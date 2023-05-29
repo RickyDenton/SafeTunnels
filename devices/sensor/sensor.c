@@ -15,6 +15,7 @@
 #include "dev/button-hal.h"
 #include "dev/leds.h"
 #include "os/sys/log.h"
+#include "random.h"
 
 /* ------------------------------- Other Headers ------------------------------- */
 #include "sensor.h"
@@ -22,9 +23,9 @@
 #include <strings.h>
 
 /* ==================== PROCESSES DEFINITIONS AND AUTOSTART ==================== */
-PROCESS_NAME(mqtt_client_process);
-PROCESS(mqtt_client_process, "MQTT Client");
-AUTOSTART_PROCESSES(&mqtt_client_process);
+
+PROCESS(safetunnels_sensor_process, "MQTT Client");
+AUTOSTART_PROCESSES(&safetunnels_sensor_process);
 
 /* ============================== GLOBAL VARIABLES ============================== */
 
@@ -39,7 +40,7 @@ char broker_address[CONFIG_IP_ADDR_STR_LEN];
 static uint8_t mqtt_cli_state;
 
 // ClientIDs and Topics Buffer Sizes TODO CHECK!
-static char client_id[BUFFER_SIZE];
+static char mqtt_client_id[MAC_ADDRESS_SIZE];
 static char pub_topic[BUFFER_SIZE];
 static char sub_topic[BUFFER_SIZE];
 
@@ -55,10 +56,31 @@ static char app_buffer[APP_BUFFER_SIZE];
 static struct mqtt_message* msg_ptr = NULL;
 
 // MQTT connection
-static struct mqtt_connection conn;
+static struct mqtt_connection mqttBrokerConn;
 
 // MQTT status
 mqtt_status_t status;
+
+
+
+// Sensor Values
+unsigned short C02Density;   // C02 Density in parts per million (ppm)
+unsigned short temperature;  // Temperature in celsius degrees
+
+
+
+// Sensor Timers
+static struct ctimer C02Timer;
+static struct ctimer tempTimer;
+
+
+// Last MQTT Updates (to prevent disconnection from the broker)
+unsigned long C02LastMQTTUpdateTime = 0;
+unsigned long tempLastMQTTUpdateTime = 0;
+
+
+static char C02Topic[] = "SafeTunnels/C02";
+static char tempTopic[] = "SafeTunnels/temp";
 
 
 /* =========================== FUNCTIONS DEFINITIONS =========================== */
@@ -88,7 +110,7 @@ static void mqtt_event(struct mqtt_connection *m, mqtt_event_t event, void *data
    case MQTT_EVENT_DISCONNECTED:
     printf("MQTT Disconnect. Reason %u\n", *((mqtt_event_t *)data));
     mqtt_cli_state = MQTT_CLI_STATE_DISCONNECTED;
-    process_poll(&mqtt_client_process);
+    process_poll(&safetunnels_sensor_process);
     break;
 
    case MQTT_EVENT_PUBLISH:
@@ -132,20 +154,99 @@ static bool have_connectivity(void)
 }
 
 
-PROCESS_THREAD(mqtt_client_process, ev, data)
+// C02 Timer
+static void C02TimerCallback(__attribute__((unused)) void* ptr)
+ {
+  unsigned int newC02Density;
+
+  char newC02DensityJSON[15];
+  unsigned int mqttPublishResult;
+
+  /* ---- TODO: Generate the C02 value depending on the "fanSpeedRel" value ---- */
+
+  newC02Density = random_rand();
+  LOG_DBG("Randomly generated new C02 density: %u\n",newC02Density);
+
+  /* --------------------------------------------------------------------------- */
+
+  // If the node's MQTT client is NOT connected to the MQTT
+  // broker, warn that the C02 update has not been published
+  if(mqtt_cli_state < MQTT_CLI_STATE_CONNECTED)
+   LOG_WARN("Cannot publish the updated C02 density (%u) as the node's MQTT client is disconnected from the broker\n", newC02Density);
+
+  // Otherwise, if the node's MQTT client IS connected to the broker
+  else
+   {
+    // If the newly generated C02 density differs from the current one OR a
+    // new C02 density has not been published for the MQTT_CLIENT_MAX_INACTIVITY
+    // time, publish the new C02 density to the broker
+    if((newC02Density != C02Density) || (clock_seconds() - C02LastMQTTUpdateTime > (unsigned long)MQTT_CLI_MAX_INACTIVITY))
+     {
+      // Prepare the message to be published
+      sprintf(newC02DensityJSON, "{\"C02\": %u}", newC02Density);
+
+      // Publish the message
+      mqttPublishResult = mqtt_publish(&mqttBrokerConn, NULL, C02Topic, (uint8_t*)newC02DensityJSON, strlen(newC02DensityJSON), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+
+      // If the publishment was successful
+      if(mqttPublishResult == MQTT_STATUS_OK)
+       {
+        // Update the time the last message was published
+        C02LastMQTTUpdateTime = clock_seconds();
+
+        // Log the successful publishment
+        LOG_INFO("Successfully published to MQTT broker new C02 density: %u\n", newC02Density);
+       }
+      else
+       {
+        LOG_ERR("FAILED to publish to the MQTT broker the new C02 density (%u, error: %u)\n", newC02Density, mqttPublishResult);
+
+        // TODO: Possibly attempt to send a publish in the "SafeTunnels/errors" topic
+       }
+     }
+   }
+
+  // In any case, update the new C02 Density value
+  C02Density = newC02Density;
+
+  // Reset the C02 Sampling timer
+  ctimer_reset(&C02Timer);
+ }
+
+// Temp Timer
+static void tempTimerCallback(void* ptr)
+ {
+  static unsigned int nTimes10 = 0;
+
+  printf("[tempTimer]: Elapsed %u seconds\n",++nTimes10*10);
+
+  ctimer_reset(&tempTimer);
+ }
+
+PROCESS_THREAD(safetunnels_sensor_process, ev, data)
 {
  PROCESS_BEGIN();
-  
- printf("MQTT Client Process\n");
 
- // Initialize the ClientID as MAC address
- snprintf(client_id, BUFFER_SIZE, "%02x%02x%02x%02x%02x%02x",
-                     linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-                     linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
-                     linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
+ // Turn on the green LED at power on
+ leds_single_on(LEDS_GREEN);
+
+ // Print that the sensor node has started
+ LOG_INFO("SafeTunnels sensor node started, MAC = ");
+ LOG_INFO_LLADDR(&linkaddr_node_addr);
+ LOG_INFO_("\n");
+
+ // Start the nodes' sensors sampling (as they do not depend on the node's connection status)
+ ctimer_set(&C02Timer,C02_SENSOR_SAMPLING_PERIOD * CLOCK_SECOND,C02TimerCallback,NULL);
+ ctimer_set(&tempTimer,TEMP_SENSOR_SAMPLING_PERIOD * CLOCK_SECOND,tempTimerCallback,NULL);
+
+ // Set the node's MQTT ID as its MAC address
+ snprintf(mqtt_client_id, MAC_ADDRESS_SIZE, "%02x%02x%02x%02x%02x%02x",
+          linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
+          linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
+          linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
 
  // Broker registration
- mqtt_register(&conn, &mqtt_client_process, client_id, mqtt_event,MAX_TCP_SEGMENT_SIZE);
+ mqtt_register(&mqttBrokerConn, &safetunnels_sensor_process, mqtt_client_id, mqtt_event, MAX_TCP_SEGMENT_SIZE);
 
  mqtt_cli_state = MQTT_CLI_STATE_INIT;
 				    
@@ -169,7 +270,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 			  
        memcpy(broker_address, broker_ip, strlen(broker_ip));
 			  
-       mqtt_connect(&conn, broker_address, DEFAULT_BROKER_PORT,(DEFAULT_PUBLISH_INTERVAL * 3) / CLOCK_SECOND,MQTT_CLEAN_SESSION_ON);
+       mqtt_connect(&mqttBrokerConn, broker_address, DEFAULT_BROKER_PORT, (DEFAULT_PUBLISH_INTERVAL * 3) / CLOCK_SECOND, MQTT_CLEAN_SESSION_ON);
        mqtt_cli_state = MQTT_CLI_STATE_CONNECTING;
 		  }
 		  
@@ -178,7 +279,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
         // Subscribe to a topic
 			  strcpy(sub_topic,"actuator");
 
-			  status = mqtt_subscribe(&conn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
+			  status = mqtt_subscribe(&mqttBrokerConn, NULL, sub_topic, MQTT_QOS_LEVEL_0);
 
 			  printf("Subscribing!\n");
 			  if(status == MQTT_STATUS_OUT_QUEUE_FULL)
@@ -198,7 +299,7 @@ PROCESS_THREAD(mqtt_client_process, ev, data)
 
 			 value++;
 
-			 mqtt_publish(&conn, NULL, pub_topic, (uint8_t *)app_buffer, strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+			 mqtt_publish(&mqttBrokerConn, NULL, pub_topic, (uint8_t *)app_buffer, strlen(app_buffer), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
 
 		  }
      else

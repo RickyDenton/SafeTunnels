@@ -8,6 +8,7 @@ set(CONTIKI /home/osboxes/contiki-ng)
 
 include_directories(${CONTIKI})
 include_directories(${CONTIKI}/os)
+include_directories(${CONTIKI}/os/lib)
 include_directories(${CONTIKI}/arch/platform/cooja)
 include_directories(${CONTIKI}/os/net/app-layer/mqtt)
 
