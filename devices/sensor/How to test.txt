@@ -1,0 +1,4 @@
+// Deploy the border router, the MQTT client, and, once everything has bootstrapped, test it from the command line via Mosquitto as:
+
+mosquitto_sub -h 127.0.0.1 -t status              // Subscribes to the "status" topic sent by the MQTT client
+mosquitto_pub -h 127.0.0.1 -t actuator -m hello   // Publishes message on the "actuator" topic the MQTT client is subscribed on
