@@ -35,7 +35,6 @@ PROCESS_NAME(mqtt_client_process);
 
 // Buffer Size
 #define BUFFER_SIZE 64
-#define MAC_ADDRESS_SIZE 64
 
 // Periodic timer to check the state of the MQTT client
 #define STATE_MACHINE_PERIODIC     (CLOCK_SECOND >> 1)
