@@ -11,8 +11,8 @@
 void writeNodeMAC(char* dest);
 
 
-// Whether the node is connected to a RPL DODAG
-bool isNodeConnected();
+// Whether the node can communicate with hosts external to the LLN
+bool isNodeOnline();
 
 
 #endif //SAFETUNNELS_DEVUTILITIES_H

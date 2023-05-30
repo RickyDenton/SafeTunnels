@@ -24,8 +24,11 @@ void writeNodeMAC(char* dest)
  }
 
 
-// Whether the node is connected to a RPL DODAG
-bool isNodeConnected()
+
+// Whether the node can communicate with hosts external to the
+// LLN, which is verified if one of its interfaces has a global
+// IPv6 address assigned and has a neighbor to route packets to
+bool isNodeOnline()
  {
   if(uip_ds6_get_global(ADDR_PREFERRED) == NULL || uip_ds6_defrt_choose() == NULL)
    return false;
