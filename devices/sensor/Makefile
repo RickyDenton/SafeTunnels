@@ -11,3 +11,6 @@ MODULES += $(CONTIKI_NG_APP_LAYER_DIR)/mqtt
 MODULES_REL += arch/platform/$(TARGET)
 
 include $(CONTIKI)/Makefile.include
+
+
+include ../common/devUtilities.h

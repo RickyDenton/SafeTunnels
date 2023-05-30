@@ -4,14 +4,9 @@
 
 /* ------------------------------- System Headers ------------------------------- */
 #include "contiki.h"
-#include "net/routing/routing.h"
 #include "mqtt.h"
-#include "net/ipv6/uip.h"
-#include "net/ipv6/uip-icmp6.h"
-#include "net/ipv6/sicslowpan.h"
 #include "sys/etimer.h"
 #include "sys/ctimer.h"
-#include "lib/sensors.h"
 #include "dev/button-hal.h"
 #include "dev/leds.h"
 #include "os/sys/log.h"
@@ -26,7 +21,7 @@
 
 /* ==================== PROCESSES DEFINITIONS AND AUTOSTART ==================== */
 
-PROCESS(safetunnels_sensor_process, "MQTT Client");
+PROCESS(safetunnels_sensor_process, "SafeTunnels Sensor Process");
 AUTOSTART_PROCESSES(&safetunnels_sensor_process);
 
 /* ============================== GLOBAL VARIABLES ============================== */
@@ -53,24 +48,8 @@ static char errDscr[APP_ERR_DSCR_BUF_SIZE];
 
 
 
-
-
-
-
-
-
-// ClientIDs and Topics Buffer Sizes TODO CHECK!
-static char pub_topic[BUFFER_SIZE];
-static char sub_topic[BUFFER_SIZE];
-
-static int value = 0;
-
-//Periodic timer to check the state of the MQTT client
+// Periodic timer to check the state of the MQTT client
 static struct etimer mqttCliStatusTimer;
-
-// Main MQTT buffers (to be increased if we start to publish more data) TODO: CHECK
-static char app_buffer[APP_BUFFER_SIZE];
-
 
 
 
@@ -79,12 +58,6 @@ static struct mqtt_message* msg_ptr = NULL;
 
 // MQTT connection
 static struct mqtt_connection mqttConn;
-
-// MQTT status
-mqtt_status_t status;
-
-
-
 
 // Sensor Values
 unsigned short C02Density = USHRT_MAX;   // C02 Density in parts per million (ppm)
@@ -96,6 +69,7 @@ unsigned char fanSpeedRel = 200;
 // Sensor Timers
 static struct ctimer C02SamplingTimer;
 static struct ctimer tempSamplingTimer;
+static struct ctimer MQTTBrokerCommLEDBlinkTimer;
 
 // Quantities last MQTT updates in seconds from power
 // on (used to prevent disconnection from the broker)
@@ -106,6 +80,31 @@ unsigned long tempLastMQTTUpdateTime = 0;
 
 /* =========================== FUNCTIONS DEFINITIONS =========================== */
 
+
+static void blinkMQTTBrokerCommLED(__attribute__((unused)) void* ptr)
+ {
+  static unsigned char blinkTimes = COMM_LED_BLINK_TIMES;
+
+  // Toggle the MQTT Broker communication LED
+  leds_single_toggle(MQTT_BROKER_COMM_LED);
+
+  // If the MQTT Broker communication LED should be further blinked, reset the timer
+  if(blinkTimes-- > 0)
+   ctimer_reset(&MQTTBrokerCommLEDBlinkTimer);
+
+  // Otherwise, if the MQTT broker communication blinking has finished
+  else
+   {
+    // Reset the "blinkTimes" variable to its default value
+    blinkTimes = COMM_LED_BLINK_TIMES;
+
+    // Turn the LED on or off depending on whether the MQTT client is connected with the broker
+    if(mqtt_cli_state >= MQTT_CLI_STATE_BROKER_CONNECTED)
+     leds_single_on(MQTT_BROKER_COMM_LED);
+    else
+     leds_single_off(MQTT_BROKER_COMM_LED);
+   }
+ }
 
 
 void logPublishError()
@@ -127,9 +126,17 @@ void logPublishError()
 
     mqttCliEngineAPIRes = mqtt_publish(&mqttConn, NULL, MQTTTopicBuf, (uint8_t*)MQTTMessageBuf, strlen(MQTTMessageBuf), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
 
-    // Log the error and whether it was successfully published
+    // If the error has been published successfully
     if(mqttCliEngineAPIRes == MQTT_STATUS_OK)
-     LOG_ERR("%s (published)\n", errDscr);
+     {
+      // Blink the communication LED
+      ctimer_set(&MQTTBrokerCommLEDBlinkTimer, COMM_LED_BLINK_PERIOD, blinkMQTTBrokerCommLED, NULL);
+
+      // Log the error locally, informing that it has also been published
+      LOG_ERR("%s (published)\n", errDscr);
+     }
+
+    // Otherwise just log the error locally, informing that it couldn't be published
     else
      LOG_ERR("%s (error that could also NOT published for error code \"%u\")\n", errDscr, mqttCliEngineAPIRes);
    }
@@ -178,6 +185,9 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue, bool qu
         // Log that the MQTT publishment was successful
         LOG_INFO("Published updated %s (%u) to the MQTT broker\n", quantity, quantityValue);
 
+        // Blink the communication LED
+        ctimer_set(&MQTTBrokerCommLEDBlinkTimer, COMM_LED_BLINK_PERIOD, blinkMQTTBrokerCommLED, NULL);
+
         // Return that the MQTT publishment was successful
         return true;
        }
@@ -186,6 +196,7 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue, bool qu
       else
        {
         // Log the error and attempt to publish it
+        // FIXME: ERR_SENSOR_QUANTITY_PUB_FAILED
         snprintf(errDscr, APP_ERR_DSCR_BUF_SIZE, "FAILED to publish the updated %s (%u) to the MQTT broker (error = %u)", quantity, quantityValue, mqttCliEngineAPIRes);
         logPublishError();
 
@@ -215,7 +226,7 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue, bool qu
 
 
 // MQTT Engine Client Callback function
-static void mqttEngineCliCallback(struct mqtt_connection* m, mqtt_event_t event, void* data)
+static void mqttEngineCliCallback(__attribute__((unused)) struct mqtt_connection* m, mqtt_event_t event, void* data)
 {
  // Pointer to a message received on a topic the MQTT client is
  // subscribed to (should be "SafeTunnels/avgFanRelSpeed" only)
@@ -231,8 +242,8 @@ static void mqttEngineCliCallback(struct mqtt_connection* m, mqtt_event_t event,
     // Update the MQTT client state
     mqtt_cli_state = MQTT_CLI_STATE_BROKER_CONNECTED;
 
-    // Turn on the yellow LED when connected with the broker
-    leds_single_on(LEDS_YELLOW);
+    // Turn on MQTT broker communication LED when connected with the broker
+    leds_single_on(MQTT_BROKER_COMM_LED);
 
     // Log that the MQTT client is now connected with the broker
     LOG_INFO("Successfully connected with the MQTT broker @%s\n",mqtt_broker_ipv6_addr);
@@ -249,7 +260,7 @@ static void mqttEngineCliCallback(struct mqtt_connection* m, mqtt_event_t event,
 
     // Attempt to subscribe to the "SafeTunnels/avgFanRelSpeed" topic
     snprintf(MQTTTopicBuf, MQTT_TOPIC_BUF_SIZE, "SafeTunnels/avgFanRelSpeed");
-    mqttCliEngineAPIRes = status = mqtt_subscribe(&mqttConn, NULL, MQTTTopicBuf, MQTT_QOS_LEVEL_0);
+    mqttCliEngineAPIRes = mqtt_subscribe(&mqttConn, NULL, MQTTTopicBuf, MQTT_QOS_LEVEL_0);
 
     // If the topic subscription was successful
     if(mqttCliEngineAPIRes == MQTT_STATUS_OK)
@@ -265,6 +276,7 @@ static void mqttEngineCliCallback(struct mqtt_connection* m, mqtt_event_t event,
     else
      {
       // Log the error and attempt to publish it
+      // FIXME: ERR_SENSOR_FANRELSPEED_SUB_FAILED
       snprintf(errDscr, APP_ERR_DSCR_BUF_SIZE, "FAILED to subscribe on the \"SafeTunnels/avgFanRelSpeed\" topic (error = %u)", mqttCliEngineAPIRes);
       logPublishError();
      }
@@ -292,8 +304,8 @@ static void mqttEngineCliCallback(struct mqtt_connection* m, mqtt_event_t event,
    /* ----------- The MQTT client has disconnected from the MQTT broker ----------- */
    case MQTT_EVENT_DISCONNECTED:
 
-    // Turn off the yellow LED when disconnected from the broker
-    leds_single_off(LEDS_YELLOW);
+    // Turn off the MQTT broker communicatiion LED when disconnected from the broker
+    leds_single_off(MQTT_BROKER_COMM_LED);
 
     // Log that the node has disconnected from the MQTT broker
     LOG_WARN("DISCONNECTED from the MQTT broker @%s (reason: %u), attempting to reconnect...\n",mqtt_broker_ipv6_addr,*(unsigned int*)data);
@@ -320,6 +332,7 @@ static void mqttEngineCliCallback(struct mqtt_connection* m, mqtt_event_t event,
     // MQTT client state, logging and publishing the error otherwise
     if(mqtt_cli_state != MQTT_CLI_STATE_BROKER_SUBSCRIBED)
      {
+       // FIXME: ERR_SENSOR_RECV_WHEN_NOT_SUB
        snprintf(errDscr, APP_ERR_DSCR_BUF_SIZE, "Received message with the MQTT client not in the MQTT_CLI_STATE_BROKER_SUBSCRIBED"
                                                 " state (MQTT_CLI_STATE = %u, topic = %s, msg = %s)",mqtt_cli_state,recvMsg->topic,recvMsg->payload_chunk);
        logPublishError();
@@ -330,6 +343,7 @@ static void mqttEngineCliCallback(struct mqtt_connection* m, mqtt_event_t event,
     else
      if(strcmp(msg_ptr->topic, "SafeTunnels/avgFanRelSpeed") != 0)
       {
+       // FIXME: ERR_SENSOR_RECEIVED_UNKNOWN_TOPIC
        snprintf(errDscr, APP_ERR_DSCR_BUF_SIZE, "Received message on a topic the MQTT client is not subscribed on"
                                                 " (topic = %s, msg = %s)",recvMsg->topic,recvMsg->payload_chunk);
        logPublishError();
@@ -346,47 +360,48 @@ static void mqttEngineCliCallback(struct mqtt_connection* m, mqtt_event_t event,
        if(recvFanSpeedRelative > 100)
         {
          // Log the error and attempt to publish it
+         // FIXME: ERR_SENSOR_FANRELSPEED_INVALID
          snprintf(errDscr, APP_ERR_DSCR_BUF_SIZE, "Received a \"fanSpeedRelative\" of invalid value (%lu > 100)", recvFanSpeedRelative);
          logPublishError();
         }
 
-       // Otherwise, if the received average fan relative speed value is valid (<= 100)
+        // Otherwise, if the received average fan relative speed value is valid (<= 100)
        else
         {
          // Set the sensor's average fan relative speed value
          fanSpeedRel = recvFanSpeedRelative;
 
          // Log the received average fan relative speed value
-         LOG_INFO("Received new average fan speed value: %u",fanSpeedRel);
+         LOG_INFO("Received new average fan speed value: %u\n", fanSpeedRel);
         }
+      }
     break;
 
-
-// TODO: Continue from here, also divide the switch cases in helper functions (here and in the main process)
-
+   /* -------- The MQTT client successfully subscribed to a topic on the MQTT broker ------- */
    case MQTT_EVENT_SUBACK:
-#if MQTT_311
-    mqtt_suback_event_t *suback_event = (mqtt_suback_event_t *)data;
 
-    if(suback_event->success)
-     printf("Application is subscribed to topic successfully\n");
-    else
-     printf("Application failed to subscribe to topic (ret code %x)\n", suback_event->return_code);
-#else
-    printf("Application is subscribed to topic successfully\n");
-#endif
+    // TODO: Check if necessary, in general called for EVERY subscription acknowledgement
+    LOG_DBG("MQTT Client successfully subscribed to the \"SafeTunnels/avgFanRelSpeed\" topic on the broker\n");
     break;
 
+   /* -------- The MQTT client successfully subscribed to a topic on the MQTT broker ------- */
    case MQTT_EVENT_UNSUBACK:
-    printf("Application is unsubscribed to topic successfully\n");
+
+    // TODO: Check if necessary, in general called for EVERY unsubscription acknowledgement
+    snprintf(errDscr, APP_ERR_DSCR_BUF_SIZE, "MQTT client unsubscribed from unknown topic");
+    logPublishError();
     break;
 
    case MQTT_EVENT_PUBACK:
-    printf("Publishing complete.\n");
+    // TODO: Check if necessary, in general called for EVERY publication acknowledgement
+    LOG_DBG("MQTT Client publication complete\n");
     break;
 
    default:
-    printf("Application got a unhandled MQTT event: %i\n", event);
+    // TODO: Possibly merge here all unnecessary cases (case in which it is no error)
+    // FIXME: ERR_SENSOR_MQTT_CLI_CALLBACK_UNKNOWN_TYPE
+    snprintf(errDscr, APP_ERR_DSCR_BUF_SIZE, "The MQTT engine invoked a callback of unknown type (%u)",event);
+    logPublishError();
     break;
   }
 }
@@ -397,8 +412,8 @@ static void mqttEngineCliCallback(struct mqtt_connection* m, mqtt_event_t event,
 
 
 
-// C02 Sampling Function (timer)
-static void C02Sampling(__attribute__((unused)) void* ptr)
+// C02 periodic sampling function (timer)
+static void C02PeriodicSampling(__attribute__((unused)) void* ptr)
  {
   unsigned int newC02Density;
 
@@ -421,8 +436,8 @@ static void C02Sampling(__attribute__((unused)) void* ptr)
   ctimer_reset(&C02SamplingTimer);
  }
 
-// Temperature sampling function (timer)
-static void tempSampling(__attribute__((unused)) void* ptr)
+// Temperature periodic sampling function (timer)
+static void tempPeriodicSampling(__attribute__((unused)) void* ptr)
  {
   unsigned int newTemp;
 
@@ -445,14 +460,16 @@ static void tempSampling(__attribute__((unused)) void* ptr)
   ctimer_reset(&tempSamplingTimer);
  }
 
+
+
 /* SafeTunnels Sensor Process Body */
 PROCESS_THREAD(safetunnels_sensor_process, ev, data)
 {
  // Contiki-NG process start
  PROCESS_BEGIN()
 
- // Turn on the green LED at power on
- leds_single_on(LEDS_GREEN);
+ // Turn the on the POWER_LED
+ leds_single_on(POWER_LED);
 
  // Set the node's ID as its MAC address
  writeNodeMAC(nodeID);
@@ -461,21 +478,22 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
  LOG_INFO("SafeTunnels sensor node started, MAC = %s\n",nodeID);
 
  // Start the nodes' sensors sampling (as they do not depend on the node's connection status)
- ctimer_set(&C02SamplingTimer, C02_SENSOR_SAMPLING_PERIOD * CLOCK_SECOND, C02Sampling, NULL);
- ctimer_set(&tempSamplingTimer, TEMP_SENSOR_SAMPLING_PERIOD * CLOCK_SECOND, tempSampling, NULL);
+ ctimer_set(&C02SamplingTimer, C02_SENSOR_SAMPLING_PERIOD, C02PeriodicSampling, NULL);
+ ctimer_set(&tempSamplingTimer, TEMP_SENSOR_SAMPLING_PERIOD, tempPeriodicSampling, NULL);
 
  /* ------------ MQTT Initialization ------------ */
 
  // Initialize the MQTT client status timer with the bootstrap period
  etimer_set(&mqttCliStatusTimer, (clock_time_t)MQTT_CLI_STATUS_TIMER_PERIOD_BOOTSTRAP);
 
- /* Process Main Loop */
+ /* Sensor Process Main Loop */
  while(1)
   {
    // Yield the process's execution
    PROCESS_YIELD();
 
    // If the MQTT client status timer has expired, or the process has been explicitly polled
+   // TODO: Check if polling is necessary
    if((ev == PROCESS_EVENT_TIMER && data == &mqttCliStatusTimer) || ev == PROCESS_EVENT_POLL)
     {
      // Depending on the MQTT client current state
@@ -523,8 +541,8 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
           mqtt_cli_state = MQTT_CLI_STATE_NET_OK;
          }
 
-         // Otherwise, if the node CANNOT (yet) communicate with hosts external to
-         // the LLN, log it (and try again at the next client status timer activation)
+        // Otherwise, if the node CANNOT (yet) communicate with hosts external to
+        // the LLN, log it (and try again at the next client status timer activation)
         else
          LOG_DBG("Waiting for the RPL DODAG to converge...\n");
 
@@ -587,6 +605,8 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
         break;
 
        default:
+
+        // FIXME: ERR_SENSOR_MAIN_LOOP_UNKNOWN_MQTT_CLI_STATE
         LOG_ERR("Unknown MQTT client state in the process main loop (%u)\n",mqtt_cli_state);
         break;
 /*
@@ -631,10 +651,42 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
       }
     }
 
-   // TODO: Buttons!
+   // Otherwise, if any button has been pressed
+   else
+    if(ev == button_hal_press_event)
+     {
+      // Set the C02 and Temperature quantities to their maximum "unsafe"
+      // values for the purposes of simulating the service's feedback mechanism
+      C02Density = C02_VALUE_MAX;
+      if(publishMQTTSensorUpdate("C02", C02Density, true, ULONG_MAX))
+       C02LastMQTTUpdateTime = clock_seconds();
+
+      temp = TEMP_VALUE_MAX;
+       if(publishMQTTSensorUpdate("temp", temp, true, ULONG_MAX))
+        tempLastMQTTUpdateTime = clock_seconds();
+
+      // Log that the C02 and Temperature values have been simulated to their maximum values
+      LOG_INFO("Sampled quantities set to their maximum values (C02Density = %u, temp = %u)\n",C02_VALUE_MAX,TEMP_VALUE_MAX);
+     }
+
+    // Unknown event
+    else
+     {
+      // FIXME: ERR_SENSOR_MAIN_LOOP_UNKNOWN_EVENT
+      snprintf(errDscr, APP_ERR_DSCR_BUF_SIZE, "Unknown event in the Sensor Process Main Loop (%u)",ev);
+      logPublishError();
+     }
   }
 
- // Execution should never reach here
- // TODO: Send publish a message on the SafeTunnels/errors topic?
+
+ /* ------------ Execution should NEVER reach here ------------ */
+
+ // Turn off both LEDs
+ leds_off(LEDS_NUM_TO_MASK(POWER_LED) | LEDS_NUM_TO_MASK(MQTT_BROKER_COMM_LED));
+
+ // FIXME: ERR_SENSOR_MAIN_LOOP_EXITED
+ snprintf(errDscr, APP_ERR_DSCR_BUF_SIZE, "Exited from the Sensor Process main loop! (last event= %u)",ev);
+ logPublishError();
+
  PROCESS_END()
 }

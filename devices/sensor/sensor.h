@@ -4,7 +4,7 @@
 /* SafeTunnels Sensor Default Parameters */
 
 
-PROCESS_NAME(mqtt_client_process);
+PROCESS_NAME(safetunnels_sensor_process);
 
 /* ------------------------------ MQTT Parameters ------------------------------ */
 #define MQTT_BROKER_IPV6_ADDR "fd00::1"              // MQTT Broker IP address
@@ -42,19 +42,132 @@ PROCESS_NAME(mqtt_client_process);
 // Application error descriptions buffer size
 #define APP_ERR_DSCR_BUF_SIZE 150
 
-// Initialize the timer periodically checking the MQTT client status
-
 // MQTT client status timer periods
 #define MQTT_CLI_STATUS_TIMER_PERIOD_BOOTSTRAP  (0.1 * CLOCK_SECOND)
-#define MQTT_CLI_STATUS_TIMER_PERIOD_SUBSCRIBED CLOCK_SECOND)
 
-// Main MQTT buffers size (to be increased if we start to publish more data) TODO: CHECK
-#define APP_BUFFER_SIZE 512
+// TODO: shouldn-t be necessary
+// #define MQTT_CLI_STATUS_TIMER_PERIOD_SUBSCRIBED CLOCK_SECOND)
 
 
 // Sensors Sampling Period
-#define C02_SENSOR_SAMPLING_PERIOD 8
-#define TEMP_SENSOR_SAMPLING_PERIOD 5
+#define C02_SENSOR_SAMPLING_PERIOD (8 * CLOCK_SECOND)
+#define TEMP_SENSOR_SAMPLING_PERIOD (5 * CLOCK_SECOND)
+
+// Communication LED blinking period and number
+#define COMM_LED_BLINK_PERIOD (0.1 * CLOCK_SECOND)
+#define COMM_LED_BLINK_TIMES 5
+
+
+// Device LEDs
+#define POWER_LED            LEDS_GREEN
+#define MQTT_BROKER_COMM_LED LEDS_YELLOW
+
+// Sampled quantities thresholds TODO
+#define C02_VALUE_MIN 10
+#define C02_VALUE_MAX 200
+#define TEMP_VALUE_MIN 10
+#define TEMP_VALUE_MAX 50
+
+
+
+
+
+enum sensorErrCode : unsigned char
+ {
+
+  // The sensor failed to publish a sampled quantity
+  ERR_SENSOR_QUANTITY_PUB_FAILED,
+
+  // The sensor failed to subscribe on the "SafeTunnels/avgFanRelSpeed" topic
+  ERR_SENSOR_FANRELSPEED_SUB_FAILED,
+
+  // The sensor received a MQTT message when not in the MQTT_CLI_STATE_BROKER_SUBSCRIBED state
+  ERR_SENSOR_RECV_WHEN_NOT_SUB,
+
+  // The sensor received a MQTT message on a topic it is not subscribed on
+  ERR_SENSOR_RECEIVED_UNKNOWN_TOPIC,
+
+  // The sensor received an invalid "fanRelSpeed" value
+  ERR_SENSOR_FANRELSPEED_INVALID,
+
+  // The MQTT engine invoked a callback of unknown type
+  ERR_SENSOR_MQTT_CLI_CALLBACK_UNKNOWN_TYPE,
+
+  // An unknown event was passed to the sensor main loop
+  ERR_SENSOR_MAIN_LOOP_UNKNOWN_EVENT,
+
+  // Unknown MQTT client state in the sensor process main loop
+  ERR_SENSOR_MAIN_LOOP_UNKNOWN_MQTT_CLI_STATE,
+
+  // Exited from the sensor process main loop
+  ERR_SENSOR_MAIN_LOOP_EXITED
+ };
+
+
+
+// Associates each SafeCloud session error code with its severity level and human-readable description
+static const char* sensorErrCodesDscr[] =
+ {
+   // ERR_SENSOR_QUANTITY_PUB_FAILED
+   "The sensor failed to publish a sampled quantity",
+
+   // ERR_SENSOR_FANRELSPEED_SUB_FAILED
+   "The sensor failed to subscribe on the \"SafeTunnels/avgFanRelSpeed\" topic",
+
+   // ERR_SENSOR_RECV_WHEN_NOT_SUB
+   "The sensor received a MQTT message when not in the MQTT_CLI_STATE_BROKER_SUBSCRIBED state",
+
+   // ERR_SENSOR_RECEIVED_UNKNOWN_TOPIC
+   "The sensor received a MQTT message on a topic it is not subscribed on",
+
+   // ERR_SENSOR_FANRELSPEED_INVALID
+   "The sensor received an invalid \"fanRelSpeed\" value",
+
+   // ERR_SENSOR_MQTT_CLI_CALLBACK_UNKNOWN_TYPE
+   "The MQTT engine invoked a callback of unknown type",
+
+   // ERR_SENSOR_MAIN_LOOP_UNKNOWN_EVENT
+   "An unknown event was passed to the sensor main loop",
+
+   // ERR_SENSOR_MAIN_LOOP_UNKNOWN_MQTT_CLI_STATE
+   "Unknown MQTT client state in the sensor process main loop",
+
+   // ERR_SENSOR_MAIN_LOOP_EXITED
+   "Sensor process exited from its main loop"
+ };
+
+
+
+#define LOG_PUB_ERROR(sensorErrCode, f_, ...) snprintf((errDscr), (APP_ERR_DSCR_BUF_SIZE), sensorErrCodesDscr[sensorErrCode] " " (f_), __VA_ARGS__)
+
+/**
+ * LOG_EXEC_CODE_ macros, calling the handleExecErrCode()
+ * function with the arguments passed to the LOG_EXEC_CODE macro:
+ *  - 1 argument   -> execErrCode only
+ *  - 2 arguments  -> execErrCode + additional description
+ *  - 3 arguments  -> execErrCode + additional description + error reason
+ *  - (DEBUG_MODE) -> The source file name and line number at which the exception is thrown
+ */
+#ifdef DEBUG_MODE
+#define LOG_EXEC_CODE_ONLY(execErrCode) handleExecErrCode(execErrCode,nullptr,nullptr,new std::string(__FILE__),__LINE__-1)
+ #define LOG_EXEC_CODE_DSCR(execErrCode,dscr) handleExecErrCode(execErrCode,new std::string(dscr),nullptr,new std::string(__FILE__),__LINE__-1)
+ #define LOG_EXEC_CODE_DSCR_REASON(execErrCode,dscr,reason) handleExecErrCode(execErrCode,new std::string(dscr),new std::string(reason),new std::string(__FILE__),__LINE__-1)
+#else
+#define LOG_EXEC_CODE_ONLY(execErrCode) handleExecErrCode(execErrCode,nullptr,nullptr)
+ #define LOG_EXEC_CODE_DSCR(execErrCode,dscr) handleExecErrCode(execErrCode,new std::string(dscr),nullptr)
+ #define LOG_EXEC_CODE_DSCR_REASON(execErrCode,dscr,reason) handleExecErrCode(execErrCode,new std::string(dscr),new std::string(reason))
+#endif
+
+/**
+ * Substitutes the appropriate LOG_EXEC_CODE_ depending on the
+ * number of arguments passed to the LOG_EXEC_CODE variadic macro:
+ *  - 1 argument  -> execErrCode only
+ *  - 2 arguments -> execErrCode + additional description
+ *  - 3 arguments -> execErrCode + additional description + error reason
+ */
+#define GET_LOG_EXEC_CODE_MACRO(_1,_2,_3,LOG_EXEC_CODE_MACRO,...) LOG_EXEC_CODE_MACRO
+#define LOG_EXEC_CODE(...) GET_LOG_EXEC_CODE_MACRO(__VA_ARGS__,LOG_EXEC_CODE_DSCR_REASON,LOG_EXEC_CODE_DSCR,LOG_EXEC_CODE_ONLY)(__VA_ARGS__)
+
 
 
 #endif //SAFETUNNELS_SENSOR_H
