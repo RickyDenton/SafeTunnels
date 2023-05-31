@@ -32,4 +32,4 @@ add_executable(SafeTunnels
         devices/border-router/border-router.c
         devices/border-router/project-conf.h
         devices/sensor/project-conf.h
-        devices/sensor/sensor.c devices/sensor/sensor.h devices/common/devUtilities.c devices/common/devUtilities.h)
+        devices/sensor/sensor.c devices/sensor/sensor.h devices/common/devUtilities.c devices/common/devUtilities.h devices/sensor/sensorErrors/sensorErrors.c devices/sensor/sensorErrors/sensorErrors.h)

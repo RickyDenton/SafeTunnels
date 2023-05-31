@@ -1,7 +1,8 @@
 CONTIKI_PROJECT = safetunnels-sensor-node
 all: $(CONTIKI_PROJECT)
 
-# Include common utilities
+# Include the "sensorErrors" and "common" folders
+MODULES_REL += ./sensorErrors
 MODULES_REL += ../common
 
 CONTIKI = /home/user/contiki-ng

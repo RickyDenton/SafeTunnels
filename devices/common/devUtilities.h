@@ -4,6 +4,13 @@
 
 #define MAC_ADDRESS_SIZE 64
 
+
+
+// The node ID, or MAC address
+char nodeID[MAC_ADDRESS_SIZE];
+
+
+
 // Print node MAC to buffer
 void writeNodeMAC(char* dest);
 
