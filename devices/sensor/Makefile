@@ -1,5 +1,8 @@
-CONTIKI_PROJECT = mqtt-client
+CONTIKI_PROJECT = safetunnels-sensor-node
 all: $(CONTIKI_PROJECT)
+
+# Include common utilities
+MODULES_REL += ../common
 
 CONTIKI = /home/user/contiki-ng
 
@@ -12,5 +15,3 @@ MODULES_REL += arch/platform/$(TARGET)
 
 include $(CONTIKI)/Makefile.include
 
-
-include ../common/devUtilities.h

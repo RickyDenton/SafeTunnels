@@ -22,11 +22,11 @@ PROCESS_NAME(safetunnels_sensor_process);
 
 // MQTT Client States
 #define MQTT_CLI_STATE_INIT    0
-#define MQTT_CLI_STATE_ENGINE_OK    		     1
-#define MQTT_CLI_STATE_NET_OK    	     2
-#define MQTT_CLI_STATE_BROKER_CONNECTING      3
-#define MQTT_CLI_STATE_BROKER_CONNECTED       4
-#define MQTT_CLI_STATE_BROKER_SUBSCRIBED      5
+#define MQTT_CLI_STATE_ENGINE_OK 1
+#define MQTT_CLI_STATE_NET_OK 2
+#define MQTT_CLI_STATE_BROKER_CONNECTING 3
+#define MQTT_CLI_STATE_BROKER_CONNECTED  4
+#define MQTT_CLI_STATE_BROKER_SUBSCRIBED 5
 
 
 // TCP Parameters
@@ -37,21 +37,22 @@ PROCESS_NAME(safetunnels_sensor_process);
 
 // MQTT topics and messages buffer sizes
 #define MQTT_TOPIC_BUF_SIZE 40
-#define MQTT_MESSAGE_BUF_SIZE 200  // Must be large so as to also hold application error descriptions
+#define MQTT_MESSAGE_BUF_SIZE 350  // Must be large so as to also hold application error descriptions
 
 // Application error descriptions buffer size
-#define APP_ERR_DSCR_BUF_SIZE 150
+#define APP_ERR_DSCR_BUF_SIZE 200
 
 // MQTT client status timer periods
 #define MQTT_CLI_STATUS_TIMER_PERIOD_BOOTSTRAP  (0.1 * CLOCK_SECOND)
+#define MQTT_CLI_STATUS_TIMER_PERIOD_RPL  (5 * CLOCK_SECOND)
 
 // TODO: shouldn-t be necessary
 // #define MQTT_CLI_STATUS_TIMER_PERIOD_SUBSCRIBED CLOCK_SECOND)
 
 
 // Sensors Sampling Period
-#define C02_SENSOR_SAMPLING_PERIOD (8 * CLOCK_SECOND)
-#define TEMP_SENSOR_SAMPLING_PERIOD (5 * CLOCK_SECOND)
+#define C02_SENSOR_SAMPLING_PERIOD (20 * CLOCK_SECOND) // (8 * CLOCK_SECOND)
+#define TEMP_SENSOR_SAMPLING_PERIOD (15 * CLOCK_SECOND) // (5 * CLOCK_SECOND)
 
 // Communication LED blinking period and number
 #define COMM_LED_BLINK_PERIOD (0.1 * CLOCK_SECOND)
@@ -72,7 +73,7 @@ PROCESS_NAME(safetunnels_sensor_process);
 
 
 
-enum sensorErrCode : unsigned char
+enum sensorErrCode // : unsigned char
  {
 
   // The sensor failed to publish a sampled quantity
@@ -89,6 +90,9 @@ enum sensorErrCode : unsigned char
 
   // The sensor received an invalid "fanRelSpeed" value
   ERR_SENSOR_FANRELSPEED_INVALID,
+
+  //The MQTT client unsubscribed from an unknown topic
+  ERR_SENSOR_MQTT_UNSUB_TOPIC,
 
   // The MQTT engine invoked a callback of unknown type
   ERR_SENSOR_MQTT_CLI_CALLBACK_UNKNOWN_TYPE,
@@ -123,6 +127,9 @@ static const char* sensorErrCodesDscr[] =
    // ERR_SENSOR_FANRELSPEED_INVALID
    "The sensor received an invalid \"fanRelSpeed\" value",
 
+   // ERR_SENSOR_MQTT_UNSUB_TOPIC
+   "The MQTT client unsubscribed from an unknown topic",
+
    // ERR_SENSOR_MQTT_CLI_CALLBACK_UNKNOWN_TYPE
    "The MQTT engine invoked a callback of unknown type",
 
@@ -136,9 +143,23 @@ static const char* sensorErrCodesDscr[] =
    "Sensor process exited from its main loop"
  };
 
+// WORKING GOOD
+//#define LOG_PUB_ERROR(sensorErrCode, f_, ...) { snprintf(errDscr,APP_ERR_DSCR_BUF_SIZE, (f_), __VA_ARGS__); logPublishError(sensorErrCode); }
+
+// REQUIRES GCC?
+//#define LOG_PUB_ERROR(sensorErrCode, f_, ...) { snprintf(errDscr,APP_ERR_DSCR_BUF_SIZE, (f_), ##__VA_ARGS__); logPublishError(sensorErrCode); }
 
 
-#define LOG_PUB_ERROR(sensorErrCode, f_, ...) snprintf((errDscr), (APP_ERR_DSCR_BUF_SIZE), sensorErrCodesDscr[sensorErrCode] " " (f_), __VA_ARGS__)
+// Up to 3 snprintf() variadic arguments (a bit crude, but works)
+#define LOG_PUB_CODE_ONLY(sensorErrCode) { errDscr[0] = '\0'; logPublishError(sensorErrCode); }
+#define LOG_PUB_ERROR_DSCR(sensorErrCode,dscr) { snprintf(errDscr,APP_ERR_DSCR_BUF_SIZE, (dscr)); logPublishError(sensorErrCode); }
+#define LOG_PUB_ERROR_DSCR_1PARAM(sensorErrCode,dscr,param1) { snprintf(errDscr,APP_ERR_DSCR_BUF_SIZE, (dscr), param1); logPublishError(sensorErrCode); }
+#define LOG_PUB_ERROR_DSCR_2PARAM(sensorErrCode,dscr,param1,param2) { snprintf(errDscr,APP_ERR_DSCR_BUF_SIZE, (dscr), param1, param2); logPublishError(sensorErrCode); }
+#define LOG_PUB_ERROR_DSCR_3PARAM(sensorErrCode,dscr,param1,param2,param3) { snprintf(errDscr,APP_ERR_DSCR_BUF_SIZE, (dscr), param1, param2, param3); logPublishError(sensorErrCode); }
+
+#define GET_LOG_PUB_ERROR_MACRO(_1,_2,_3,_4,_5,LOG_PUB_ERROR_MACRO,...) LOG_PUB_ERROR_MACRO
+#define LOG_PUB_ERROR(...) GET_LOG_PUB_ERROR_MACRO(__VA_ARGS__,LOG_PUB_ERROR_DSCR_3PARAM,LOG_PUB_ERROR_DSCR_2PARAM,LOG_PUB_ERROR_DSCR_1PARAM,LOG_PUB_ERROR_DSCR,LOG_PUB_CODE_ONLY)(__VA_ARGS__)
+
 
 /**
  * LOG_EXEC_CODE_ macros, calling the handleExecErrCode()
@@ -167,7 +188,5 @@ static const char* sensorErrCodesDscr[] =
  */
 #define GET_LOG_EXEC_CODE_MACRO(_1,_2,_3,LOG_EXEC_CODE_MACRO,...) LOG_EXEC_CODE_MACRO
 #define LOG_EXEC_CODE(...) GET_LOG_EXEC_CODE_MACRO(__VA_ARGS__,LOG_EXEC_CODE_DSCR_REASON,LOG_EXEC_CODE_DSCR,LOG_EXEC_CODE_ONLY)(__VA_ARGS__)
-
-
 
 #endif //SAFETUNNELS_SENSOR_H
