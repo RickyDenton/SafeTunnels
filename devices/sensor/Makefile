@@ -15,3 +15,5 @@ MODULES_REL += arch/platform/$(TARGET)
 
 include $(CONTIKI)/Makefile.include
 
+# Testing
+CFLAGS += -Wno-error

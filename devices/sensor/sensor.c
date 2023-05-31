@@ -279,6 +279,8 @@ static void mqttEngineCliCallback(__attribute__((unused)) struct mqtt_connection
     // Update the MQTT client state
     mqtt_cli_state = MQTT_CLI_STATE_BROKER_CONNECTED;
 
+
+
     // Turn on MQTT broker communication LED when connected with the broker
     leds_single_on(MQTT_BROKER_COMM_LED);
 
@@ -303,34 +305,16 @@ static void mqttEngineCliCallback(__attribute__((unused)) struct mqtt_connection
     if(mqttCliEngineAPIRes == MQTT_STATUS_OK)
      {
       // Update the MQTT client state
-      mqtt_cli_state = MQTT_CLI_STATE_BROKER_SUBSCRIBED;
+      // TODO: NO! this probably only if acked
+      //mqtt_cli_state = MQTT_CLI_STATE_BROKER_SUBSCRIBED;
 
       // Log that the sensor has successfully subscribed to the "SafeTunnels/avgFamRelSpeed" topic
-      LOG_DBG("Sensor successfully subscribed to \"SafeTunnels/avgFanRelSpeed\" topic\n");
+      //LOG_DBG("Sensor successfully subscribed to \"SafeTunnels/avgFanRelSpeed\" topic\n");
      }
 
     // Otherwise, log the error and attempt to publish it
     else
      LOG_PUB_ERROR(ERR_SENSOR_FANRELSPEED_SUB_FAILED,"(error = %u)", mqttCliEngineAPIRes)
-
-      /*
-       {
-      // Attempt to publish the error on the "SafeTunnels/SensorsCtrlEvents" topic
-      snprintf(MQTTTopicBuf, MQTT_TOPIC_BUF_SIZE, "SafeTunnels/SensorsCtrlEvents");
-      snprintf(MQTTMessageBuf, MQTT_MESSAGE_BUF_SIZE, "{"
-                                                          " \"ID\": \"%s\""
-                                                          " \"event\": \"offline\""
-                                                          " }", nodeID);
-
-      mqttCliEngineAPIRes = mqtt_publish(&mqttConn, NULL, MQTTTopicBuf, (uint8_t*)MQTTMessageBuf, strlen(MQTTMessageBuf), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
-
-      // Log the error and whether it was successfully published
-      if(mqttCliEngineAPIRes == MQTT_STATUS_OK)
-       LOG_ERR("FAILED to subscribe on the \"SafeTunnels/avgFanRelSpeed\" topic (published)\n");
-      else
-       LOG_ERR("FAILED to subscribe on the \"SafeTunnels/avgFanRelSpeed\" topic AND to publish the error\n");
-     }
-       */
     break;
 
    /* ----------- The MQTT client has disconnected from the MQTT broker ----------- */
@@ -359,6 +343,16 @@ static void mqttEngineCliCallback(__attribute__((unused)) struct mqtt_connection
     // The data passed to the callback function in this case consists
     // of a message received on a topic the node is subscribed to
     recvMsg = data;
+
+
+    LOG_ERR("RecvMsg: topic='%s', topic_len = %lu), chunk = %s, chunk_len = %u\n", recvMsg->topic,
+           strlen(recvMsg->topic), msg_ptr->payload_chunk, msg_ptr->payload_length);
+
+
+
+
+
+
 
     // Ensure the message to have been received in a consistent
     // MQTT client state, logging and publishing the error otherwise
@@ -399,6 +393,7 @@ static void mqttEngineCliCallback(__attribute__((unused)) struct mqtt_connection
 
     // TODO: Check if necessary, in general called for EVERY subscription acknowledgement
     LOG_DBG("MQTT Client successfully subscribed to the \"SafeTunnels/avgFanRelSpeed\" topic on the broker\n");
+    mqtt_cli_state = MQTT_CLI_STATE_BROKER_SUBSCRIBED;
     break;
 
    /* -------- The MQTT client successfully subscribed to a topic on the MQTT broker ------- */
@@ -489,8 +484,10 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
  LOG_INFO("SafeTunnels sensor node started, MAC = %s\n",nodeID);
 
  // Start the nodes' sensors sampling (as they do not depend on the node's connection status)
- ctimer_set(&C02SamplingTimer, C02_SENSOR_SAMPLING_PERIOD, C02PeriodicSampling, NULL);
- ctimer_set(&tempSamplingTimer, TEMP_SENSOR_SAMPLING_PERIOD, tempPeriodicSampling, NULL);
+
+ // TODO: Disabled for debugging
+ //ctimer_set(&C02SamplingTimer, C02_SENSOR_SAMPLING_PERIOD, C02PeriodicSampling, NULL);
+ //ctimer_set(&tempSamplingTimer, TEMP_SENSOR_SAMPLING_PERIOD, tempPeriodicSampling, NULL);
 
  /* ------------ MQTT Initialization ------------ */
 
@@ -682,7 +679,7 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
 
     // Unknown event
     else
-     LOG_PUB_ERROR(ERR_SENSOR_RECV_WHEN_NOT_SUB,"(%u)",ev)
+     LOG_PUB_ERROR(ERR_SENSOR_MAIN_LOOP_UNKNOWN_EVENT,"(%u)",ev)
   }
 
 
@@ -692,7 +689,7 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
  leds_off(LEDS_NUM_TO_MASK(POWER_LED) | LEDS_NUM_TO_MASK(MQTT_BROKER_COMM_LED));
 
  // Attempt to log and publish the error
- LOG_PUB_ERROR(ERR_SENSOR_RECV_WHEN_NOT_SUB,"(last event= %u)",ev)
+ LOG_PUB_ERROR(ERR_SENSOR_MAIN_LOOP_EXITED,"(last event= %u)",ev)
 
  PROCESS_END()
 }
