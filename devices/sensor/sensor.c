@@ -44,7 +44,7 @@ char MQTTTopicBuf[MQTT_TOPIC_BUF_SIZE];
 char MQTTMsgBuf[MQTT_MESSAGE_BUF_SIZE];
 
 // Periodic timer to check the state of the MQTT client
-static struct etimer mqttCliStatusTimer;
+static struct etimer sensorMainLoopTimer;
 
 // Sensor Values
 unsigned short C02Density = USHRT_MAX;   // C02 Density in parts per million (ppm)
@@ -62,6 +62,11 @@ struct ctimer MQTTBrokerCommLEDBlinkTimer;
 // on (used to prevent disconnection from the broker)
 unsigned long C02LastMQTTUpdateTime = 0;
 unsigned long tempLastMQTTUpdateTime = 0;
+
+// Used to notify the quantities' sampling functions to
+// report a maximum, unsafe value at their next sampling
+static bool simulateMaxC02 = false;
+static bool simulateMaxTemp = false;
 
 // Buffer used to store application errors descriptions
 char errDscr[ERR_DSCR_BUF_SIZE];
@@ -127,7 +132,7 @@ static void MQTTEngineCallback(__attribute__((unused)) struct mqtt_connection* m
      MQTTCliState = MQTT_CLI_STATE_BROKER_SUBSCRIBED;
 
      // Log the successful topic subscription on the broker
-     LOG_DBG("MQTT Client successfully subscribed to the " TOPIC_AVG_FAN_REL_SPEED " topic on the broker\n");
+     LOG_DBG("Subscribed to the " TOPIC_AVG_FAN_REL_SPEED " topic on the broker\n");
      break;
 
     /* -------- The MQTT client successfully subscribed to a topic on the MQTT broker ------- */
@@ -252,7 +257,7 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue, bool qu
       if(mqttCliEngineAPIRes == MQTT_STATUS_OK)
        {
         // Log that the MQTT publishment was successful
-        LOG_INFO("Published updated %s value (%u) to the MQTT broker\n", quantity, quantityValue);
+        LOG_INFO("Submitted updated %s value (%u) to the MQTT broker\n", quantity, quantityValue);
 
         // Blink the communication LED
         ctimer_set(&MQTTBrokerCommLEDBlinkTimer, COMM_LED_BLINK_PERIOD, blinkMQTTBrokerCommLED, NULL);
@@ -296,12 +301,23 @@ static void C02Sampling(__attribute__((unused)) void* ptr)
  {
   unsigned int newC02Density;
 
-  /* ---- TODO: Generate the C02 value depending on the "fanSpeedRel" value ---- */
+  // Check if the CO2 must be simulated to its maximum, unsafe value
+  if(simulateMaxC02)
+   {
+    newC02Density = C02_VALUE_MAX;
+    simulateMaxC02 = false;
+   }
 
-  newC02Density = random_rand();
-  // LOG_DBG("New randomly generated C02 density: %u\n",newC02Density);
+  // Otherwise, sample the C02 normally
+  else
+   {
+    /* ---- TODO: Generate the C02 value depending on the "avgFanRelSpeed" value ---- */
 
-  /* --------------------------------------------------------------------------- */
+    newC02Density = random_rand();
+    // LOG_DBG("New randomly generated C02 density: %u\n",newC02Density);
+
+    /* ------------------------------------------------------------------------------ */
+   }
 
   // Check and attempt to publish the updated C02 value, and, if
   // the publishment was successful, update the last publishment time
@@ -311,8 +327,12 @@ static void C02Sampling(__attribute__((unused)) void* ptr)
   // In any case, update the new C02 Density value
   C02Density = newC02Density;
 
-  // Reset the C02 sampling timer
+  // Restart the C02 sampling timer depending on the sampling mode used for the two quantities
+#ifdef QUANTITIES_SHARED_SAMPLING_PERIOD
+  ctimer_set(&C02SamplingTimer, QUANTITIES_SHARED_SAMPLING_PERIOD, C02Sampling, NULL);
+#else
   ctimer_reset(&C02SamplingTimer);
+#endif
  }
 
 
@@ -321,12 +341,23 @@ static void tempSampling(__attribute__((unused)) void* ptr)
  {
   unsigned int newTemp;
 
-  /* ---- TODO: Generate the temperature value depending on the "fanSpeedRel" value ---- */
+  // Check if the temperature must be simulated to its maximum, unsafe value
+  if(simulateMaxTemp)
+   {
+    newTemp = TEMP_VALUE_MAX;
+    simulateMaxTemp = false;
+   }
 
-  newTemp = random_rand();
-  // LOG_DBG("New randomly generated temperature: %u\n",newTemp);
+   // Otherwise, sample the temperature normally
+  else
+   {
+    /* --- TODO: Generate the temperature value depending on the "avgFanRelSpeed" value --- */
 
-  /* ----------------------------------------------------------------------------------- */
+    newTemp = random_rand();
+    // LOG_DBG("New randomly generated temperature: %u\n",newTemp);
+
+    /* ------------------------------------------------------------------------------------ */
+   }
 
   // Check and attempt to publish the updated temperature value, and, if
   // the publishment was successful, update the last publishment time
@@ -336,8 +367,12 @@ static void tempSampling(__attribute__((unused)) void* ptr)
   // In any case, update the new C02 Density value
   temp = newTemp;
 
-  // Reset the temperature sampling timer
+  // Restart the temperature sampling timer depending on the sampling mode used for the two quantities
+#ifdef QUANTITIES_SHARED_SAMPLING_PERIOD
+  ctimer_set(&tempSamplingTimer, QUANTITIES_SHARED_SAMPLING_PERIOD, tempSampling, NULL);
+#else
   ctimer_reset(&tempSamplingTimer);
+#endif
  }
 
 
@@ -365,7 +400,7 @@ void sensor_MQTT_CLI_STATE_INIT_Callback()
    LOG_ERR("FAILED to initialize the MQTT Client engine (error = %u)", mqttCliEngineAPIRes);
 
   // Reinitialize the MQTT client status timer with the bootstrap period
-  etimer_set(&mqttCliStatusTimer, SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD);
+  etimer_restart(&sensorMainLoopTimer);
  }
 
 void sensor_MQTT_CLI_STATE_ENGINE_OK_Callback()
@@ -392,9 +427,9 @@ void sensor_MQTT_CLI_STATE_ENGINE_OK_Callback()
   else
    if(++RPLWaitingTimes % SENSOR_MQTT_CLI_RPL_WAITING_TIMES_MODULE == 0)
     LOG_DBG("Waiting for the RPL DODAG to converge...\n");
-
+   
   // Reinitialize the MQTT client status timer with the bootstrap period
-  etimer_set(&mqttCliStatusTimer, SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD);
+  etimer_restart(&sensorMainLoopTimer);
  }
 
 
@@ -426,7 +461,7 @@ void sensor_MQTT_CLI_STATE_NET_OK_Callback()
     MQTTCliState = MQTT_CLI_STATE_BROKER_CONNECTING;
 
     // TODO: Test (activated because the process_poll was deactivated in the MQTT engine handler);
-    etimer_set(&mqttCliStatusTimer, SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD);
+    etimer_restart(&sensorMainLoopTimer);
    }
 
    // Otherwise, if the MQTT broker connection has NOT been successfully submitted
@@ -436,7 +471,7 @@ void sensor_MQTT_CLI_STATE_NET_OK_Callback()
     LOG_ERR("FAILED to attempt to connect with the MQTT broker (error = \'%s\')", MQTTEngineAPIResultStr());
 
     // Try again at the next client status timer activation
-    etimer_set(&mqttCliStatusTimer, SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD);
+    etimer_restart(&sensorMainLoopTimer);
    }
  }
 
@@ -465,7 +500,7 @@ void sensor_MQTT_CLI_STATE_BROKER_CONNECTED_Callback()
                   MQTTEngineAPIResultStr(), MQTTCliStateToStr())
 
     // Reinitialize the timer to try again at the next cycle
-    etimer_set(&mqttCliStatusTimer, SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD);
+    etimer_restart(&sensorMainLoopTimer);
    }
  }
 
@@ -520,15 +555,22 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
  // Log that the sensor node has started along with its MAC
  LOG_INFO("SafeTunnels sensor node started, MAC = %s\n",nodeID);
 
- // Start the nodes' sensors sampling (as they do not depend on the node's connection status)
-    ctimer_set(&C02SamplingTimer, C02_SAMPLING_PERIOD, C02Sampling, NULL);
+ /*
+  * As they do not depend on its connection status, start the sensor's
+  * physical quantities sampling depending on the sampling mode uses
+  * (see 'SENSOR SAMPLING MODES' noted in sensor.h, line TODO), uniformly
+  * distributing their sampling instants if using a shared sampling period
+  */
+#ifdef QUANTITIES_SHARED_SAMPLING_PERIOD
+ ctimer_set(&C02SamplingTimer, 0, C02Sampling, NULL);
+ ctimer_set(&tempSamplingTimer, QUANTITIES_SHARED_SAMPLING_PERIOD >> 1, tempSampling, NULL);
+#else
+ ctimer_set(&C02SamplingTimer, C02_SAMPLING_PERIOD, C02Sampling, NULL);
+ ctimer_set(&tempSamplingTimer, TEMP_SAMPLING_PERIOD, tempSampling, NULL);
+#endif
 
-    ctimer_set(&tempSamplingTimer, TEMP_SAMPLING_PERIOD, tempSampling, NULL);
-
- /* ------------ MQTT Initialization ------------ */
-
- // Initialize the MQTT client status timer with the bootstrap period
- etimer_set(&mqttCliStatusTimer, (clock_time_t)SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD);
+ // Initialize the sensor process main loop timer
+ etimer_set(&sensorMainLoopTimer, (clock_time_t)SENSOR_MAIN_LOOP_PERIOD);
 
  /* Sensor Process Main Loop */
  while(1)
@@ -537,7 +579,7 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
    PROCESS_YIELD();
 
    // If the MQTT client status timer has expired, or the process has been explicitly polled
-   if((ev == PROCESS_EVENT_TIMER && data == &mqttCliStatusTimer) || ev == PROCESS_EVENT_POLL)
+   if((ev == PROCESS_EVENT_TIMER && data == &sensorMainLoopTimer) || ev == PROCESS_EVENT_POLL)
     {
      // Depending on the MQTT client current state
      switch(MQTTCliState)
@@ -562,8 +604,7 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
 
        /* ----- The node is currently attempting to connect with the broker (should never be called) ----- */
        case MQTT_CLI_STATE_BROKER_CONNECTING:
-        // TODO: Test (activated because the process_poll was deactivated in the MQTT engine handler);
-        etimer_set(&mqttCliStatusTimer, SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD);
+        etimer_restart(&sensorMainLoopTimer);
         //LOG_WARN("Process main loop in the MQTT_CLI_STATE_BROKER_CONNECTING state (should never happen)\n");
         break;
 
@@ -586,26 +627,20 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
    else
     if(ev == button_hal_press_event)
      {
-      // Log that the C02 and Temperature values have been simulated to their maximum values
-      LOG_INFO("Sampled quantities set to their maximum values (C02Density = %u, temp = %u)\n",C02_VALUE_MAX,TEMP_VALUE_MAX);
+      // Notify the quantities' sampling functions to report
+      // a maximum, unsafe value at their next sampling
+      simulateMaxC02 = true;
+      simulateMaxTemp = true;
 
-      // Set the C02 and Temperature quantities to their maximum "unsafe"
-      // values for the purposes of simulating the service's feedback mechanism
-      C02Density = C02_VALUE_MAX;
-      if(publishMQTTSensorUpdate("C02", C02Density, true, ULONG_MAX))
-       C02LastMQTTUpdateTime = clock_seconds();
-
-      temp = TEMP_VALUE_MAX;
-       if(publishMQTTSensorUpdate("temp", temp, true, ULONG_MAX))
-        tempLastMQTTUpdateTime = clock_seconds();
+      // Log that the C02 and temperature values have been simulated to their maximum, unsafe values
+      LOG_INFO("Sampled quantities simulated to their maximum, unsafe values\n");
      }
 
-    // Unknown event
+    // TODO: continuously passes event 150, check if it also happens in the prof example
+    /* Unknown event
     else
-     ;
-     // TODO: Always passes event 150, check if relevant
-     //LOG_ERR("An unknown event was passed to the sensor main loop (%u)\n",ev);
-     //LOG_PUB_ERROR(ERR_SENSOR_MAIN_LOOP_UNKNOWN_EVENT,"(event = %u)",ev)
+     LOG_ERR("An unknown event was passed to the sensor main loop (%u)\n",ev);
+    */
   }
 
 

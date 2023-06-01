@@ -31,21 +31,43 @@ PROCESS_NAME(mqtt_process);
 #define MQTT_MESSAGE_BUF_SIZE 350  // Must be large so as to also hold application error descriptions
 
 // MQTT client status timer periods
-#define SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD (1 * CLOCK_SECOND)
+#define SENSOR_MAIN_LOOP_PERIOD (1 * CLOCK_SECOND)
 #define SENSOR_MQTT_CLI_RPL_WAITING_TIMES_MODULE 30
 
-// Sensor Quantities Sampling Periods
-//
-// NOTE: Using two independent timers for sampling the two quantities
-//       causes, due to the MQTT engine limitation of allowing a single
-//       pending message at a time, the publishment of one of the two
-//       quantities to surely fail with a MQTT_STATUS_OUT_QUEUE_FULL
-//       error close to times integer multiple of their individual periods
-//
-//       t '= n * (CO2_SAMPLING_PERIOD * TEMP_PERIOD) -> MQTT_STATUS_OUT_QUEUE_FULL
-//
-#define C02_SAMPLING_PERIOD (16 * CLOCK_SECOND)
-#define TEMP_SAMPLING_PERIOD (10 * CLOCK_SECOND)
+
+/**
+ * SENSOR SAMPLING MODES
+ * ---------------------
+ * The sensor can sample the physical quantities (C02 and temperature) by using:
+ *
+ *  1) A shared period for both quantities
+ *  2) Different, independent periods for the two quantities
+ *
+ * Where using different periods for sampling the two quantities causes, due to
+ * the Contiki-NG MQTT engine limitation of allowing a single outbound message to
+ *  be published at a time (as the "uint8_t out_queue_full" variable defined in
+ * the "mqtt.h" file, line 544 is in fact used as a boolean), the publishment of
+ * one of the two quantities to most likely fail with a MQTT_STATUS_OUT_QUEUE_FULL
+ * error at times around integer multiples of their individual periods
+ *
+ *              t '= n * (CO2_SAMPLING_PERIOD * TEMP_SAMPLING_PERIOD)
+ *                 => MQTT_STATUS_OUT_QUEUE_FULL
+ *
+ * A problem that can be avoided by uniformly distributing the two quantities'
+ * sampling instants within a shared sampling period
+ */
+
+// Sampling mode 1) (shared period for both quantities)
+#define QUANTITIES_SHARED_SAMPLING_PERIOD (12 * CLOCK_SECOND)
+
+// Sampling mode 2) (different, independent periods for the two quantities)
+#ifndef QUANTITIES_SHARED_SAMPLING_PERIOD
+ #define C02_SAMPLING_PERIOD (16 * CLOCK_SECOND)
+ #define TEMP_SAMPLING_PERIOD (10 * CLOCK_SECOND)
+#endif
+
+
+
 
 // Communication LED blinking period and number
 #define COMM_LED_BLINK_PERIOD (0.1 * CLOCK_SECOND)
