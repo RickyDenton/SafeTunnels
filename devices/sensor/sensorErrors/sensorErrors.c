@@ -24,8 +24,13 @@ extern uint8_t MQTTCliState;
 extern mqtt_status_t mqttCliEngineAPIRes;
 extern char MQTTTopicBuf[];
 extern char MQTTMsgBuf[];
+extern char errDscr[];
 extern struct mqtt_connection mqttConn;
 extern struct ctimer MQTTBrokerCommLEDBlinkTimer;
+
+
+
+
 
 void blinkMQTTBrokerCommLED(__attribute__((unused)) void* ptr);
 
@@ -57,14 +62,6 @@ char* MQTTCliStateToStr()
 
     case MQTT_CLI_STATE_BROKER_CONNECTED:
      sprintf(MQTTCliStateStr,"MQTT_CLI_STATE_BROKER_CONNECTED");
-     break;
-
-    case MQTT_CLI_STATE_BROKER_UNSUBSCRIBED:
-     sprintf(MQTTCliStateStr,"MQTT_CLI_STATE_BROKER_UNSUBSCRIBED");
-     break;
-
-    case MQTT_CLI_STATE_BROKER_SUBSCRIBING:
-     sprintf(MQTTCliStateStr,"MQTT_CLI_STATE_BROKER_SUBSCRIBING");
      break;
 
     case MQTT_CLI_STATE_BROKER_SUBSCRIBED:
@@ -126,12 +123,71 @@ char* MQTTEngineAPIResultStr()
  }
 
 
-void logPublishError(unsigned short sensorErrCode)
+char* sensorErrCodeToStr(enum sensorErrCode sensErrCode)
+ {
+  // Stores a sensor error code as a string
+  static char sensorErrCodeStr[105];
+
+  // Stringify the "sensErrCode" enum into "sensorErrCodeStr"
+  switch(sensErrCode)
+   {
+    case ERR_SENSOR_QUANTITY_PUB_FAILED:
+     sprintf(sensorErrCodeStr, "Failed to publish a sampled quantity");
+     break;
+
+    case ERR_SENSOR_AVGFANRELSPEED_SUB_FAILED:
+     sprintf(sensorErrCodeStr, "Failed to subscribe on the \"SafeTunnels/avgFanRelSpeed\" topic");
+     break;
+
+    case ERR_SENSOR_MQTT_RECV_UNKNOWN_TOPIC:
+     sprintf(sensorErrCodeStr, "The sensor received a MQTT message on a topic it is not subscribed on");
+     break;
+
+    case ERR_SENSOR_AVGFANRELSPEED_INVALID:
+     sprintf(sensorErrCodeStr, "The sensor received an invalid \"fanRelSpeed\" value");
+     break;
+
+    case ERR_SENSOR_MQTT_CONNECTED_IN_INVALID_STATE:
+     sprintf(sensorErrCodeStr, "The sensor has connected with the MQTT broker when not in the \'MQTT_CLI_STATE_BROKER_CONNECTING\' state");
+     break;
+
+    case ERR_SENSOR_MQTT_DISCONNECTED:
+     sprintf(sensorErrCodeStr, "The sensor has disconnected from the MQTT broker");
+     break;
+
+    case ERR_SENSOR_MQTT_CLI_CALLBACK_UNKNOWN_TYPE:
+     sprintf(sensorErrCodeStr, "The MQTT engine invoked a callback of unknown type");
+     break;
+
+    case ERR_SENSOR_MAIN_LOOP_UNKNOWN_EVENT:
+     sprintf(sensorErrCodeStr, "An unknown event was passed to the sensor main loop");
+     break;
+
+    case ERR_SENSOR_MAIN_LOOP_UNKNOWN_MQTT_CLI_STATE:
+     sprintf(sensorErrCodeStr, "Unknown MQTT client state in the sensor process main loop");
+     break;
+
+    case ERR_SENSOR_MAIN_LOOP_EXITED:
+     sprintf(sensorErrCodeStr, "Sensor process exited from its main loop");
+     break;
+
+    /* Unknown sensor error code */
+    default:
+     sprintf(sensorErrCodeStr, "UNKNOWN SENSOR ERROR");
+    break;
+   }
+
+  // Return the stringyfied sensor error code
+  return sensorErrCodeStr;
+ }
+
+
+void logPublishError(enum sensorErrCode sensErrCode)
  {
   // If the node's MQTT client is NOT connected with the MQTT
   // broker, just log the error and that it couldn't be published
   if(MQTTCliState < MQTT_CLI_STATE_BROKER_CONNECTED)
-   LOG_ERR("%s %s (state = \'%s\') (the error couldn't be published as the MQTT client is not connected with the broker)\n",sensorErrCodesDscr[sensorErrCode],errDscr,MQTTCliStateToStr());
+   LOG_ERR("%s %s (MQTTCliState = \'%s\') (the error couldn't be published as the MQTT client is not connected with the broker)\n",sensorErrCodeToStr(sensErrCode),errDscr,MQTTCliStateToStr());
 
    // Otherwise, If the node's MQTT client IS connected with the MQTT broker
   else
@@ -143,17 +199,17 @@ void logPublishError(unsigned short sensorErrCode)
     // an additional description was provided in the "errDscr" buffer
     if(errDscr[0] != '\0')
      snprintf(MQTTMsgBuf, MQTT_MESSAGE_BUF_SIZE, "{"
-                                                     " \"ID\": \"%s\""
-                                                     " \"errCode\": %u"
-                                                     " \"errDscr\": \"%s\""
-                                                     " \"MQTTCliState\": \"%u\""
-                                                     " }", nodeID, sensorErrCode, errDscr, MQTTCliState);
+                                                     " \"ID\": \"%s\","
+                                                     " \"errCode\": %u,"
+                                                     " \"errDscr\": \"%s\","
+                                                     " \"MQTTCliState\": %u"
+                                                     " }", nodeID, sensErrCode, errDscr, MQTTCliState);
     else
      snprintf(MQTTMsgBuf, MQTT_MESSAGE_BUF_SIZE, "{"
-                                                     " \"ID\": \"%s\""
-                                                     " \"errCode\": %u"
-                                                     " \"MQTTCliState\": \"%u\""
-                                                     " }", nodeID, sensorErrCode, MQTTCliState);
+                                                     " \"ID\": \"%s\","
+                                                     " \"errCode\": %u,"
+                                                     " \"MQTTCliState\": %u"
+                                                     " }", nodeID, sensErrCode, MQTTCliState);
 
     // Attempt to publish the error on the MQTT broker
     mqttCliEngineAPIRes = mqtt_publish(&mqttConn, NULL, MQTTTopicBuf, (uint8_t*)MQTTMsgBuf, strlen(MQTTMsgBuf), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
@@ -165,11 +221,11 @@ void logPublishError(unsigned short sensorErrCode)
       ctimer_set(&MQTTBrokerCommLEDBlinkTimer, COMM_LED_BLINK_PERIOD, blinkMQTTBrokerCommLED, NULL);
 
       // Log the error locally, informing that it has also been published
-      LOG_ERR("%s %s (MQTTCliState = \'%s\') (submitted to the broker)\n",sensorErrCodesDscr[sensorErrCode],MQTTCliStateToStr(),errDscr);
+      LOG_ERR("%s %s (MQTTCliState = \'%s\') (submitted to the broker)\n",sensorErrCodeToStr(sensErrCode),errDscr,MQTTCliStateToStr());
      }
 
      // Otherwise just log the error locally, informing that it couldn't be published
     else
-     LOG_ERR("%s %s (MQTTCliState = \'%s\') (failed to submit to the broker for error \'%s\')\n", sensorErrCodesDscr[sensorErrCode], errDscr, MQTTCliStateToStr(), MQTTEngineAPIResultStr());
+     LOG_ERR("%s %s (MQTTCliState = \'%s\') (failed to submit to the broker for error \'%s\')\n", sensorErrCodeToStr(sensErrCode), errDscr, MQTTCliStateToStr(), MQTTEngineAPIResultStr());
    }
  }

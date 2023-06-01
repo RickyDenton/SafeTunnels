@@ -5,6 +5,7 @@
 
 PROCESS_NAME(safetunnels_sensor_process);
 
+PROCESS_NAME(mqtt_process);
 
 /* ------------------------------ MQTT Parameters ------------------------------ */
 #define MQTT_BROKER_IPV6_ADDR "fd00::1"              // MQTT Broker IP address
@@ -33,8 +34,8 @@ PROCESS_NAME(safetunnels_sensor_process);
 
 
 // MQTT client status timer periods
-#define SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD  (0.3 * CLOCK_SECOND)
-#define SENSOR_MQTT_CLI_RPL_WAITING_TIMES_MODULE 10
+#define SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD (1 * CLOCK_SECOND)
+#define SENSOR_MQTT_CLI_RPL_WAITING_TIMES_MODULE 30
 
 // TODO: shouldn-t be necessary
 // #define MQTT_CLI_STATUS_TIMER_PERIOD_SUBSCRIBED CLOCK_SECOND)
@@ -45,7 +46,7 @@ PROCESS_NAME(safetunnels_sensor_process);
 #define TEMP_SENSOR_SAMPLING_PERIOD (15 * CLOCK_SECOND) // (5 * CLOCK_SECOND)
 
 // Communication LED blinking period and number
-#define COMM_LED_BLINK_PERIOD (0.3 * CLOCK_SECOND)
+#define COMM_LED_BLINK_PERIOD (0.1 * CLOCK_SECOND)
 #define COMM_LED_BLINK_TIMES 3
 
 
@@ -72,8 +73,6 @@ enum MQTTCliState
   MQTT_CLI_STATE_NET_OK,
   MQTT_CLI_STATE_BROKER_CONNECTING,
   MQTT_CLI_STATE_BROKER_CONNECTED,
-  MQTT_CLI_STATE_BROKER_UNSUBSCRIBED,
-  MQTT_CLI_STATE_BROKER_SUBSCRIBING,
   MQTT_CLI_STATE_BROKER_SUBSCRIBED
  };
 

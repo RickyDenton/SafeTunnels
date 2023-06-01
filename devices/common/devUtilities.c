@@ -12,12 +12,16 @@
 #include "devUtilities.h"
 
 
+// The node ID consisting of its stringyfied MAC address
+char nodeID[MAC_ADDRESS_STR_SIZE];
+
+
 /* =========================== FUNCTIONS DEFINITIONS =========================== */
 
-// Print node MAC to buffer
-void writeNodeMAC(char* dest)
+// Initializes the node's ID as its stringyfied MAC address
+void initNodeID()
  {
-  snprintf(dest, MAC_ADDRESS_SIZE, "%02x%02x%02x%02x%02x%02x",
+  snprintf(nodeID, sizeof(nodeID), "%02x:%02x:%02x:%02x:%02x:%02x",
            linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
            linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
            linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);

@@ -4,8 +4,8 @@
 // Error descriptions buffer size
 #define ERR_DSCR_BUF_SIZE 200
 
-// Buffer used to store application errors descriptions
-static char errDscr[ERR_DSCR_BUF_SIZE];
+
+
 
 enum sensorErrCode
  {
@@ -20,6 +20,9 @@ enum sensorErrCode
 
   // The sensor has connected with the MQTT broker when not in the 'MQTT_CLI_STATE_BROKER_CONNECTING' state
   ERR_SENSOR_MQTT_CONNECTED_IN_INVALID_STATE,
+
+
+
 
   // The sensor has disconnected from the MQTT broker
   // NOTE: this error is also published automatically by the broker as the sensor's "last will"
@@ -42,43 +45,6 @@ enum sensorErrCode
  };
 
 
-static const char* sensorErrCodesDscr[] =
-  {
-    // ERR_SENSOR_QUANTITY_PUB_FAILED
-    "The sensor failed to publish a sampled quantity",
-
-    // ERR_SENSOR_AVGFANRELSPEED_SUB_FAILED
-    "The sensor failed to subscribe on the \"SafeTunnels/avgFanRelSpeed\" topic",
-
-    // ERR_SENSOR_MQTT_RECV_UNKNOWN_TOPIC
-    "The sensor received a MQTT message on a topic it is not subscribed on",
-
-    // ERR_SENSOR_AVGFANRELSPEED_INVALID
-    "The sensor received an invalid \"fanRelSpeed\" value",
-
-    // ERR_SENSOR_MQTT_CONNECTED_IN_INVALID_STATE,
-    "The sensor has connected with the MQTT broker when not in the \'MQTT_CLI_STATE_BROKER_CONNECTING\' state",
-
-    // ERR_SENSOR_MQTT_UNSUB_TOPIC
-    "The MQTT client unsubscribed from an unknown topic",
-
-    // ERR_SENSOR_MQTT_DISCONNECTED
-    "The sensor has disconnected from the MQTT broker",
-
-    // ERR_SENSOR_MQTT_CLI_CALLBACK_UNKNOWN_TYPE
-    "The MQTT engine invoked a callback of unknown type",
-
-    // ERR_SENSOR_MAIN_LOOP_UNKNOWN_EVENT
-    "An unknown event was passed to the sensor main loop",
-
-    // ERR_SENSOR_MAIN_LOOP_UNKNOWN_MQTT_CLI_STATE
-    "Unknown MQTT client state in the sensor process main loop",
-
-    // ERR_SENSOR_MAIN_LOOP_EXITED
-    "Sensor process exited from its main loop"
-  };
-
-
 // WORKING GOOD
 //#define LOG_PUB_ERROR(sensorErrCode, f_, ...) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, (f_), __VA_ARGS__); logPublishError(sensorErrCode); }
 
@@ -88,11 +54,11 @@ static const char* sensorErrCodesDscr[] =
 
 // Up to 4 snprintf() variadic arguments (a bit crude, but works)
 #define LOG_PUB_CODE_ONLY(sensorErrCode) { errDscr[0] = '\0'; logPublishError(sensorErrCode); }
-#define LOG_PUB_ERROR_DSCR(sensorErrCode,dscr) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, (dscr)); logPublishError(sensorErrCode); }
-#define LOG_PUB_ERROR_DSCR_1PARAM(sensorErrCode,dscr,param1) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, (dscr), param1); logPublishError(sensorErrCode); }
-#define LOG_PUB_ERROR_DSCR_2PARAM(sensorErrCode,dscr,param1,param2) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, (dscr), param1, param2); logPublishError(sensorErrCode); }
-#define LOG_PUB_ERROR_DSCR_3PARAM(sensorErrCode,dscr,param1,param2,param3) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, (dscr), param1, param2, param3); logPublishError(sensorErrCode); }
-#define LOG_PUB_ERROR_DSCR_4PARAM(sensorErrCode,dscr,param1,param2,param3,param4) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, (dscr), param1, param2, param3, param4); logPublishError(sensorErrCode); }
+#define LOG_PUB_ERROR_DSCR(sensorErrCode,dscr) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, dscr); logPublishError(sensorErrCode); }
+#define LOG_PUB_ERROR_DSCR_1PARAM(sensorErrCode,dscr,param1) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, dscr, param1); logPublishError(sensorErrCode); }
+#define LOG_PUB_ERROR_DSCR_2PARAM(sensorErrCode,dscr,param1,param2) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, dscr, param1, param2); logPublishError(sensorErrCode); }
+#define LOG_PUB_ERROR_DSCR_3PARAM(sensorErrCode,dscr,param1,param2,param3) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, dscr, param1, param2, param3); logPublishError(sensorErrCode); }
+#define LOG_PUB_ERROR_DSCR_4PARAM(sensorErrCode,dscr,param1,param2,param3,param4) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, dscr, param1, param2, param3, param4); logPublishError(sensorErrCode); }
 
 #define GET_LOG_PUB_ERROR_MACRO(_1,_2,_3,_4,_5,_6,LOG_PUB_ERROR_MACRO,...) LOG_PUB_ERROR_MACRO
 #define LOG_PUB_ERROR(...) GET_LOG_PUB_ERROR_MACRO(__VA_ARGS__,LOG_PUB_ERROR_DSCR_4PARAM,LOG_PUB_ERROR_DSCR_3PARAM,LOG_PUB_ERROR_DSCR_2PARAM,LOG_PUB_ERROR_DSCR_1PARAM,LOG_PUB_ERROR_DSCR,LOG_PUB_CODE_ONLY)(__VA_ARGS__)
@@ -129,6 +95,6 @@ static const char* sensorErrCodesDscr[] =
 
 char* MQTTCliStateToStr();
 char* MQTTEngineAPIResultStr();
-void logPublishError(unsigned short sensorErrCode);
+void logPublishError(enum sensorErrCode sensorErrCode);
 
 #endif //SAFETUNNELS_SENSORERRORS_H
