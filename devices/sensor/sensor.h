@@ -25,25 +25,27 @@ PROCESS_NAME(mqtt_process);
 // TCP Parameters
 #define MQTT_MAX_TCP_SEGMENT_SIZE    32
 
-// TODO: Check if necessary (mqtt_broker_ipv6_addr[CONFIG_IP_ADDR_STR_LEN])
-// #define CONFIG_IP_ADDR_STR_LEN       64
 
 // MQTT topics and messages buffer sizes
 #define MQTT_TOPIC_BUF_SIZE 40
 #define MQTT_MESSAGE_BUF_SIZE 350  // Must be large so as to also hold application error descriptions
 
-
 // MQTT client status timer periods
 #define SENSOR_MQTT_CLI_STATUS_LOOP_TIMER_PERIOD (1 * CLOCK_SECOND)
 #define SENSOR_MQTT_CLI_RPL_WAITING_TIMES_MODULE 30
 
-// TODO: shouldn-t be necessary
-// #define MQTT_CLI_STATUS_TIMER_PERIOD_SUBSCRIBED CLOCK_SECOND)
-
-
-// Sensors Sampling Period
-#define C02_SENSOR_SAMPLING_PERIOD (20 * CLOCK_SECOND) // (8 * CLOCK_SECOND)
-#define TEMP_SENSOR_SAMPLING_PERIOD (15 * CLOCK_SECOND) // (5 * CLOCK_SECOND)
+// Sensor Quantities Sampling Periods
+//
+// NOTE: Using two independent timers for sampling the two quantities
+//       causes, due to the MQTT engine limitation of allowing a single
+//       pending message at a time, the publishment of one of the two
+//       quantities to surely fail with a MQTT_STATUS_OUT_QUEUE_FULL
+//       error close to times integer multiple of their individual periods
+//
+//       t '= n * (CO2_SAMPLING_PERIOD * TEMP_PERIOD) -> MQTT_STATUS_OUT_QUEUE_FULL
+//
+#define C02_SAMPLING_PERIOD (16 * CLOCK_SECOND)
+#define TEMP_SAMPLING_PERIOD (10 * CLOCK_SECOND)
 
 // Communication LED blinking period and number
 #define COMM_LED_BLINK_PERIOD (0.1 * CLOCK_SECOND)

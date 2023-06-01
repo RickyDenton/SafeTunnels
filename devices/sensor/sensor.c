@@ -292,7 +292,7 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue, bool qu
 
 
 // C02 periodic sampling function (timer)
-static void C02PeriodicSampling(__attribute__((unused)) void* ptr)
+static void C02Sampling(__attribute__((unused)) void* ptr)
  {
   unsigned int newC02Density;
 
@@ -317,7 +317,7 @@ static void C02PeriodicSampling(__attribute__((unused)) void* ptr)
 
 
 // Temperature periodic sampling function (timer)
-static void tempPeriodicSampling(__attribute__((unused)) void* ptr)
+static void tempSampling(__attribute__((unused)) void* ptr)
  {
   unsigned int newTemp;
 
@@ -521,8 +521,9 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
  LOG_INFO("SafeTunnels sensor node started, MAC = %s\n",nodeID);
 
  // Start the nodes' sensors sampling (as they do not depend on the node's connection status)
- ctimer_set(&C02SamplingTimer, C02_SENSOR_SAMPLING_PERIOD, C02PeriodicSampling, NULL);
- ctimer_set(&tempSamplingTimer, TEMP_SENSOR_SAMPLING_PERIOD, tempPeriodicSampling, NULL);
+    ctimer_set(&C02SamplingTimer, C02_SAMPLING_PERIOD, C02Sampling, NULL);
+
+    ctimer_set(&tempSamplingTimer, TEMP_SAMPLING_PERIOD, tempSampling, NULL);
 
  /* ------------ MQTT Initialization ------------ */
 
