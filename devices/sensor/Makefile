@@ -1,8 +1,7 @@
 CONTIKI_PROJECT = safetunnels-sensor-node
 all: $(CONTIKI_PROJECT)
 
-# Include the "sensorErrors" and "common" folders
-MODULES_REL += ./sensorErrors
+# Include the "common" folder
 MODULES_REL += ../common
 
 CONTIKI = /home/user/contiki-ng
@@ -16,5 +15,5 @@ MODULES_REL += arch/platform/$(TARGET)
 
 include $(CONTIKI)/Makefile.include
 
-# Testing
-CFLAGS += -Wno-error
+# Testing purposes
+# CFLAGS += -Wno-error
