@@ -25,6 +25,10 @@
 PROCESS(safetunnels_sensor_process, "SafeTunnels Sensor Process");
 AUTOSTART_PROCESSES(&safetunnels_sensor_process);
 
+
+// Buffer used to store application errors descriptions
+extern char errDscr[];
+
 /* ============================== GLOBAL VARIABLES ============================== */
 
 // MQTT Broker IPv6 Address
@@ -37,7 +41,7 @@ struct mqtt_connection mqttConn;
 uint8_t MQTTCliState = MQTT_CLI_STATE_INIT;
 
 // Stores the result of a MQTT client engine API call
-mqtt_status_t mqttCliEngineAPIRes;
+mqtt_status_t MQTTEngineAPIRes;
 
 // Buffers used to store MQTT topics and messages
 char MQTTTopicBuf[MQTT_TOPIC_BUF_SIZE];
@@ -68,8 +72,8 @@ unsigned long tempLastMQTTUpdateTime = 0;
 static bool simulateMaxC02 = false;
 static bool simulateMaxTemp = false;
 
-// Buffer used to store application errors descriptions
-char errDscr[ERR_DSCR_BUF_SIZE];
+
+
 
 /* =========================== FUNCTIONS DEFINITIONS =========================== */
 
@@ -94,7 +98,7 @@ static void MQTTEngineCallback(__attribute__((unused)) struct mqtt_connection* m
 
      // This event can be received only with the MQTT client in the "MQTT_CLI_STATE_BROKER_CONNECTING" state
      if(MQTTCliState != MQTT_CLI_STATE_BROKER_CONNECTING)
-      LOG_PUB_ERROR(ERR_SENSOR_MQTT_CONNECTED_IN_INVALID_STATE)
+      LOG_PUB_ERROR(ERR_SENSOR_MQTT_CONNECTED_NOT_CONNECTING)
 
      // Update the MQTT client state
      MQTTCliState = MQTT_CLI_STATE_BROKER_CONNECTED;
@@ -182,7 +186,7 @@ static void MQTTEngineCallback(__attribute__((unused)) struct mqtt_connection* m
      break;
 
     default:
-     LOG_PUB_ERROR(ERR_SENSOR_MQTT_CLI_CALLBACK_UNKNOWN_TYPE,"(%u)",event)
+     LOG_PUB_ERROR(ERR_SENSOR_MQTT_ENGINE_UNKNOWN_CALLBACK_TYPE, "(%u)", event)
      break;
    }
  }
@@ -251,10 +255,10 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue, bool qu
                " }", nodeID, quantity, quantityValue);
 
       // Attempt to publish the message on the topic
-      mqttCliEngineAPIRes = mqtt_publish(&mqttConn, NULL, MQTTTopicBuf, (uint8_t*)MQTTMsgBuf, strlen(MQTTMsgBuf), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+      MQTTEngineAPIRes = mqtt_publish(&mqttConn, NULL, MQTTTopicBuf, (uint8_t*)MQTTMsgBuf, strlen(MQTTMsgBuf), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
 
       // If the MQTT publishment was successful
-      if(mqttCliEngineAPIRes == MQTT_STATUS_OK)
+      if(MQTTEngineAPIRes == MQTT_STATUS_OK)
        {
         // Log that the MQTT publishment was successful
         LOG_INFO("Submitted updated %s value (%u) to the MQTT broker\n", quantity, quantityValue);
@@ -271,12 +275,12 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue, bool qu
        {
         // If the MQTT publishment failed for a MQTT_STATUS_OUT_QUEUE_FULL error,
         // just log it, as attempting to publishing it would result in the same error
-        if(mqttCliEngineAPIRes == MQTT_STATUS_OUT_QUEUE_FULL)
+        if(MQTTEngineAPIRes == MQTT_STATUS_OUT_QUEUE_FULL)
          LOG_ERR("Failed to publish updated %s value (%u) because the MQTT outbound queue is full (MQTT_STATUS_OUT_QUEUE_FULL) \n", quantity, quantityValue);
 
         // Otherwise, log the error and attempt to publish it
         else
-         LOG_PUB_ERROR(ERR_SENSOR_QUANTITY_PUB_FAILED, "(%s = %u, error = \'%s\', MQTTCliState = \'%s\')", quantity, quantityValue, MQTTEngineAPIResultStr(),MQTTCliStateToStr())
+         LOG_PUB_ERROR(ERR_SENSOR_PUB_QUANTITY_FAILED, "(%s = %u, error = \'%s\')", quantity, quantityValue, MQTTEngineAPIResultStr())
 
         // Return that the MQTT publishment was NOT successful
         return false;
@@ -313,7 +317,10 @@ static void C02Sampling(__attribute__((unused)) void* ptr)
    {
     /* ---- TODO: Generate the C02 value depending on the "avgFanRelSpeed" value ---- */
 
-    newC02Density = random_rand();
+    // TODO:  Test
+    // newC02Density = random_rand();
+    newC02Density = 30;
+
     // LOG_DBG("New randomly generated C02 density: %u\n",newC02Density);
 
     /* ------------------------------------------------------------------------------ */
@@ -353,7 +360,10 @@ static void tempSampling(__attribute__((unused)) void* ptr)
    {
     /* --- TODO: Generate the temperature value depending on the "avgFanRelSpeed" value --- */
 
-    newTemp = random_rand();
+    // TODO: Test
+    // newTemp = random_rand();
+    newTemp = 20;
+
     // LOG_DBG("New randomly generated temperature: %u\n",newTemp);
 
     /* ------------------------------------------------------------------------------------ */
@@ -380,10 +390,10 @@ static void tempSampling(__attribute__((unused)) void* ptr)
 void sensor_MQTT_CLI_STATE_INIT_Callback()
  {
   // Attempt to initialize the MQTT client engine
-  mqttCliEngineAPIRes = mqtt_register(&mqttConn, &safetunnels_sensor_process, nodeID, MQTTEngineCallback, MQTT_MAX_TCP_SEGMENT_SIZE);
+  MQTTEngineAPIRes = mqtt_register(&mqttConn, &safetunnels_sensor_process, nodeID, MQTTEngineCallback, MQTT_MAX_TCP_SEGMENT_SIZE);
 
   // If the MQTT client engine initialization was successful
-  if(mqttCliEngineAPIRes == MQTT_STATUS_OK)
+  if(MQTTEngineAPIRes == MQTT_STATUS_OK)
    {
     // Update the MQTT client state
     MQTTCliState = MQTT_CLI_STATE_ENGINE_OK;
@@ -397,7 +407,7 @@ void sensor_MQTT_CLI_STATE_INIT_Callback()
    // Otherwise, if the MQTT client engine initialization was NOT successful,
    // log the error (and try again at the next client status timer activation)
   else
-   LOG_ERR("FAILED to initialize the MQTT Client engine (error = %u)", mqttCliEngineAPIRes);
+   LOG_ERR("FAILED to initialize the MQTT Client engine (error = %u)", MQTTEngineAPIRes);
 
   // Reinitialize the MQTT client status timer with the bootstrap period
   etimer_restart(&sensorMainLoopTimer);
@@ -449,10 +459,10 @@ void sensor_MQTT_CLI_STATE_NET_OK_Callback()
   mqtt_set_last_will(&mqttConn, (char*)MQTTTopicBuf, MQTTMsgBuf, MQTT_QOS_LEVEL_0);
 
   // Attempt to connect with the MQTT broker
-  mqttCliEngineAPIRes = mqtt_connect(&mqttConn, (char*)mqtt_broker_ipv6_addr, MQTT_BROKER_DEFAULT_PORT, MQTT_BROKER_KEEPALIVE_TIMEOUT, MQTT_CLEAN_SESSION_ON);
+  MQTTEngineAPIRes = mqtt_connect(&mqttConn, (char*)mqtt_broker_ipv6_addr, MQTT_BROKER_DEFAULT_PORT, MQTT_BROKER_KEEPALIVE_TIMEOUT, MQTT_CLEAN_SESSION_ON);
 
   // If the MQTT broker connection has been successfully submitted
-  if(mqttCliEngineAPIRes == MQTT_STATUS_OK)
+  if(MQTTEngineAPIRes == MQTT_STATUS_OK)
    {
     // Log that the MQTT client is attempting to connect with the MQTT broker
     LOG_DBG("Attempting to connect with the MQTT broker @%s...\n",mqtt_broker_ipv6_addr);
@@ -480,10 +490,10 @@ void sensor_MQTT_CLI_STATE_BROKER_CONNECTED_Callback()
  {
   // Attempt to subscribe to the TOPIC_AVG_FAN_REL_SPEED topic
   snprintf(MQTTTopicBuf, sizeof(MQTTTopicBuf), TOPIC_AVG_FAN_REL_SPEED);
-  mqttCliEngineAPIRes = mqtt_subscribe(&mqttConn, NULL, MQTTTopicBuf, MQTT_QOS_LEVEL_0);
+  MQTTEngineAPIRes = mqtt_subscribe(&mqttConn, NULL, MQTTTopicBuf, MQTT_QOS_LEVEL_0);
 
   // If the topic subscription submission was successful
-  if(mqttCliEngineAPIRes == MQTT_STATUS_OK)
+  if(MQTTEngineAPIRes == MQTT_STATUS_OK)
    {
     // Log the successful submission
     LOG_DBG("Submitted subscription to the " TOPIC_AVG_FAN_REL_SPEED " topic\n");
@@ -496,8 +506,8 @@ void sensor_MQTT_CLI_STATE_BROKER_CONNECTED_Callback()
   else
    {
     // Log and attempt to publish the error
-    LOG_PUB_ERROR(ERR_SENSOR_AVGFANRELSPEED_SUB_FAILED, "(error = \'%s\', MQTTCliState = \'%s\')",
-                  MQTTEngineAPIResultStr(), MQTTCliStateToStr())
+    LOG_PUB_ERROR(ERR_SENSOR_SUB_AVGFANRELSPEED_FAILED, "(error = \'%s\')",
+                  MQTTEngineAPIResultStr())
 
     // Reinitialize the timer to try again at the next cycle
     etimer_restart(&sensorMainLoopTimer);
@@ -515,7 +525,7 @@ void sensor_MQTT_CLI_STATE_BROKER_SUBSCRIBED_Callback()
   // Ensure the received MQTT message topic to consist of the only TOPIC_AVG_FAN_REL_SPEED
   // topic a sensor can be subscribed to, logging and publishing the error otherwise
   if(strncmp(MQTTTopicBuf, TOPIC_AVG_FAN_REL_SPEED, sizeof(MQTTTopicBuf)) != 0)
-   LOG_PUB_ERROR(ERR_SENSOR_MQTT_RECV_UNKNOWN_TOPIC, "(topic = %s, msg = %.100s)", MQTTTopicBuf, MQTTMsgBuf)
+   LOG_PUB_ERROR(ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC, "(topic = %s, msg = %.100s)", MQTTTopicBuf, MQTTMsgBuf)
   else
    {
     // Interpret the message's contents as an unsigned (long) integer
@@ -524,7 +534,7 @@ void sensor_MQTT_CLI_STATE_BROKER_SUBSCRIBED_Callback()
     // Ensure the received average fan relative speed value to
     // be valid, logging and publishing the error otherwise
     if(recvFanSpeedRelative > 100)
-     LOG_PUB_ERROR(ERR_SENSOR_AVGFANRELSPEED_INVALID, "(%lu > 100)", recvFanSpeedRelative)
+     LOG_PUB_ERROR(ERR_SENSOR_RECV_INVALID_AVGFANRELSPEED, "(%lu > 100)", recvFanSpeedRelative)
     else
      {
       // Update the "avgFanRelSpeed" to the received value
@@ -636,8 +646,12 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
       LOG_INFO("Sampled quantities simulated to their maximum, unsafe values\n");
      }
 
-    // TODO: continuously passes event 150, check if it also happens in the prof example
-    /* Unknown event
+    /*
+     * NOTE: Checking for unknown events passed by the process has been
+     *       disabled due to the OS repeatedly passing event '150'
+     *       (which also occurs in the "mqtt_client.c" course example)
+     *
+
     else
      LOG_ERR("An unknown event was passed to the sensor main loop (%u)\n",ev);
     */
