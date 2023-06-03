@@ -11,6 +11,8 @@ include_directories(${CONTIKI}/os)
 include_directories(${CONTIKI}/os/lib)
 include_directories(${CONTIKI}/arch/platform/cooja)
 include_directories(${CONTIKI}/os/net/app-layer/mqtt)
+include_directories(${CONTIKI}/os/net/app-layer/coap)
+
 
 #include_directories(/home/osboxes/contiki-ng/os)
 #include_directories(/home/osboxes/contiki-ng/os/sys)
@@ -32,4 +34,4 @@ add_executable(SafeTunnels
         devices/border-router/border-router.c
         devices/border-router/project-conf.h
         devices/sensor/project-conf.h
-        devices/sensor/sensor.c devices/sensor/sensor.h devices/common/devUtilities.c devices/common/devUtilities.h devices/sensor/sensorErrors/sensorErrors.c devices/sensor/sensorErrors/sensorErrors.h)
+        devices/sensor/sensor.c devices/sensor/sensor.h devices/common/devUtilities.c devices/common/devUtilities.h devices/actuator/actuator.c devices/actuator/actuator.h devices/actuator/actuator.h devices/actuator/actuator.c devices/actuator/actuator.c devices/actuator/project-conf.h devices/actuator/resources/light.c devices/actuator/resources/fan.c)

@@ -21,7 +21,7 @@
 // that it is waiting for external connectivity
 #define SENSOR_MAIN_LOOP_NO_CONN_LOG_PERIOD 30
 
-// --------------------------- Sensor LEDs Management ---------------------------
+// ---------------------- LEDs Definitions and Management ----------------------
 
 /*
  * Sensor Power LED
@@ -119,7 +119,7 @@
  */
 
 // Sampling mode 1) (shared period for both quantities)
-//#define QUANTITIES_SHARED_SAMPLING_PERIOD (12 * CLOCK_SECOND)
+#define QUANTITIES_SHARED_SAMPLING_PERIOD (12 * CLOCK_SECOND)
 
 // Sampling mode 2) (different, independent periods for the two quantities)
 #ifndef QUANTITIES_SHARED_SAMPLING_PERIOD
