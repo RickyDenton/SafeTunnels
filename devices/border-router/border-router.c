@@ -31,9 +31,12 @@
  */
 
 #include "contiki.h"
+#include "dev/leds.h"
 
 /* Log configuration */
 #include "sys/log.h"
+
+
 #define LOG_MODULE "RPL BR"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
@@ -44,7 +47,10 @@ AUTOSTART_PROCESSES(&contiki_ng_br);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(contiki_ng_br, ev, data)
 {
-  PROCESS_BEGIN();
+  PROCESS_BEGIN()
+
+  // Turn ON the LEDS_GREEN LED at power on
+  leds_single_on(LEDS_GREEN);
 
 #if BORDER_ROUTER_CONF_WEBSERVER
   PROCESS_NAME(webserver_nogui_process);
@@ -53,5 +59,5 @@ PROCESS_THREAD(contiki_ng_br, ev, data)
 
   LOG_INFO("Contiki-NG Border Router started\n");
 
-  PROCESS_END();
+  PROCESS_END()
 }

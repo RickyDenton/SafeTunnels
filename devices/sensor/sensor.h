@@ -17,28 +17,26 @@
 // Sensor main loop timer period
 #define SENSOR_MAIN_LOOP_PERIOD (1 * CLOCK_SECOND)
 
-// How many main loops invocations the sensor logs
-// that it is waiting for the RPL DODAG to converge
-#define SENSOR_MAIN_LOOP_RPL_LOG_DEFER_TIMES 30
+// How many main loop cycles the sensor logs
+// that it is waiting for external connectivity
+#define SENSOR_MAIN_LOOP_NO_CONN_LOG_PERIOD 30
 
 // --------------------------- Sensor LEDs Management ---------------------------
 
 /*
  * Sensor Power LED
- *
  *  - OFF -> Device OFF
  *  - ON  -> Device ON
  */
-#define POWER_LED      LEDS_GREEN
+#define POWER_LED LEDS_GREEN
 
 /*
  * Sensor MQTT communication LED
- *
  *  - OFF      -> The MQTT client is NOT subscribed to a topic on the MQTT broker
  *  - ON       -> The MQTT client IS subscribed to a topic on the MQTT broker
  *  - BLINKING -> The MQTT client has published a message to the broker
  */
-#define MQTT_COMM_LED  LEDS_YELLOW   // OFF -> MQTT
+#define MQTT_COMM_LED LEDS_YELLOW
 
 // The period and how many times the MQTT_COMM_LED is
 // toggled upon publishing a MQTT message so as to blink it
@@ -109,7 +107,7 @@
  * Where using different periods for sampling the two quantities causes, due to
  * the Contiki-NG MQTT engine limitation of allowing a single outbound message to
  *  be published at a time (as the "uint8_t out_queue_full" variable defined in
- * the "mqtt.h" file, line 544 is in fact used as a boolean), the publishment of
+ * the "mqtt.h" file, line 544 is in fact used as a boolean), the publication of
  * one of the two quantities to most likely fail with a MQTT_STATUS_OUT_QUEUE_FULL
  * error at times around integer multiples of their individual periods
  *
@@ -121,7 +119,7 @@
  */
 
 // Sampling mode 1) (shared period for both quantities)
-#define QUANTITIES_SHARED_SAMPLING_PERIOD (12 * CLOCK_SECOND)
+//#define QUANTITIES_SHARED_SAMPLING_PERIOD (12 * CLOCK_SECOND)
 
 // Sampling mode 2) (different, independent periods for the two quantities)
 #ifndef QUANTITIES_SHARED_SAMPLING_PERIOD
@@ -131,12 +129,12 @@
 
 // ---------- Sampled Quantities Thresholds and Evolution Parameters ----------
 
-// TODO!
+/* ------- TODO! ------- */
 
 // Sampled quantities minimum and maximum values
-#define C02_VALUE_MIN 10
+//#define C02_VALUE_MIN 10
 #define C02_VALUE_MAX 200
-#define TEMP_VALUE_MIN 10
+//#define TEMP_VALUE_MIN 10
 #define TEMP_VALUE_MAX 50
 
 
@@ -194,7 +192,7 @@ enum sensorErrCode
   // The sensor failed to subscribe on the TOPIC_AVG_FAN_REL_SPEED topic
   ERR_SENSOR_SUB_AVGFANRELSPEED_FAILED,
 
-  // The sensor received the publishment of an
+  // The sensor received the publication of an
   // invalid "avgFanRelSpeed" value (not [0,100])
   ERR_SENSOR_RECV_INVALID_AVGFANRELSPEED,
 
