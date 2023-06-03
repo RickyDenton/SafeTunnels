@@ -11,10 +11,38 @@
 // The fan current state
 unsigned char fanRelSpeed = 0;
 
+// Last fan observers' notification time
+unsigned long fanLastObsNotifyTime = 0;
+
 
 // The timer used to blink the FAN_LED
 // depending on the current "fanRelSpeed"
 static struct ctimer fanLEDBlinkTimer;
+
+// Timer used to notify observers after a PUT or POST changed the fan state
+static struct ctimer fanPUTPOSTObsNotifyTimer;
+
+
+// Forward Declarations
+static void fan_GET_handler(coap_message_t* request, coap_message_t* response,
+                            uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
+static void fan_POST_PUT_handler(coap_message_t* request, coap_message_t* response,
+                                 uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
+static void fanNotifyObservers();
+
+
+// Actuator Fan Resource Definition
+EVENT_RESOURCE(actuatorFan,
+               "title=\"SafeTunnels Actuator Fan (GET | PUT/POST "
+                      "\"fanRelSpeed\" = <fanRelSpeed> [0-100]\"; "
+               "rt=\"fanControl\"; "
+               "ct=50; "              // ct = 50 -> application/json
+               "obs",                 // Observable resource
+               fan_GET_handler,
+               fan_POST_PUT_handler,
+               fan_POST_PUT_handler,
+               NULL,
+               fanNotifyObservers);
 
 
 // Fan LED blink timer callback
@@ -40,11 +68,14 @@ static void fan_GET_handler(coap_message_t* request, coap_message_t* response,
   coap_set_header_content_format(response, APPLICATION_JSON);
   coap_set_header_etag(response, &resLength, 1);
   coap_set_payload(response, buffer, resLength);
+
+  // Probably default and thus unnecessary (not used in any CoAP GET handler example)
+  // coap_set_status_code(response, CONTENT_2_05);
  }
 
 
-static void fan_PUT_handler(coap_message_t* request, coap_message_t* response,
-                            uint8_t* buffer, uint16_t preferred_size, int32_t* offset)
+static void fan_POST_PUT_handler(coap_message_t* request, coap_message_t* response,
+                                 uint8_t* buffer, uint16_t preferred_size, int32_t* offset)
  {
   //size_t newLightStateLen = 0;
   const char*newFanRelSpeedStr = NULL;
@@ -73,6 +104,7 @@ static void fan_PUT_handler(coap_message_t* request, coap_message_t* response,
     // Update the fan relative speed
     fanRelSpeed = newFanRelSpeed;
 
+
     LOG_INFO("Received valid new fan relative speed: %u\n", fanRelSpeed);
 
     // Vary the FAN_LED blinking frequency
@@ -81,6 +113,10 @@ static void fan_PUT_handler(coap_message_t* request, coap_message_t* response,
     else
      ctimer_set(&fanLEDBlinkTimer, FAN_LED_BLINK_PERIOD_MAX - fanRelSpeed * FAN_LED_BLINK_PERIOD_UNIT,
                 fanLEDBlink, NULL);
+
+    // Notify observing clients
+    // TODO: Only if the status has changed
+    ctimer_set(&fanPUTPOSTObsNotifyTimer, 0, fanNotifyObservers, NULL);
    }
   else
    {
@@ -92,10 +128,17 @@ static void fan_PUT_handler(coap_message_t* request, coap_message_t* response,
  }
 
 
-// Actuator Fan Resource Definition
-RESOURCE(actuatorFan,
-         "title=\"Fan\"; GET; PUT \"fanRelSpeed\" = <fanRelSpeed> 0-100; rt=\"JSON\"",
-         fan_GET_handler,
-         NULL,
-         fan_PUT_handler,
-         NULL);
+// Notify all Observers
+static void fanNotifyObservers()
+ {
+  // Notify all observers
+  coap_notify_observers(&actuatorFan);
+
+  // Update the last fan observers notification time
+  fanLastObsNotifyTime = clock_seconds();
+ }
+
+
+
+
+
