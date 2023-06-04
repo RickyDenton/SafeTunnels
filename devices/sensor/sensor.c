@@ -1060,10 +1060,8 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
 
  /* -------- Outside the sensor main loop (execution should NEVER reach here) -------- */
 
- // TODO: Fatal blink both LEDs instead
-
- // Turn off both LEDs
- leds_off(LEDS_NUM_TO_MASK(POWER_LED) | LEDS_NUM_TO_MASK(MQTT_COMM_LED));
+ // Turn off ALL LEDs
+ leds_off(LEDS_ALL);
 
  // Attempt to log and publish that the sensor has exited from the main loop
  LOG_PUB_ERROR(ERR_SENSOR_MAIN_LOOP_EXITED,"(last event= %u)",ev)

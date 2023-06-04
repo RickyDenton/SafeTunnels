@@ -21,17 +21,19 @@
 // that it is waiting for external connectivity
 #define SENSOR_MAIN_LOOP_NO_CONN_LOG_PERIOD 30
 
-// ---------------------- LEDs Definitions and Management ----------------------
+/* ----------------------------- LEDs Management ----------------------------- */
 
 /*
- * Sensor Power LED
+ * Power LED
+ * =========
  *  - OFF -> Device OFF
  *  - ON  -> Device ON
  */
 #define POWER_LED LEDS_GREEN
 
 /*
- * Sensor MQTT communication LED
+ * MQTT communication LED
+ * ======================
  *  - OFF      -> The MQTT client is NOT subscribed to a topic on the MQTT broker
  *  - ON       -> The MQTT client IS subscribed to a topic on the MQTT broker
  *  - BLINKING -> The MQTT client has published a message to the broker
@@ -216,10 +218,13 @@ enum sensorErrCode
 /* ================ SENSOR ERRORS LOGGING AND PUBLISHING MACROS ================ */
 
 /**
- * LOG_PUB_ERROR_ macros, writing the formatted additional description into the 'errDscr' buffer and invoking the "logPublish" error function with the passes sensorErrCode
- *  - 1 argument    -> reset "errDscr" and call logPublishError(sensorErrCode)
- *  - 2 arguments   -> snprintf in "errDscr" with format string only + call logPublishError(sensorErrCode)
- *  - 3-6 arguments -> snprintf in "errDscr" with format string + 1- parameters + call logPublishError(sensorErrCode)
+ * LOG_PUB_ERROR_ macros, writing the formatted additional description into the 'errDscr'
+ * buffer and invoking the "logPublish" error function with the passed 'sensorErrCode'
+ *   - 1 argument    -> reset "errDscr" and call logPublishError()
+ *   - 2 arguments   -> snprintf in "errDscr" with format string only +
+ *                      call logPublishError()
+ *   - 3-6 arguments -> snprintf in "errDscr" with format string + 1-4 parameters
+ *                      call logPublishError()
  */
 #define LOG_PUB_CODE_ONLY(sensorErrCode) { errDscr[0] = '\0'; logPublishError(sensorErrCode); }
 #define LOG_PUB_ERROR_DSCR(sensorErrCode,dscr) { snprintf(errDscr,ERR_DSCR_BUF_SIZE, dscr); logPublishError(sensorErrCode); }
@@ -231,9 +236,11 @@ enum sensorErrCode
 /**
  * Substitutes the appropriate LOG_PUB_ERROR_ depending on the
  * number of arguments passed to the LOG_PUB_ERROR variadic macro:
- *  - 1 argument    -> sensorErrCode only
- *  - 2 arguments   -> sensorErrCode + additional description (snprintf format string)
- *  - 3-6 arguments -> sensorErrCode + additional description (snprintf format string + 1-4 snprintf params)
+ *   - 1 argument    -> sensorErrCode only
+ *   - 2 arguments   -> sensorErrCode +
+ *                      additional description (snprintf format string)
+ *   - 3-6 arguments -> sensorErrCode +
+ *                      additional description (snprintf format string + 1-4 snprintf params)
  */
 #define GET_LOG_PUB_ERROR_MACRO(_1,_2,_3,_4,_5,_6,LOG_PUB_ERROR_MACRO,...) LOG_PUB_ERROR_MACRO
 #define LOG_PUB_ERROR(...) GET_LOG_PUB_ERROR_MACRO(__VA_ARGS__,LOG_PUB_ERROR_DSCR_4PARAM,LOG_PUB_ERROR_DSCR_3PARAM,LOG_PUB_ERROR_DSCR_2PARAM,LOG_PUB_ERROR_DSCR_1PARAM,LOG_PUB_ERROR_DSCR,LOG_PUB_CODE_ONLY)(__VA_ARGS__)

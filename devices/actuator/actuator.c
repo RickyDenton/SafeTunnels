@@ -3,7 +3,6 @@
 /* ================================== INCLUDES ================================== */
 
 /* ------------------------------ Standard Headers ------------------------------ */
-#include <stdio.h>
 #include <strings.h>
 
 /* ----------------------------- Contiki-NG Headers ----------------------------- */
@@ -14,7 +13,6 @@
 #include "dev/leds.h"
 #include "os/sys/log.h"
 
-
 /* ------------------------ SafeTunnels Service Headers ------------------------ */
 #include "actuator.h"
 #include "../common/devUtilities.h"
@@ -24,73 +22,62 @@
 PROCESS(safetunnels_actuator_process, "SafeTunnels Actuator Process");
 AUTOSTART_PROCESSES(&safetunnels_actuator_process);
 
-
-/* ============================== GLOBAL VARIABLES ============================== */
+/* ============================ FORWARD DECLARATIONS ============================ */
 
 // Actuator CoAP Resources
-extern coap_resource_t actuatorLight;
-extern coap_resource_t actuatorFan;
-extern coap_resource_t actuatorErrors;
+extern coap_resource_t actuatorLight;   // Light Resource
+extern coap_resource_t actuatorFan;     // Fan Resource
+extern coap_resource_t actuatorErrors;  // Actuator Errors Resource
 
-// Simulation (button)
+// Light and Fan resources utility functions simulating an external actor's
+// intervention changing their states, which are then notified to their observers
 void simulateNewLightState();
 void simulateNewFanRelSpeed();
 
 
+/* ============================== GLOBAL VARIABLES ============================== */
 
-// Whether the actuator node has external connectivity
-static bool externalConn = false;
-
-// Actuator connectivity check timer
-static struct etimer actuatorConnCheckTimer;
+// Connectivity check timer used to log when
+// the actuator obtains external connectivity
+static struct etimer connCheckTimer;
 
 
 /* =========================== FUNCTIONS DEFINITIONS =========================== */
 
-
-
 /**
- * @brief Checks whether the actuator's external connectivity
- *        state has changed, updating and logging it in the case
+ * @brief Checks and logs whether the actuator
+ *        has external connectivity at startup
  */
-void checkExternalConnectivityChange()
+void checkLogActuatorOnline()
  {
-  // Log a message if the actuator's external connectivity state has changed
-  if(isNodeOnline())
+  // Counter used to suppress most of the LOG_DBG associated
+  // with the actuator waiting for external network connectivity
+  static unsigned char suppressNoConnLogs = 0;
+
+  // If the actuator has not external connectivity yet
+  if(!isNodeOnline())
    {
-    if(!externalConn)
-     {
-      externalConn = true;
-      LOG_INFO("The actuator is now online and ready to serve CoAP requests\n");
-     }
+    // Log that the actuator is waiting for external
+    // connectivity every 'suppressNoConnLogs' main loop cycles
+    if(++suppressNoConnLogs % ACTUATOR_MAIN_LOOP_NO_CONN_LOG_PERIOD == 0)
+     LOG_DBG("Waiting for external connectivity...\n");
+
+    // Reinitialize the connectivity check timer
+    etimer_reset(&connCheckTimer);
    }
+
+  // Otherwise, if the actuator is now online, log the event
+  // without reinitializing the connectivity check timer
   else
-   // Reset the connectivity check timer
-   etimer_reset(&actuatorConnCheckTimer);
-
- /*
-  * NOTE: It appears that, once connection has established, isNodeOnline()
-  *       always returns true even if the node is no longer connected with
-  *       the RPL DODAG, making this check useless
-   {
-
-    if(externalConn)
-     {
-      externalConn = false;
-      LOG_INFO("External connectivity lost, attempting to re-establish...\n");
-     }
-   }
-
-  // Reset the connectivity check timer
-  etimer_reset(&actuatorConnCheckTimer);
- */
+   LOG_INFO("The actuator is now online and ready to serve CoAP requests\n");
  }
 
 
-
-
-
-
+/**
+ * @brief SafeTunnels actuator process main body
+ * @param ev   The event passed by the Contiki-NG kernel to the process
+ * @param data Additional information on the passed event
+ */
 PROCESS_THREAD(safetunnels_actuator_process, ev, data)
  {
   // Contiki-NG process start macro
@@ -111,8 +98,8 @@ PROCESS_THREAD(safetunnels_actuator_process, ev, data)
   // and that the node is now waiting for external connectivity
   LOG_DBG("Actuator CoAP server activated, waiting for external connectivity...\n");
 
-  // Initialize the actuator connectivity check timer
-  etimer_set(&actuatorConnCheckTimer, (clock_time_t)ACTUATOR_CONN_CHECK_TIMER_PERIOD);
+  // Initialize the connectivity check timer
+  etimer_set(&connCheckTimer, (clock_time_t)CONN_CHECK_TIMER_PERIOD);
 
   /* --------------------------- Actuator Process Main Loop --------------------------- */
   while(1)
@@ -120,14 +107,14 @@ PROCESS_THREAD(safetunnels_actuator_process, ev, data)
     // Yield the process's execution
     PROCESS_YIELD();
 
-    // If the connectivity check timer has expired, checks whether the actuator's
-    // external connectivity state has changed, updating and logging it in the case
-    if(ev == PROCESS_EVENT_TIMER && data == &actuatorConnCheckTimer)
-     checkExternalConnectivityChange();
+    // If the connectivity check timer has expired,
+    // verify and log whether the actuator is now online
+    if(ev == PROCESS_EVENT_TIMER && data == &connCheckTimer)
+     checkLogActuatorOnline();
 
     // Otherwise, if any of the actuator's buttons has been pressed,
-    // change the light and fan resources state simulating an external
-    // actor's intervention and notify all observers of the new values
+    // simulate an external actor's intervention changing the
+    // fan and light resource states and notify their observers
     else
      if(ev == button_hal_press_event)
       {
@@ -138,10 +125,12 @@ PROCESS_THREAD(safetunnels_actuator_process, ev, data)
 
   /* ------- Outside the actuator main loop (execution should NEVER reach here) ------- */
 
-  // Turn off both LEDs
-  // TODO: Fatal blink both LEDs instead
-  leds_off(LEDS_NUM_TO_MASK(LIGHT_LED) | LEDS_NUM_TO_MASK(FAN_LED));
+  // Turn off ALL LEDs
+  leds_off(LEDS_ALL);
 
-  // Shut down the sensor process
+  // Log that the actuator process has exited from the main loop
+  LOG_ERR("Exited from the actuator process main loop\n");
+
+  // Shut down the actuator process
   PROCESS_END()
  }
