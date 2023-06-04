@@ -3,17 +3,25 @@
 #include "../actuator.h"
 #include <string.h>
 #include <stdio.h>
+#include <limits.h>
 #include "os/sys/log.h"
 #include "dev/leds.h"
+#include "actuatorErrors.h"
+#include "random.h"
 
-//extern char CoAPResBuf[];
+// --------------------- Forward Declarations ----------------------------
 
-// The fan current state
+
+static void fan_GET_handler(__attribute__((unused)) coap_message_t* request, coap_message_t* response,
+                            uint8_t* buffer, __attribute__((unused)) uint16_t preferred_size, __attribute__((unused)) int32_t* offset);
+static void fan_POST_PUT_handler(coap_message_t* request, coap_message_t* response,
+                                 uint8_t* buffer, __attribute__((unused)) uint16_t preferred_size, __attribute__((unused)) int32_t* offset);
+static void fanNotifyObservers();
+
+
+
+// The fan current relative speed
 unsigned char fanRelSpeed = 0;
-
-// Last fan observers' notification time
-unsigned long fanLastObsNotifyTime = 0;
-
 
 // The timer used to blink the FAN_LED
 // depending on the current "fanRelSpeed"
@@ -22,13 +30,6 @@ static struct ctimer fanLEDBlinkTimer;
 // Timer used to notify observers after a PUT or POST changed the fan state
 static struct ctimer fanPUTPOSTObsNotifyTimer;
 
-
-// Forward Declarations
-static void fan_GET_handler(coap_message_t* request, coap_message_t* response,
-                            uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
-static void fan_POST_PUT_handler(coap_message_t* request, coap_message_t* response,
-                                 uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
-static void fanNotifyObservers();
 
 
 // Actuator Fan Resource Definition
@@ -45,7 +46,10 @@ EVENT_RESOURCE(actuatorFan,
                fanNotifyObservers);
 
 
-// Fan LED blink timer callback
+/**
+ * @brief Toggles the FAN_LED so as to blink it
+ *        (fanLEDBlinkTimer callback function)
+ */
 static void fanLEDBlink(__attribute__((unused)) void* ptr)
  {
   // Toggle the FAN_LED
@@ -56,18 +60,24 @@ static void fanLEDBlink(__attribute__((unused)) void* ptr)
  }
 
 
-static void fan_GET_handler(coap_message_t* request, coap_message_t* response,
-                            uint8_t* buffer, uint16_t preferred_size, int32_t* offset)
+static void fan_GET_handler(__attribute__((unused)) coap_message_t* request,
+                            coap_message_t* response, uint8_t* buffer,
+                            __attribute__((unused)) uint16_t preferred_size,
+                            __attribute__((unused)) int32_t* offset)
  {
-  uint8_t resLength;
+  // Length of the GET response
+  uint8_t respLength;
 
+  // Set the GET CoAP response body as the
+  // current fan relative speed in JSON format
   sprintf((char*)buffer, "{ \"fanRelSpeed\": %u }",fanRelSpeed);
-  resLength = strlen((char*)buffer);
 
-  // Prepare the response
+
+  // Prepare the metadata of the CoAP response to be returned to the client
+  respLength = strlen((char*)buffer);
   coap_set_header_content_format(response, APPLICATION_JSON);
-  coap_set_header_etag(response, &resLength, 1);
-  coap_set_payload(response, buffer, resLength);
+  coap_set_header_etag(response, &respLength, 1);
+  coap_set_payload(response, buffer, respLength);
 
   // Probably default and thus unnecessary (not used in any CoAP GET handler example)
   // coap_set_status_code(response, CONTENT_2_05);
@@ -75,70 +85,102 @@ static void fan_GET_handler(coap_message_t* request, coap_message_t* response,
 
 
 static void fan_POST_PUT_handler(coap_message_t* request, coap_message_t* response,
-                                 uint8_t* buffer, uint16_t preferred_size, int32_t* offset)
+                                 uint8_t* buffer, __attribute__((unused)) uint16_t preferred_size,
+                                 __attribute__((unused)) int32_t* offset)
  {
-  //size_t newLightStateLen = 0;
-  const char*newFanRelSpeedStr = NULL;
-  unsigned long newFanRelSpeed;
-  bool newFanRelSpeedValid;
+  // Used to parse the content of the POST/PUT request
+  const char* newFanRelSpeedStr = NULL;
+  unsigned long newFanRelSpeed = ULONG_MAX;
 
-  newFanRelSpeedValid = false;
-
-  if(coap_get_post_variable(request, "fanRelSpeed", &newFanRelSpeedStr) > 0)
+  // Ensure the "fanRelSpeed" variable to be present in the POST/PUT request
+  if(coap_get_post_variable(request, "fanRelSpeed", &newFanRelSpeedStr) <= 0)
+   REPORT_COAP_REQ_ERR(ERR_FAN_POST_PUT_NO_FANRELSPEED)
+  else
    {
-    // Interpret the value of the "fanRelSpeed" variable as an unsigned
-    // (long) integer representing the new "fanRelSpeed" value
+    // Interpret the value of the "fanRelSpeed" variable as
+    // the unsigned (long) integer new "fanRelSpeed" value
     newFanRelSpeed = strtoul(newFanRelSpeedStr, NULL, 10);
 
-    // Ensure the received "newFanRelSpeed" value to be valid (<= 100)
-    if(newFanRelSpeed <= 100)
-     newFanRelSpeedValid = true;
+    // If the new "fanRelSpeed" value is invalid, report the error
+    if(newFanRelSpeed > 100)
+     REPORT_COAP_REQ_ERR(ERR_FAN_POST_PUT_NO_FANRELSPEED, "(%lu)", newFanRelSpeed)
+
+    // Otherwise, if the new "fanRelSpeed" value is valid
     else
-     LOG_INFO("Received INVALID new fan relative speed: %lu\n", newFanRelSpeed);
-   }
-  else
-   LOG_ERR("MISSING \'fanRelSpeed\' variable in fan PUT\n");
+     {
+      // Adjust the FAN_LED blinking period to the new fan relative speed
+      if(newFanRelSpeed == 0)
+       ctimer_stop(&fanLEDBlinkTimer);
+      else
+       ctimer_set(&fanLEDBlinkTimer,
+                  FAN_LED_BLINK_PERIOD_MAX - (unsigned char)newFanRelSpeed * FAN_LED_BLINK_PERIOD_UNIT,
+                  fanLEDBlink, NULL);
 
-  if(newFanRelSpeedValid)
-   {
-    // Update the fan relative speed
-    fanRelSpeed = newFanRelSpeed;
+      // If the fan relative speed has changed
+      if(newFanRelSpeed != fanRelSpeed)
+       {
+        // Log that a new valid fan relative speed has been received
+        LOG_INFO("Received valid new fan relative speed: %lu\n", newFanRelSpeed);
 
+        // Report in the response message status code
+        // that the fan's relative speed has changed
+        coap_set_status_code(response, CHANGED_2_04);
 
-    LOG_INFO("Received valid new fan relative speed: %u\n", fanRelSpeed);
+        // Initialize a timer to notify the observing clients
+        // immediately after this request has been served
+        ctimer_set(&fanPUTPOSTObsNotifyTimer, 0, fanNotifyObservers, NULL);
+       }
 
-    // Vary the FAN_LED blinking frequency
-    if(fanRelSpeed == 0)
-     ctimer_stop(&fanLEDBlinkTimer);
-    else
-     ctimer_set(&fanLEDBlinkTimer, FAN_LED_BLINK_PERIOD_MAX - fanRelSpeed * FAN_LED_BLINK_PERIOD_UNIT,
-                fanLEDBlink, NULL);
+      // Otherwise, if the light state has NOT changed
+      else
+       {
+        // Log that the same valid fan relative speed has been received
+        LOG_INFO("Received same valid fan relative speed: %lu\n", newFanRelSpeed);
 
-    // Notify observing clients
-    // TODO: Only if the status has changed
-    ctimer_set(&fanPUTPOSTObsNotifyTimer, 0, fanNotifyObservers, NULL);
-   }
-  else
-   {
-    coap_set_status_code(response, BAD_REQUEST_4_00);
+        // Report in the response message status code
+        // that the fan relative speed has NOT changed
+        coap_set_status_code(response, VALID_2_03);
+       }
 
-    // TODO: Send the error to the Control Module and possibly in the response's payload
-
+      // Update the fan relative speed
+      fanRelSpeed = newFanRelSpeed;
+     }
    }
  }
 
 
-// Notify all Observers
-static void fanNotifyObservers()
+/**
+ * @brief Notifies all observers subscribed on the fan resource
+ *        (fanPUTPOSTObsNotifyTimer callback function)
+ */
+void fanNotifyObservers()
+ { coap_notify_observers(&actuatorFan); }
+
+
+
+void simulateNewFanRelSpeed()
  {
-  // Notify all observers
-  coap_notify_observers(&actuatorFan);
+  unsigned char newFanRelSpeed;
 
-  // Update the last fan observers notification time
-  fanLastObsNotifyTime = clock_seconds();
+  // Randomly select a new valid fan relative speed
+  do
+   newFanRelSpeed = random_rand() % 101;
+  while (newFanRelSpeed == fanRelSpeed);
+
+  // Adjust the FAN_LED blinking period to the new fan relative speed
+  if(newFanRelSpeed == 0)
+   ctimer_stop(&fanLEDBlinkTimer);
+  else
+   ctimer_set(&fanLEDBlinkTimer,
+              FAN_LED_BLINK_PERIOD_MAX - (unsigned char)newFanRelSpeed * FAN_LED_BLINK_PERIOD_UNIT,
+              fanLEDBlink, NULL);
+
+  // Update the fan relative speed
+  fanRelSpeed = newFanRelSpeed;
+
+  // Log that a new fan relative speed has been simulated
+  LOG_INFO("Simulated new fan relative speed %u\n", fanRelSpeed);
+
+  // Notify the observing clients (in this case, immediately)
+  fanNotifyObservers();
  }
-
-
-
-
-

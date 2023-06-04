@@ -1034,7 +1034,7 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
       }
     }
 
-   // Otherwise, if any of the sensor's buttons have been pressed
+   // Otherwise, if any of the sensor's buttons has been pressed
    else
     if(ev == button_hal_press_event)
      {
@@ -1059,6 +1059,8 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
   }
 
  /* -------- Outside the sensor main loop (execution should NEVER reach here) -------- */
+
+ // TODO: Fatal blink both LEDs instead
 
  // Turn off both LEDs
  leds_off(LEDS_NUM_TO_MASK(POWER_LED) | LEDS_NUM_TO_MASK(MQTT_COMM_LED));

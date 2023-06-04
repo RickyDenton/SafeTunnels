@@ -11,6 +11,9 @@
 #define LOG_MODULE "actuator"
 #define LOG_LEVEL  LOG_LEVEL_DBG
 
+// Actuator connectivity check timer period
+#define ACTUATOR_CONN_CHECK_TIMER_PERIOD (5 * CLOCK_SECOND)
+
 // ---------------------- LEDs Definitions and Management ----------------------
 
 /*
@@ -48,12 +51,14 @@
 
 /* ----------------------------- CoAP Parameters ----------------------------- */
 
+/* UNUSED
+
 // Control Module CoAP server endpoint
 #define CONTROL_MODULE_IPV6_ADDR        "fd00::1"
 #define CONTROL_MODULE_COAP_SERVER_PORT "5683"
 #define CONTROL_MODULE_COAP_SERVER_ENDPOINT \
  "coap://[" CONTROL_MODULE_IPV6_ADDR "]:" CONTROL_MODULE_COAP_SERVER_PORT
-
+*/
 
 /* ============================== TYPE DEFINITIONS ============================== */
 
@@ -70,7 +75,11 @@ enum lightResState
   LIGHT_BLINK_ALERT,
 
   // The light is blinking fast (emergency)
-  LIGHT_BLINK_EMERGENCY
+  LIGHT_BLINK_EMERGENCY,
+
+  // Invalid light state (used for processing a received new light state)
+  LIGHT_STATE_INVALID
  };
+
 
 #endif //SAFETUNNELS_ACTUATOR_H

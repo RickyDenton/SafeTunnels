@@ -5,32 +5,29 @@
 #include <stdio.h>
 #include "os/sys/log.h"
 #include "dev/leds.h"
+#include "actuatorErrors.h"
+#include "random.h"
 
-//extern char CoAPResBuf[];
+// Forward Declarations
+static void light_GET_handler(__attribute__((unused)) coap_message_t* request, coap_message_t* response,
+                              uint8_t* buffer, __attribute__((unused)) uint16_t preferred_size, __attribute__((unused)) int32_t* offset);
+static void light_POST_PUT_handler(coap_message_t* request, coap_message_t* response,
+                                   uint8_t* buffer, __attribute__((unused)) uint16_t preferred_size, __attribute__((unused)) int32_t* offset);
+static void lightNotifyObservers();
+
+
 
 // The light's current state
-// enum lightResState lightState = LIGHT_OFF;
+enum lightResState lightState = LIGHT_OFF;
 char lightStateStr[22] = "LIGHT_OFF";
-
-// Last light observers' notification time
-unsigned long lightLastObsNotifyTime = 0;
-
 
 // The timer used to blink the LIGHT_LED into the
 // LIGHT_BLINK_ALERT and LIGHT_BLINK_EMERGENCY states
-static struct ctimer lightLEDBlinkTimer;
+struct ctimer lightLEDBlinkTimer;
 
 // Timer used to notify observers after a PUT or POST changed the light state
 static struct ctimer lightPUTPOSTObsNotifyTimer;
 
-
-
-// Forward Declarations
-static void light_GET_handler(coap_message_t* request, coap_message_t* response,
-                              uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
-static void light_POST_PUT_handler(coap_message_t* request, coap_message_t* response,
-                                   uint8_t* buffer, uint16_t preferred_size, int32_t* offset);
-static void lightNotifyObservers();
 
 
 // Actuator Light Resource Definition
@@ -48,7 +45,10 @@ EVENT_RESOURCE(actuatorLight,
 
 
 
-// Light LED blink timer callback
+/**
+ * @brief Toggles the LIGHT_LED so as to blink it
+ *        (lightLEDBlinkTimer callback function)
+ */
 static void lightLEDBlink(__attribute__((unused)) void* ptr)
  {
   // Toggle the LIGHT_LED
@@ -59,18 +59,22 @@ static void lightLEDBlink(__attribute__((unused)) void* ptr)
  }
 
 
-static void light_GET_handler(coap_message_t* request, coap_message_t* response,
-                              uint8_t* buffer, uint16_t preferred_size, int32_t* offset)
+static void light_GET_handler(__attribute__((unused)) coap_message_t* request,
+                              coap_message_t* response, uint8_t* buffer,
+                              __attribute__((unused)) uint16_t preferred_size,
+                              __attribute__((unused)) int32_t* offset)
  {
-  uint8_t resLength;
+  // Length of the GET response
+  uint8_t respLength;
 
+  // Set the GET CoAP response body as the current light state in JSON format
   sprintf((char*)buffer, "{ \"lightState\": \"%s\" }",lightStateStr);
-  resLength = strlen((char*)buffer);
 
-  // Prepare the response
+  // Prepare the metadata of the CoAP response to be returned to the client
+  respLength = strlen((char*)buffer);
   coap_set_header_content_format(response, APPLICATION_JSON);
-  coap_set_header_etag(response, &resLength, 1);
-  coap_set_payload(response, buffer, resLength);
+  coap_set_header_etag(response, &respLength, 1);
+  coap_set_payload(response, buffer, respLength);
 
   // Probably default and thus unnecessary (not used in any CoAP GET handler example)
   // coap_set_status_code(response, CONTENT_2_05);
@@ -78,100 +82,157 @@ static void light_GET_handler(coap_message_t* request, coap_message_t* response,
 
 
 static void light_POST_PUT_handler(coap_message_t* request, coap_message_t* response,
-                                   uint8_t* buffer, uint16_t preferred_size, int32_t* offset)
+                                   uint8_t* buffer, __attribute__((unused)) uint16_t preferred_size,
+                                   __attribute__((unused)) int32_t* offset)
 {
- //size_t newLightStateLen = 0;
- bool newLightStateValid;
+ // Used to parse the content of the POST/PUT request
  const char* newLightStateStr = NULL;
+ enum lightResState newLightState = LIGHT_STATE_INVALID;
 
- newLightStateValid = false;
-
-
- if(coap_get_post_variable(request, "lightState", &newLightStateStr) > 0)
+ // Ensure the "lightState" variable to be present in the POST/PUT request
+ if(coap_get_post_variable(request, "lightState", &newLightStateStr) <= 0)
+  REPORT_COAP_REQ_ERR(ERR_LIGHT_POST_PUT_NO_LIGHTSTATE)
+ else
   {
-   /*
-   if((strcmp(newLightStateStr, "LIGHT_OFF") == 0)             ||
-      (strcmp(newLightStateStr, "LIGHT_ON") == 0)              ||
-      (strcmp(newLightStateStr, "LIGHT_BLINK_ALERT") == 0)     ||
-      (strcmp(newLightStateStr, "LIGHT_BLINK_EMERGENCY") == 0))
-    newLightStateValid = true;
-   else
-    LOG_ERR("Received invalid new light state \'%s\'\n", newLightStateStr);
-   */
+   // Check whether a valid "lightState" value has been
+   // passed, modifying the LIGHT_LED appropriately
    if(strcmp(newLightStateStr, "LIGHT_OFF") == 0)
     {
-     // Stop the LED blinking timer
+     // Stop the LIGHT_LED blinking timer
      ctimer_stop(&lightLEDBlinkTimer);
 
      // Turn OFF the LIGHT_LED
      leds_single_off(LIGHT_LED);
 
-     newLightStateValid = true;
+     newLightState = LIGHT_OFF;
     }
    else
     if(strcmp(newLightStateStr, "LIGHT_ON") == 0)
      {
-      // Stop the LED blinking timer
+      // Stop the LIGHT_LED blinking timer
       ctimer_stop(&lightLEDBlinkTimer);
 
       // Turn ON the LIGHT_LED
       leds_single_on(LIGHT_LED);
 
-      newLightStateValid = true;
+      newLightState = LIGHT_ON;
      }
     else
      if(strcmp(newLightStateStr, "LIGHT_BLINK_ALERT") == 0)
       {
-       // Start the blinking timer
+       // Start the LIGHT_LED blinking timer
        ctimer_set(&lightLEDBlinkTimer, LIGHT_LED_ALERT_BLINK_PERIOD, lightLEDBlink, NULL);
-       newLightStateValid = true;
+
+       newLightState = LIGHT_BLINK_ALERT;
       }
      else
       if(strcmp(newLightStateStr, "LIGHT_BLINK_EMERGENCY") == 0)
        {
-        // Start the blinking timer
+        // Start the LIGHT_LED blinking timer
         ctimer_set(&lightLEDBlinkTimer, LIGHT_LED_EMERGENCY_BLINK_PERIOD, lightLEDBlink, NULL);
 
-        newLightStateValid = true;
+        newLightState = LIGHT_BLINK_EMERGENCY;
        }
-      else
-       {
-        // Log unknown light state
-        LOG_ERR("Received INVALID new light state \'%s\'\n", newLightStateStr);
-       }
-   }
- else
-  LOG_ERR("MISSING \'lightState\' variable in light PUT\n");
 
- if(newLightStateValid)
+      // If the light state value is invalid, report the error
+      else
+       REPORT_COAP_REQ_ERR(ERR_LIGHT_POST_PUT_LIGHTSTATE_INVALID,"(\"%s\")",newLightStateStr)
+  }
+
+ // If a valid light state value was passed
+ if(newLightState != LIGHT_STATE_INVALID)
   {
-   // Update the lightStrateStr directly from the CoAP message buffer
+   // Update the "lightStateStr" directly from
+   // the CoAP message buffer (optimization)
    strcpy(lightStateStr, newLightStateStr);
 
-   // Notify observing clients
-   // TODO: Only if the status has changed
-   ctimer_set(&lightPUTPOSTObsNotifyTimer, 0, lightNotifyObservers, NULL);
+   // If the light state has changed
+   if(newLightState != lightState)
+    {
+     // Log that a new valid light state has been received
+     LOG_INFO("Received valid new light state \'%s\'\n", lightStateStr);
 
-   LOG_INFO("Received valid new light state \'%s\'\n", lightStateStr);
+     // Report in the response message status
+     // code that the light's state has changed
+     coap_set_status_code(response, CHANGED_2_04);
 
-   coap_set_status_code(response, CHANGED_2_04);
-  }
- else
-  {
-   coap_set_status_code(response, BAD_REQUEST_4_00);
+     // Initialize a timer to notify the observing clients
+     // immediately after this request has been served
+     ctimer_set(&lightPUTPOSTObsNotifyTimer, 0, lightNotifyObservers, NULL);
+    }
 
-   // TODO: Send the error to the Control Module and possibly in the response's payload
+   // Otherwise, if the light state has NOT changed
+   else
+    {
+     // Log that the same valid light state has been received
+     LOG_INFO("Received same valid light state \'%s\'\n", lightStateStr);
 
+     // Report in the response message status
+     // code that the light state has NOT changed
+     coap_set_status_code(response, VALID_2_03);
+    }
+
+   // Update the light state
+   lightState = newLightState;
   }
 }
 
 
-// Notify all Observers
-static void lightNotifyObservers()
- {
-  // Notify all observers
-  coap_notify_observers(&actuatorLight);
+/**
+ * @brief Notifies all observers subscribed on the light resource
+ *        (lightPUTPOSTObsNotifyTimer callback function)
+ */
+void lightNotifyObservers()
+ { coap_notify_observers(&actuatorLight); }
 
-  // Update the last fan observers notification time
-  lightLastObsNotifyTime = clock_seconds();
+
+void simulateNewLightState()
+ {
+  enum lightResState newLightState;
+
+  // Randomly select a new valid light state
+  do
+   newLightState = random_rand() % 4;
+  while (newLightState == LIGHT_STATE_INVALID || newLightState == lightState);
+
+  // Stringify the new light state into the
+  // "lightStateStr" and drive the LIGHT_LED accordingly
+  switch(newLightState)
+   {
+    case LIGHT_OFF:
+     sprintf(lightStateStr,"LIGHT_OFF");
+     ctimer_stop(&lightLEDBlinkTimer);
+     leds_single_off(LIGHT_LED);
+     break;
+
+    case LIGHT_ON:
+     sprintf(lightStateStr,"LIGHT_ON");
+     ctimer_stop(&lightLEDBlinkTimer);
+     leds_single_on(LIGHT_LED);
+     break;
+
+    case LIGHT_BLINK_ALERT:
+     sprintf(lightStateStr,"LIGHT_BLINK_ALERT");
+     ctimer_set(&lightLEDBlinkTimer, LIGHT_LED_ALERT_BLINK_PERIOD,
+                lightLEDBlink, NULL);
+     break;
+
+    case LIGHT_BLINK_EMERGENCY:
+     sprintf(lightStateStr,"LIGHT_BLINK_EMERGENCY");
+     ctimer_set(&lightLEDBlinkTimer, LIGHT_LED_EMERGENCY_BLINK_PERIOD, lightLEDBlink, NULL);
+     break;
+
+    default:
+     LOG_ERR("Generated an INVALID new light state in simulateNewLightState() (%u)\n", newLightState);
+     return;
+   }
+
+  // Update the light state
+  lightState = newLightState;
+
+  // Log that a new light state has been simulated
+  LOG_INFO("Simulated new light state \'%s\'\n", lightStateStr);
+
+  // Notify the observing clients (in this case, immediately)
+  lightNotifyObservers();
  }
