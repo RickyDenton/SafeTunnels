@@ -65,12 +65,15 @@ void checkExternalConnectivityChange()
      }
    }
   else
+   // Reset the connectivity check timer
+   etimer_reset(&actuatorConnCheckTimer);
+
+ /*
+  * NOTE: It appears that, once connection has established, isNodeOnline()
+  *       always returns true even if the node is no longer connected with
+  *       the RPL DODAG, making this check useless
    {
-    /*
-     * NOTE: It appears that, once connection has established, isNodeOnline()
-     *       always returns true even if the node is no longer connected with
-     *       the RPL DODAG, making this check useless
-     */
+
     if(externalConn)
      {
       externalConn = false;
@@ -80,6 +83,7 @@ void checkExternalConnectivityChange()
 
   // Reset the connectivity check timer
   etimer_reset(&actuatorConnCheckTimer);
+ */
  }
 
 

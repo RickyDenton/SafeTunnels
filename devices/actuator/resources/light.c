@@ -78,6 +78,9 @@ static void light_GET_handler(__attribute__((unused)) coap_message_t* request,
 
   // Probably default and thus unnecessary (not used in any CoAP GET handler example)
   // coap_set_status_code(response, CONTENT_2_05);
+
+  // Log that the light state has been returned
+  LOG_DBG("Light state returned (\'%s\')\n",lightStateStr);
  }
 
 

@@ -101,16 +101,18 @@ void prepareCliErrResp(uint8_t* respBuffer,coap_message_t* response)
  {
   uint8_t respLength;
 
-  // Prepare the contents of the CoAP error response to be returned by the client
+  // Prepare the contents of the CoAP error response to be returned
+  // to the client depending on whether an additional error
+  // description is stored in the "coapReqErrDscr" buffer
   strcpy((char*)respBuffer,coapReqErrCodeStr);
-  strcat((char*)respBuffer,coapReqErrDscr);
+  if(coapReqErrDscr[0] != '\0')
+   {
+    strcat((char*)respBuffer, " ");
+    strcat((char*)respBuffer, coapReqErrDscr);
+   }
 
   // Prepare the metadata of the CoAP error response to be returned by the client
   respLength = strlen((char*)respBuffer);
-
-  // TODO: The response appears truncated to =' 70 chars in the coap-client
-  //       cmd line utility, check if it is a server or a client problem
-
   coap_set_header_content_format(response, TEXT_PLAIN);
   coap_set_header_etag(response, &respLength, 1);
   coap_set_payload(response, respBuffer, respLength);
@@ -164,33 +166,50 @@ static void actuatorErrors_GET_handler(__attribute__((unused)) coap_message_t* r
  {
   uint8_t resLength;
 
-  // If there is no error pending, just return COAP_REQ_OK
+  // If there is no error pending, a client is attempting to observe the actuator errors
   if(coapReqErrCode == COAP_REQ_OK)
-   sprintf((char*)buffer, "{ \"errCode\": %u }", coapReqErrCode);
+   {
+    // Write the observing client IP into the "cliIPAddr" buffer for logging purposes
+    uiplib_ipaddr_snprint(coapReqErrCliIP, sizeof(coapReqErrCliIP), &request->src_ep->ipaddr);
 
-  // Otherwise prepare the error message contents to be returned depending on
-  // whether its additional description was stored in the "coapReqErrDscr" buffer
+    // Log that the client is now (probably) observing the actuator errors
+    LOG_DBG("Client @%s requested observing actuator errors\n", coapReqErrCliIP);
+
+    // Reset the "cliIPAddr" buffer for safety purposes
+    coapReqErrCliIP[0] = '\0';
+
+    // Return the observing client an (empty) confirmation response
+    coap_set_status_code(response, VALID_2_03);
+    sprintf((char*)buffer, "{ \"errCode\": %u }", coapReqErrCode);
+   }
+
+   // Otherwise, if this GET invocation is associated
+   // with a pending error to be notified to observers
   else
-   if(coapReqErrDscr[0] != '\0')
-    sprintf((char*)buffer, "{"
-                           "\"errCode\": %u, "
-                           "\"errDscr\": \"%s\", "
-                           "\"clientIP\": \"%s\" "
-                           "}", coapReqErrCode, coapReqErrDscr,coapReqErrCliIP);
-   else
-    sprintf((char*)buffer, "{"
-                           "\"errCode\": %u, "
-                           "\"clientIP\": \"%s\" "
-                           "}", coapReqErrCode,coapReqErrCliIP);
+   {
+    // Prepare the contents of the message to be returned to observers depending on
+    // whether an additional error description is stored in the "coapReqErrDscr" buffer
+    if(coapReqErrDscr[0] != '\0')
+     sprintf((char*)buffer, "{"
+                            "\"errCode\": %u, "
+                            "\"errDscr\": \"%s\", "
+                            "\"clientIP\": \"%s\" "
+                            "}", coapReqErrCode, coapReqErrDscr, coapReqErrCliIP);
+    else
+     sprintf((char*)buffer, "{"
+                            "\"errCode\": %u, "
+                            "\"clientIP\": \"%s\" "
+                            "}", coapReqErrCode, coapReqErrCliIP);
 
-  // Prepare the CoAP response to be returned to the client
-  resLength = strlen((char*)buffer);
-  coap_set_header_content_format(response, APPLICATION_JSON);
-  coap_set_header_etag(response, &resLength, 1);
-  coap_set_payload(response, buffer, resLength);
+    // Prepare the metadata of the message to be returned to observers
+    resLength = strlen((char*)buffer);
+    coap_set_header_content_format(response, APPLICATION_JSON);
+    coap_set_header_etag(response, &resLength, 1);
+    coap_set_payload(response, buffer, resLength);
 
-  // Probably default and thus unnecessary (not used in any CoAP GET handler example)
-  // coap_set_status_code(response, CONTENT_2_05);
+    // Probably default and thus unnecessary (not used in any CoAP GET handler example)
+    // coap_set_status_code(response, CONTENT_2_05);
+   }
  }
 
 

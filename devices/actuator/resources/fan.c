@@ -81,6 +81,9 @@ static void fan_GET_handler(__attribute__((unused)) coap_message_t* request,
 
   // Probably default and thus unnecessary (not used in any CoAP GET handler example)
   // coap_set_status_code(response, CONTENT_2_05);
+
+  // Log that the fan relative speed has been returned
+  LOG_DBG("Fan relative speed returned (%u)\n",fanRelSpeed);
  }
 
 
@@ -103,7 +106,7 @@ static void fan_POST_PUT_handler(coap_message_t* request, coap_message_t* respon
 
     // If the new "fanRelSpeed" value is invalid, report the error
     if(newFanRelSpeed > 100)
-     REPORT_COAP_REQ_ERR(ERR_FAN_POST_PUT_NO_FANRELSPEED, "(%lu)", newFanRelSpeed)
+     REPORT_COAP_REQ_ERR(ERR_FAN_POST_PUT_FANRELSPEED_INVALID, "(%lu)", newFanRelSpeed)
 
     // Otherwise, if the new "fanRelSpeed" value is valid
     else
