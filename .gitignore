@@ -1,2 +1,3 @@
-/devices/sensor/build/
-/devices/border-router/build/
+/contikiNG_devices/src/sensor/build/
+/contikiNG_devices/src/border-router/build/
+/contikiNG_devices/src/actuator/build/
