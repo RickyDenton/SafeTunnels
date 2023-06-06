@@ -1,4 +1,4 @@
-package logging.errors;
+package errors;
 
 public enum ErrCodeSeverity
  {

@@ -1,7 +1,11 @@
 package devices;
 
-import logging.errors.ErrCodeInfo;
+import errors.ErrCodeInfo;
+import errors.SafeTunnelsErrCode;
 
 
-public interface DeviceErrCode
- { public ErrCodeInfo getErrCodeInfo(); }
+public interface DeviceErrCode extends SafeTunnelsErrCode
+ {
+  public ErrCodeInfo getErrCodeInfo();
+  public String getDevType();
+ }

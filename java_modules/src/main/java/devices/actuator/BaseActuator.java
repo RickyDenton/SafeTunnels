@@ -1,53 +1,30 @@
 package devices.actuator;
 
 import devices.Device;
-import devices.DeviceErrCode;
-import logging.errors.ErrCodeInfo;
-
-import java.util.EnumMap;
-import java.util.Map;
-
-import static logging.errors.ErrCodeSeverity.WARNING;
 
 
 public class BaseActuator implements Device
  {
-  public final String deviceID;
+  public final short deviceID;
 
-  public enum ActuatorErrCode implements DeviceErrCode
+  public enum LightState
    {
-    // No error
-    COAP_REQ_OK,
+    // The light is OFF (NOMINAL)
+    LIGHT_OFF,
 
-    // ----------------- Light Resource CoAP Requests Application Error Codes -----------------
+    // The light is ON (WARNING)
+    LIGHT_ON,
 
-    // The "lightState" variable is missing from a light PUT request
-    ERR_LIGHT_PUT_NO_LIGHTSTATE,
+    // The light is blinking slowly (ALERT)
+    LIGHT_BLINK_ALERT,
 
-    // An invalid "lightState" value was received in a light PUT request
-    ERR_LIGHT_PUT_LIGHTSTATE_INVALID,
+    // The light is blinking fast (EMERGENCY)
+    LIGHT_BLINK_EMERGENCY,
 
-    // ------------------ Fan Resource CoAP Requests Application Error Codes ------------------
-
-    // The "fanRelSpeed" variable is missing from a fan PUT request
-    ERR_FAN_PUT_NO_FANRELSPEED,
-
-    // An invalid "fanRelSpeed" value was received in a fan PUT request
-    ERR_FAN_PUT_FANRELSPEED_INVALID;
-
-    private static final EnumMap<ActuatorErrCode,ErrCodeInfo> actuatorsErrorsInfoMap = new EnumMap<>(Map.ofEntries
-      (
-       Map.entry(COAP_REQ_OK,                      new ErrCodeInfo(WARNING,"NO_ERROR")),
-       Map.entry(ERR_LIGHT_PUT_NO_LIGHTSTATE,      new ErrCodeInfo(WARNING,"\"lightState\" variable missing from a light PUT request")),
-       Map.entry(ERR_LIGHT_PUT_LIGHTSTATE_INVALID, new ErrCodeInfo(WARNING,"Invalid \"lightState\" value received in a light PUT request")),
-       Map.entry(ERR_FAN_PUT_NO_FANRELSPEED,       new ErrCodeInfo(WARNING,"\"fanRelSpeed\" variable missing from a fan PUT request")),
-       Map.entry(ERR_FAN_PUT_FANRELSPEED_INVALID,  new ErrCodeInfo(WARNING,"Invalid \"fanRelSpeed\" value received in a fan PUT request"))
-      ));
-
-    public ErrCodeInfo getErrCodeInfo()
-     { return actuatorsErrorsInfoMap.get(this); }
+    // Invalid light state used for validating a received new light state
+    LIGHT_STATE_INVALID
    }
 
-  public BaseActuator(String deviceID)
+  public BaseActuator(short deviceID)
    {this.deviceID = deviceID;}
  }

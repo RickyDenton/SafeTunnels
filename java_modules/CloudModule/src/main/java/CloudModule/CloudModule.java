@@ -1,5 +1,8 @@
 package CloudModule;
 
+
+import
+
 // Paho imports
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
@@ -61,9 +64,41 @@ public class CloudModule implements MqttCallback
  public static void main(String[] args) {
 
 
-  try {
+  try
+   {
+    Log.dbg("Hello World")
 
-   CloudModule mc = new CloudModule();
+
+
+   // No code
+   public static void dbg(String logStr)
+   { System.out.println(COLOR_DBG + "[DBG]: " + logStr + COLOR_RST); }
+
+   public static void info(String logStr)
+   { System.out.println(COLOR_INFO + "[INFO]: " + logStr + COLOR_RST); }
+
+   public static void warn(String logStr)
+   { System.out.println(COLOR_WARNING + "[WARN]: " + logStr + COLOR_RST); }
+
+   public static void err(String logStr)
+   { System.out.println(COLOR_ERROR + "[ERR]: " + logStr + COLOR_RST); }
+
+   public static void fatal(String logStr)
+   { System.out.println(COLOR_FATAL + "[FATAL]: " + logStr + COLOR_RST); }
+
+   // Device error codes
+   public static void code(DeviceErrCode devErrCode, short devID)
+   { code(devErrCode,devID,""); }
+
+   public static void code(DeviceErrCode devErrCode, short devID, String addDscr)
+   {
+    ErrCodeInfo errCodeInfo = devErrCode.getErrCodeInfo();
+    System.out.println(ErrCodeSevColorMap.get(errCodeInfo.sevLev) + printHeadDevSev(devErrCode.getDevType(),devID,errCodeInfo.sevLev) + " " + addDscr + COLOR_RST);
+   }
+
+
+
+   // CloudModule mc = new CloudModule();
 
 
   } catch(MqttException me) {

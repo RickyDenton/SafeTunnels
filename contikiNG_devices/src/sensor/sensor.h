@@ -180,38 +180,38 @@ enum sensorErrCode
   // NOTE: This error code is also published automatically by the MQTT
   //       broker on the TOPIC_SENSORS_ERROR as the sensor's "last will"
   //
-  ERR_SENSOR_MQTT_DISCONNECTED,
+  ERR_SENSOR_MQTT_DISCONNECTED = 0,
 
   // The sensor failed to publish a sampled quantity
   // (C02 or temperature) to the MQTT broker
-  ERR_SENSOR_PUB_QUANTITY_FAILED,
+  ERR_SENSOR_PUB_QUANTITY_FAILED = 1,
 
   // ----------------- Invalid MQTT Publications Reception -----------------
 
   // The sensor received a MQTT message on a topic it is not subscribed to
-  ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC,
+  ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC = 2,
 
   // The sensor failed to subscribe on the TOPIC_AVG_FAN_REL_SPEED topic
-  ERR_SENSOR_SUB_AVGFANRELSPEED_FAILED,
+  ERR_SENSOR_SUB_AVGFANRELSPEED_FAILED = 3,
 
   // The sensor received the publication of an
   // invalid "avgFanRelSpeed" value (not [0,100])
-  ERR_SENSOR_RECV_INVALID_AVGFANRELSPEED,
+  ERR_SENSOR_RECV_INVALID_AVGFANRELSPEED = 4,
 
   // ---------------------- Invalid Application States ----------------------
 
   // The sensor established a connection with the MQTT broker
   // when not in the 'MQTT_CLI_STATE_BROKER_CONNECTING' state
-  ERR_SENSOR_MQTT_CONNECTED_NOT_CONNECTING,
+  ERR_SENSOR_MQTT_CONNECTED_NOT_CONNECTING = 5,
 
   // The MQTT engine invoked a callback of unknown type
-  ERR_SENSOR_MQTT_ENGINE_UNKNOWN_CALLBACK_TYPE,
+  ERR_SENSOR_MQTT_ENGINE_UNKNOWN_CALLBACK_TYPE = 6,
 
   // Unknown MQTT client state in the sensor process main loop
-  ERR_SENSOR_MAIN_LOOP_UNKNOWN_MQTT_CLI_STATE,
+  ERR_SENSOR_MAIN_LOOP_UNKNOWN_MQTT_CLI_STATE = 7,
 
   // The sensor process has exited from its main loop
-  ERR_SENSOR_MAIN_LOOP_EXITED
+  ERR_SENSOR_MAIN_LOOP_EXITED = 8
  };
 
 
