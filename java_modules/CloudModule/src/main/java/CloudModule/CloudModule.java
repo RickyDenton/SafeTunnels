@@ -15,8 +15,12 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import devices.sensor.BaseSensor;
 import logging.Log;
 
-import static devices.sensor.SensorErrCode.ERR_SENSOR_MQTT_DISCONNECTED;
-import static devices.sensor.SensorErrCode.ERR_SENSOR_SUB_AVGFANRELSPEED_FAILED;
+import java.util.Map;
+
+import static devices.actuator.ActuatorErrCode.ERR_LIGHT_PUT_NO_LIGHTSTATE;
+import static devices.sensor.SensorErrCode.*;
+import static errors.ErrCodeSeverity.ERROR;
+import static errors.ErrCodeSeverity.WARNING;
 
 
 public class CloudModule implements MqttCallback
@@ -60,10 +64,9 @@ public class CloudModule implements MqttCallback
   }
 
 
-  public static void main(String[] args){
-
-
-   try {
+  public static void main(String[] args)
+   {
+    try {
 
     CloudModule mc = new CloudModule();
 
