@@ -146,27 +146,27 @@
 enum MQTTCliState
  {
   // The sensor must still initialize the MQTT engine
-  MQTT_CLI_STATE_INIT,
+  MQTT_CLI_STATE_INIT = 0,
 
   // The sensor has initialized the MQTT engine
   // and is waiting for the RPL DODAG to converge
-  MQTT_CLI_STATE_ENGINE_OK,
+  MQTT_CLI_STATE_ENGINE_OK = 1,
 
   // The sensor is online and attempting
   // to connect with the MQTT broker
-  MQTT_CLI_STATE_NET_OK,
+  MQTT_CLI_STATE_NET_OK = 2,
 
   // The sensor is waiting for the connection
   // with the MQTT broker to be established
-  MQTT_CLI_STATE_BROKER_CONNECTING,
+  MQTT_CLI_STATE_BROKER_CONNECTING = 3,
 
   // The sensor is connected with the MQTT broker but is not
   // yet subscribed on the TOPIC_AVG_FAN_REL_SPEED topic
-  MQTT_CLI_STATE_BROKER_CONNECTED,
+  MQTT_CLI_STATE_BROKER_CONNECTED = 4,
 
   // The sensor is connected with the MQTT broker AND is subscribed
   // on the TOPIC_AVG_FAN_REL_SPEED topic (steady-state)
-  MQTT_CLI_STATE_BROKER_SUBSCRIBED
+  MQTT_CLI_STATE_BROKER_SUBSCRIBED = 5
  };
 
 
