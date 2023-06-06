@@ -1,4 +1,4 @@
 package errors;
 
-public interface SafeTunnelsErrCode
+public interface ErrCode
  { public ErrCodeInfo getErrCodeInfo(); }

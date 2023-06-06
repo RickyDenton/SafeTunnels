@@ -1,6 +1,6 @@
 package devices.actuator;
 
-import devices.DeviceErrCode;
+import devices.DevErrCode;
 import errors.ErrCodeInfo;
 
 import java.util.EnumMap;
@@ -9,7 +9,7 @@ import java.util.Map;
 import static errors.ErrCodeSeverity.WARNING;
 
 
-public enum ActuatorErrCode implements DeviceErrCode
+public enum ActuatorErrCode implements DevErrCode
  {
   // No error
   COAP_REQ_OK,
