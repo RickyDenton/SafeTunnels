@@ -1,4 +1,4 @@
-package modules;
+package modules.SensorsMQTTHandler;
 
 // Paho imports
 import devices.sensor.SensorErrCode;
@@ -12,7 +12,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import logging.Log;
 
 import static devices.sensor.BaseSensor.*;
-import static modules.SensorsMQTTHandlerErrCode.*;
+import static modules.SensorsMQTTHandler.SensorsMQTTHandlerErrCode.*;
 
 import org.json.*;
 
@@ -48,6 +48,43 @@ public abstract class SensorsMQTTHandler implements MqttCallback
    }
 
 
+  // Lost connection with the MQTT broker
+  public void connectionLost(Throwable cause)
+   {
+    // Log that connection with the MQTT broker has been lost
+    Log.code(ERR_MQTT_BROKER_DISCONNECTED,cause.toString());
+
+    try
+     {
+      // Attempt to reconnect with the MQTT broker
+      MQTTClient.connect();
+
+      Log.info("Reconnected with the MQTT broker @" + MQTT_BROKER_ENDPOINT + ", subscribing on topics");
+
+      // Re-subscribe on topics
+      MQTTClient.subscribe(TOPIC_SENSORS_ERRORS);
+      MQTTClient.subscribe(TOPIC_SENSORS_C02);
+      MQTTClient.subscribe(TOPIC_SENSORS_TEMP);
+     }
+    catch(MqttException mqttExcp)
+     { Log.code(ERR_MQTT_BROKER_RECONN_FAILED,"(reason = " + mqttExcp.getMessage() + ")"); }
+   }
+
+
+  // A published MQTT message has been ACKd by the MQTT broker
+  public void deliveryComplete(IMqttDeliveryToken token)
+   {}
+
+  // Publish an updated "AvgFanRelSpeed" value to the MQTT broker
+  public void publishAvgFanRelSpeed(int avgFanRelSpeed)
+   {
+    MqttMessage message = new MqttMessage(String.valueOf(avgFanRelSpeed).getBytes());
+
+    try
+     { MQTTClient.publish(TOPIC_AVG_FAN_REL_SPEED, message); }
+    catch(MqttException mqttExcp)
+     { Log.code(ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED,"(reason = " + mqttExcp.getMessage() + ")"); }
+   }
 
 
   private String getSensorMAC(JSONObject mqttMsgJSON,String mqttMsgStr) throws  ErrCodeExcp
@@ -148,17 +185,6 @@ public abstract class SensorsMQTTHandler implements MqttCallback
    }
 
 
-  public void connectionLost(Throwable cause)
-   {
-
-
-   }
-
-  public void deliveryComplete(IMqttDeliveryToken token)
-   {}
-
-
-
   public void messageArrived(String topic, MqttMessage mqttMsg)
    {
     // MQTT message
@@ -242,17 +268,7 @@ public abstract class SensorsMQTTHandler implements MqttCallback
      { Log.excp(errCodeExcp);}
    }
 
-  public void publishAvgFanRelSpeed(int avgFanRelSpeed)
-   {
-    MqttMessage message = new MqttMessage(String.valueOf(avgFanRelSpeed).getBytes());
-
-    try
-     { MQTTClient.publish(TOPIC_AVG_FAN_REL_SPEED, message); }
-    catch(MqttException mqttExcp)
-     { Log.code(ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED,"(reason = " + mqttExcp.getMessage() + ")"); }
-   }
-
-  /* ---- Abstract method ---- */
+  /* ---- Abstract methods ---- */
 
   // Get sensorID from its MAC
   public abstract int getSensorID(String sensorMAC);

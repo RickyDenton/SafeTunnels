@@ -1,4 +1,4 @@
-package modules;
+package modules.SensorsMQTTHandler;
 
 import errors.ErrCodeInfo;
 import errors.ModuleErrCode;
@@ -12,6 +12,14 @@ import static errors.ErrCodeSeverity.ERROR;
 public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
  {
   /* =========================== Enumeration Values Definition =========================== */
+
+  /* -------------------------- General MQTT Broker Interaction -------------------------- */
+
+  // Disconnected from the MQTT broker
+  ERR_MQTT_BROKER_DISCONNECTED,
+
+  // Failed to reconnect with the MQTT broker
+  ERR_MQTT_BROKER_RECONN_FAILED,
 
   // An error occurred in publishing an average fan relative speed value
   ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED,
@@ -68,6 +76,9 @@ public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
 
   private static final EnumMap<SensorsMQTTHandlerErrCode,ErrCodeInfo> sensorsErrorsInfoMap = new EnumMap<>(Map.ofEntries
    (
+    /* ------------------------ General MQTT Broker Interaction ------------------------ */
+    Map.entry(ERR_MQTT_BROKER_DISCONNECTED,new ErrCodeInfo(ERROR,"The MQTT Handler has disconnected from the MQTT broker, attempting reconnection...")),
+     Map.entry(ERR_MQTT_BROKER_RECONN_FAILED,new ErrCodeInfo(ERROR,"MQTT Broker reconnection attempt failed, please restart the application to restore MQTT connectivity")),
     Map.entry(ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED,new ErrCodeInfo(ERROR,"An error occurred in publishing an average fan relative speed value")),
 
     /* ------------------ Received MQTT Message General Errors Codes ------------------ */

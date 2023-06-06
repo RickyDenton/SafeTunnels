@@ -81,7 +81,7 @@ public abstract class Log
 
   public static void dbg(String logStr)
    {
-    if(ErrCodeSeverity.DEBUG.ordinal() >= LOG_LEVEL.ordinal())
+    if(ErrCodeSeverity.DEBUG.ordinal() == LOG_LEVEL.ordinal())
      System.out.println(COLOR_DBG + "[DBG]: " + logStr + COLOR_RST); }
 
   public static void info(String logStr)
