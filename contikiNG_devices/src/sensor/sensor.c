@@ -201,26 +201,26 @@ char* sensorErrCodeToStr(enum sensorErrCode sensErrCode)
 
     case ERR_SENSOR_MQTT_DISCONNECTED:
      sprintf(sensorErrCodeStr, "The sensor has disconnected from the MQTT broker");
-    break;
+     break;
 
     case ERR_SENSOR_PUB_QUANTITY_FAILED:
      sprintf(sensorErrCodeStr, "Failed to publish a sampled quantity");
-    break;
+     break;
 
     // ----------------- Invalid MQTT Publications Reception -----------------
 
     case ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC:
      sprintf(sensorErrCodeStr, "Received a MQTT message on a non-subscribed topic");
-    break;
+     break;
 
     case ERR_SENSOR_SUB_AVGFANRELSPEED_FAILED:
      sprintf(sensorErrCodeStr, "Failed to subscribe on the "
                                "\"" TOPIC_AVG_FAN_REL_SPEED "\" topic");
-    break;
+     break;
 
     case ERR_SENSOR_RECV_INVALID_AVGFANRELSPEED:
      sprintf(sensorErrCodeStr, "Received an invalid \"avgFanRelSpeed\" value");
-    break;
+     break;
 
     // ---------------------- Invalid Application States ----------------------
 
@@ -312,14 +312,14 @@ void logPublishError(enum sensorErrCode sensErrCode)
     // its additional description was stored in the "errDscr" buffer
     if(errDscr[0] != '\0')
      snprintf(MQTTMsgContentsBuf, MQTT_MSG_CONTENTS_BUF_SIZE, "{"
-                                                      " \"ID\": \"%s\","
+                                                      " \"MAC\": \"%s\","
                                                       " \"errCode\": %u,"
                                                       " \"errDscr\": \"%s\","
                                                       " \"MQTTCliState\": %u"
                                                       " }", nodeID, sensErrCode, errDscr, MQTTCliState);
     else
      snprintf(MQTTMsgContentsBuf, MQTT_MSG_CONTENTS_BUF_SIZE, "{"
-                                                      " \"ID\": \"%s\","
+                                                      " \"MAC\": \"%s\","
                                                       " \"errCode\": %u,"
                                                       " \"MQTTCliState\": %u"
                                                       " }", nodeID, sensErrCode, MQTTCliState);
@@ -536,7 +536,7 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue,
       snprintf(MQTTMsgContentsBuf,
                sizeof(MQTTMsgContentsBuf),
                "{ "
-               "\"ID\": \"%s\", "                      // Node ID (MAC Address)
+               "\"MAC\": \"%s\", "                      // Node ID/MAC Address
                "\"%s\": %u "                           // "quantity" : value
                "}", nodeID, quantity, quantityValue);
 
@@ -791,7 +791,7 @@ void sensor_MQTT_CLI_STATE_NET_OK_Callback()
   snprintf(MQTTMsgContentsBuf,
            sizeof(MQTTMsgContentsBuf),
            "{ "
-           "\"ID\": \"%s\", "    // Node ID (MAC Address)
+           "\"MAC\": \"%s\", "    // Node ID/MAC Address)
            "\"errCode\": %u "    // ERR_SENSOR_MQTT_DISCONNECTED
            "}", nodeID, ERR_SENSOR_MQTT_DISCONNECTED);
 

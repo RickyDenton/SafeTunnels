@@ -6,6 +6,7 @@ import errors.*;
 import java.util.EnumMap;
 import java.util.Map;
 
+// Testing purposes
 import static devices.actuator.ActuatorErrCode.ERR_LIGHT_PUT_NO_LIGHTSTATE;
 import static devices.sensor.SensorErrCode.ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC;
 
