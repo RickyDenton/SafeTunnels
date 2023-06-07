@@ -13,6 +13,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import logging.Log;
 
 import static devices.sensor.BaseSensor.*;
+import static devices.sensor.BaseSensor.SensorMQTTCliState.MQTT_CLI_STATE_UNKNOWN;
 import static modules.SensorsMQTTHandler.SensorsMQTTHandlerErrCode.*;
 
 import org.json.*;
@@ -67,9 +68,9 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     Log.dbg("Connected with the MQTT broker @" + MQTT_BROKER_ENDPOINT + ", subscribing on topics");
 
     // Subscribe on topics
-    MQTTClient.subscribe(TOPIC_SENSORS_ERRORS);
     MQTTClient.subscribe(TOPIC_SENSORS_C02);
     MQTTClient.subscribe(TOPIC_SENSORS_TEMP);
+    MQTTClient.subscribe(TOPIC_SENSORS_ERRORS);
 
     Log.dbg("Subscribed on the sensors' topics, waiting for publications");
    }
@@ -145,16 +146,17 @@ public abstract class SensorsMQTTHandler implements MqttCallback
 
   private SensorMQTTCliState getSensorMQTTCliState(JSONObject mqttMsgJSON,String mqttMsgStr) throws  ErrCodeExcp
    {
-    // Check if the received MQTT message contains the
-    // required sensor "sensorMQTTCliState" attribute
-    if(!mqttMsgJSON.has("MQTTCliState"))
-     throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_MQTTCLISTATE_MISSING,mqttMsgStr);
-
-    // Attempt to interpret the sensor "errCode" attribute as an int
-    try
-     { return SensorMQTTCliState.values()[mqttMsgJSON.getInt("MQTTCliState")]; }
-    catch(JSONException jsonExcp)
-     { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_MQTTCLISTATE_NOT_INT,mqttMsgStr); }
+    // If the received MQTT message contains the optional sensor "MQTTCliState" attribute
+    if(mqttMsgJSON.has("MQTTCliState"))
+     {
+      // Attempt to extract the sensor "MQTTCliState" attribute as a String
+      try
+       { return SensorMQTTCliState.values()[mqttMsgJSON.getInt("MQTTCliState")]; }
+      catch(JSONException jsonExcp)
+       { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_MQTTCLISTATE_NOT_INT,mqttMsgStr); }
+     }
+    else
+     return MQTT_CLI_STATE_UNKNOWN;
    }
 
 
@@ -255,17 +257,25 @@ public abstract class SensorsMQTTHandler implements MqttCallback
          // Attempt to extract the required "errCode" attribute from the MQTT error message
          sensorErrCode = getSensorErrCode(mqttMsgJSON,mqttMsgStr);
 
-         // Attempt to extract the required "MQTTCliState" attribute from the MQTT error message
+         // Attempt to extract the optional "MQTTCliState" attribute from the MQTT error message
          sensorMQTTCliState = getSensorMQTTCliState(mqttMsgJSON,mqttMsgStr);
 
          // Attempt to extract the optional "errDscr" attribute from the MQTT error message
          sensorErrDscr = getSensorErrDscr(mqttMsgJSON,mqttMsgStr);
 
-         // Log the error
-         Log.code(sensorErrCode,sensorID,sensorErrDscr + " (MQTT_CLI_STATE = '" + sensorMQTTCliState + "')");
+         // If the sensor has disconnected
+         if(sensorErrCode == SensorErrCode.ERR_SENSOR_MQTT_DISCONNECTED)
+          {
+           // Update the sensor connection status
+           sensor.connState = false;
 
-         // If the sensor has disconnected ('ERR_SENSOR_MQTT_DISCONNECTED'), invoke the associated abstract handler
-         handleSensorDisconnect(sensorID);
+           // Invoke the sensor disconnection abstract handler
+           handleSensorDisconnect(sensorID);
+          }
+
+         // Otherwise, just log the reported sensor error
+         else
+          Log.code(sensorErrCode,sensorID,sensorErrDscr + " (MQTT_CLI_STATE = '" + sensorMQTTCliState + "')");
          break;
 
         // A sensor CO2 density reading has been received
@@ -274,9 +284,15 @@ public abstract class SensorsMQTTHandler implements MqttCallback
          // Attempt to extract the required "C02" attribute from the MQTT message
          recvQuantity = getSensorC02Reading(mqttMsgJSON,mqttMsgStr);
 
-         // If the sensor was offline, call the virtual handler to set its status to online
+         // If the sensor was offline
          if(!sensorConnStatus)
-          handleSensorConnect(sensorID);
+          {
+           // Update the sensor connection status
+           sensor.connState = true;
+
+           // Invoke the sensor connection abstract handler
+           handleSensorConnect(sensorID);
+          }
 
          // Pass the information on the C02 sensor reading to the virtual handler
          handleSensorC02Reading(sensorID,recvQuantity);
@@ -288,9 +304,15 @@ public abstract class SensorsMQTTHandler implements MqttCallback
          // Attempt to extract the required "temp" attribute from the MQTT message
          recvQuantity = getSensorTempReading(mqttMsgJSON,mqttMsgStr);
 
-         // If the sensor was offline, call the virtual handler to set its status to online
+         // If the sensor was offline
          if(!sensorConnStatus)
-          handleSensorConnect(sensorID);
+          {
+           // Update the sensor connection status
+           sensor.connState = true;
+
+           // Invoke the sensor connection abstract handler
+           handleSensorConnect(sensorID);
+          }
 
          // Pass the information on the temperature sensor reading to the virtual handler
          handleSensorTempReading(sensorID,recvQuantity);

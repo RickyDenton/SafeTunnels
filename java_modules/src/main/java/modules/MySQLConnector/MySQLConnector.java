@@ -1,12 +1,12 @@
 package modules.MySQLConnector;
 
-import devices.Device.*;
 import devices.actuator.BaseActuator;
 import devices.sensor.BaseSensor;
 import logging.Log;
 
 import java.sql.*;
 import java.util.HashMap;
+import java.util.Properties;
 
 import static modules.MySQLConnector.MySQLConnectorErrCode.*;
 
@@ -50,9 +50,11 @@ public abstract class MySQLConnector
 
   /* ==================================== ATTRIBUTES ==================================== */
 
-  // SafeTunnels database connection
-  protected static Connection STDBConn;
+  // SafeTunnels Database connection
+  private Connection STDBConn;
 
+  // SafeTunnels Database connection properties
+  Properties STDBConnProperties;
 
   /* ================================= PROTECTED METHODS ================================= */
 
@@ -75,8 +77,35 @@ public abstract class MySQLConnector
    }
   */
 
+  private void connectToDB()
+   {
+    try
+     { STDBConn = DriverManager.getConnection(ST_DB_ENDPOINT,STDBConnProperties);}
+
+    // Failing to connect with the database is a FATAL error
+    catch(java.sql.SQLException sqlExcp)
+     { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp + ")"); }
+   }
+
+  private void checkDBConn()
+   {
+    try
+     {
+      // If the database connection has been closed, attempt to reopen it
+      if(STDBConn.isClosed())
+       connectToDB();
+     }
+    catch(java.sql.SQLException sqlExcp)
+     { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp + ")"); }
+   }
+
+
+
   protected void pushDevState(String seriesTable, String devIDColumn, String valueColumn, int devID, String value) throws java.sql.SQLException
    {
+    // Ensure the database connection to be active
+    checkDBConn();
+
     // Build the query to push the updated device state into the database
     String pushDevConnStatusQuery = "INSERT INTO " + seriesTable + "( " + devIDColumn + "," + valueColumn + ") VALUES(" + devID + "," + value +")";
 
@@ -92,97 +121,7 @@ public abstract class MySQLConnector
      }
    }
 
-  // TODO: Check if something useful, otherwise remove
 
-  /*
-  // Attempts to push an updated device connection state into the database, return whether the operation was successful
-  private boolean pushDevConnStatus(DevType devType, int devID, boolean connStatus)
-   {
-    // Retrieve the DB connStateSeries table associated with "devType"
-    String connStateSeriesTable = getConnStateSeriesTable(devType);
-
-    // Retrieve the name of the ID column associated with "devType"
-    String devIDColumn = getDevIDColumn(devType);
-
-    // Convert the boolean connStatus to a (short) bit)
-    short connStatusBit = connStatus?(short)1:(short)0;
-
-    // Query to push the updated device connection status
-    String pushDevConnStatusQuery = "INSERT INTO " + connStateSeriesTable + "( " + devIDColumn + ",connState) VALUES(" + devID + "," + connStatusBit +")";
-
-    // Attempt to push the updated device connection status into the database
-    try
-     {
-      int numRowsChanged = mySQLStmt.executeUpdate(pushDevConnStatusQuery);
-
-      // Ensure that a row was affected by the update
-      if(numRowsChanged == 0)
-       {
-        // Log the error
-        Log.code(ERR_DB_PUSH_DEVCONNSTATE_NOROWS);
-
-        // Return that the device connection state was NOT pushed into the database
-        return false;
-       }
-
-      // Return that the device connection state
-      // was successfully pushed into the database
-      return true;
-     }
-    catch(SQLException sqlExcp)
-     {
-      // Log the error
-      Log.code(ERR_DB_PUSH_DEVCONNSTATE,"(reason = " + sqlExcp + ")");
-
-      // Return that the device connection state was NOT pushed into the database
-      return false;
-     }
-   }
-
-  // Attempts to push an updated device state (C02, temp for sensors, lightState, fanRelSpeed for actuators) into the database
-  private boolean pushDevState(DevType devType, int devID, Object updatedState)
-   {
-    // Retrieve the DB connStateSeries table associated with "devType"
-    String connStateSeriesTable = getConnStateSeriesTable(devType);
-
-    // Retrieve the name of the ID column associated with "devType"
-    String devIDColumn = getDevIDColumn(devType);
-
-    // Convert the boolean connStatus to a (short) bit)
-    short connStatusBit = connStatus?(short)1:(short)0;
-
-    // Query to push the updated device connection status
-    String pushDevConnStatusQuery = "INSERT INTO " + connStateSeriesTable + "( " + devIDColumn + ",connState) VALUES(" + devID + "," + connStatusBit +")";
-
-    // Attempt to push the updated device connection status into the database
-    try
-     {
-      int numRowsChanged = mySQLStmt.executeUpdate(pushDevConnStatusQuery);
-
-      // Ensure that a row was affected by the update
-      if(numRowsChanged == 0)
-       {
-        // Log the error
-        Log.code(ERR_DB_PUSH_DEVCONNSTATE_NOROWS);
-
-        // Return that the device connection state was NOT pushed into the database
-        return false;
-       }
-
-      // Return that the device connection state
-      // was successfully pushed into the database
-      return true;
-     }
-    catch(SQLException sqlExcp)
-     {
-      // Log the error
-      Log.code(ERR_DB_PUSH_DEVCONNSTATE,"(reason = " + sqlExcp + ")");
-
-      // Return that the device connection state was NOT pushed into the database
-      return false;
-     }
-   }
-  */
 
   /* ================================== PUBLIC METHODS ================================== */
 
@@ -191,28 +130,15 @@ public abstract class MySQLConnector
   // Constructor
   public MySQLConnector()
    {
-    /*
+    // Initialize the database connection properties
+    STDBConnProperties = new Properties();
+    STDBConnProperties.put("user",ST_DB_USER);
+    STDBConnProperties.put("password",ST_DB_PWD);
+    STDBConnProperties.put("autoReconnect","true");
+    STDBConnProperties.put("maxReconnects","4");
 
-    // Attempt to establish a connection with the database
-    try(Connection STDBConn = DriverManager.getConnection(ST_DB_ENDPOINT,ST_DB_USER,ST_DB_PWD))
-     { this.STDBConn = STDBConn; }
-
-    // Failing to connect with the database or to initialize the statement is a FATAL error
-    catch(SQLException sqlExcp)
-     { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp + ")"); }
-
-     */
-    java.util.Properties connProperties = new java.util.Properties();
-    connProperties.put("user",ST_DB_USER);
-    connProperties.put("password",ST_DB_PWD);
-    connProperties.put("autoReconnect","true");
-    connProperties.put("maxReconnects","4");
-
-
-    try
-     { STDBConn = DriverManager.getConnection(ST_DB_ENDPOINT,connProperties);}
-    catch(java.sql.SQLException sqlExcp)
-     { Log.err("shit"); }
+    // Attempt to connect with the database
+    connectToDB();
    }
 
 
@@ -243,6 +169,9 @@ public abstract class MySQLConnector
    {
     // <MAC,BaseSensor> map of sensors in the database to be returned
     HashMap<String,BaseSensor> sensorsMap = new HashMap<>();
+
+    // Ensure the database connection to be active
+    checkDBConn();
 
     // Query to retrieve all sensors in the database
     String getAllSensorsQuery = "SELECT * FROM " + ST_DB_SENSORS_TABLE;
@@ -277,6 +206,9 @@ public abstract class MySQLConnector
    {
     // <MAC,BaseActuator> map of sensors in the database to be returned
     HashMap<String,BaseActuator> actuatorsMap = new HashMap<>();
+
+    // Ensure the database connection to be active
+    checkDBConn();
 
     // Query to retrieve all actuators in the database
     String getAllActuatorsQuery = "SELECT * FROM " + ST_DB_ACTUATORS_TABLE;

@@ -5,17 +5,6 @@ import devices.Device;
 
 public class BaseSensor implements Device
  {
-
-  // The quantities sampled by a sensor
-  public enum Quantity
-   {
-    // C02 density (ppm)
-    C02,
-
-    // Temperature (°C)
-    temp,
-   };
-
   public enum SensorMQTTCliState
    {
     // The sensor must still initialize the MQTT engine
@@ -39,8 +28,11 @@ public class BaseSensor implements Device
 
     // The sensor is connected with the MQTT broker AND is subscribed
     // on the TOPIC_AVG_FAN_REL_SPEED topic (steady-state)
-    MQTT_CLI_STATE_BROKER_SUBSCRIBED
-   };
+    MQTT_CLI_STATE_BROKER_SUBSCRIBED,
+
+    // Unknown sensor MQTT client state (used if not specified in error messages)
+    MQTT_CLI_STATE_UNKNOWN,
+   }
 
 
   // Sensors MQTT topics
