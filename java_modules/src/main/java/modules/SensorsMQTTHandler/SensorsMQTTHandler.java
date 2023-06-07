@@ -16,6 +16,7 @@ import static devices.sensor.BaseSensor.*;
 import static devices.sensor.BaseSensor.SensorMQTTCliState.MQTT_CLI_STATE_UNKNOWN;
 import static modules.SensorsMQTTHandler.SensorsMQTTHandlerErrCode.*;
 
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.json.*;
 
 import java.util.HashMap;
@@ -39,9 +40,14 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     // Initialize the sensorMap
     this.sensorMap = sensorMap;
 
-    // Attempt to initialize the PAHO MQTT client module
+    /*
+     * Attempt to initialize the PAHO MQTT client module
+     *
+     * NOTE: Explicitly passing a MemoryPersistence object to the MqttClient()
+     *       function suppresses the PAHO illegal reflective access warning
+     */
     try
-     { MQTTClient = new MqttClient(MQTT_BROKER_ENDPOINT,mqttCliID); }
+     { MQTTClient = new MqttClient(MQTT_BROKER_ENDPOINT,mqttCliID,new MemoryPersistence()); }
     catch(MqttException mqttExcp)
      { Log.code(ERR_MQTT_PAHO_INIT_FAILED,"(reason = " + mqttExcp.getMessage() + ")"); }
 
@@ -72,7 +78,7 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     MQTTClient.subscribe(TOPIC_SENSORS_TEMP);
     MQTTClient.subscribe(TOPIC_SENSORS_ERRORS);
 
-    Log.dbg("Subscribed on the sensors' topics, waiting for publications");
+    Log.dbg("Successfully subscribed on the sensors' topics");
    }
 
 

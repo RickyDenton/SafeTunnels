@@ -58,6 +58,9 @@ final class CloudModule extends SensorsMQTTHandler
          { mutexDB.unlock(); }
        }
      },MQTT_CLI_MAX_INACTIVITY * 1000); // In milliseconds
+
+    // Log that the Cloud Module initialization was successful
+    Log.info("Cloud Module successfully initialized");
    }
 
 
@@ -139,7 +142,7 @@ final class CloudModule extends SensorsMQTTHandler
     // If LOG_LEVEL = DEBUG, log the map of sensors retrieved from the database (which is surely not null)
     if(Log.LOG_LEVEL == ErrCodeSeverity.DEBUG)
      {
-      Log.dbg(sensorMap.size() + "sensors were retrieved from the database <MAC,sensorID>:");
+      Log.dbg(sensorMap.size() + " sensors were retrieved from the database <MAC,sensorID>:");
       sensorMap.forEach((MAC,sensor) -> Log.dbg(" - <" + MAC + "," + sensor.ID + ">"));
      }
 
