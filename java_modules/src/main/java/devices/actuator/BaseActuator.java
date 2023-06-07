@@ -5,8 +5,6 @@ import devices.Device;
 
 public class BaseActuator implements Device
  {
-  public final short deviceID;
-
   public enum LightState
    {
     // The light is OFF (NOMINAL)
@@ -25,6 +23,12 @@ public class BaseActuator implements Device
     LIGHT_STATE_INVALID
    }
 
-  public BaseActuator(short deviceID)
-   {this.deviceID = deviceID;}
+  public final short ID;
+  public boolean connState;
+
+  public BaseActuator(short ID)
+   {
+    this.ID = ID;
+    this.connState = false;
+   }
  }

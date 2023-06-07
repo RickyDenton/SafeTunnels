@@ -6,6 +6,16 @@ import devices.Device;
 public class BaseSensor implements Device
  {
 
+  // The quantities sampled by a sensor
+  public enum Quantity
+   {
+    // C02 density (ppm)
+    C02,
+
+    // Temperature (°C)
+    temp,
+   };
+
   public enum SensorMQTTCliState
    {
     // The sensor must still initialize the MQTT engine
@@ -39,8 +49,13 @@ public class BaseSensor implements Device
   public final static String TOPIC_SENSORS_ERRORS = "SafeTunnels/sensorsErrors";
   public final static String TOPIC_AVG_FAN_REL_SPEED = "SafeTunnels/avgFanRelSpeed";
 
-  public final short deviceID;
 
-  public BaseSensor(short deviceID)
-   {this.deviceID = deviceID;}
+  public final short ID;
+  public boolean connState;
+
+  public BaseSensor(short ID)
+   {
+    this.ID = ID;
+    this.connState = false;
+   }
  }

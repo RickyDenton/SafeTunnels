@@ -1,80 +1,121 @@
 package CloudModule;
 
-// Paho imports
-import devices.DevErrCode;
-import errors.DevErrCodeExcp;
-import errors.ErrCodeExcp;
-import errors.ErrCodeInfo;
-import errors.ErrCodeSeverity;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-
 import devices.sensor.BaseSensor;
+import errors.ErrCodeSeverity;
 import logging.Log;
+import modules.SensorsMQTTHandler.SensorsMQTTHandler;
 
-import java.util.Map;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import static devices.actuator.ActuatorErrCode.ERR_LIGHT_PUT_NO_LIGHTSTATE;
-import static devices.sensor.SensorErrCode.*;
-import static errors.ErrCodeSeverity.ERROR;
-import static errors.ErrCodeSeverity.WARNING;
+import static CloudModule.CloudModuleErrCode.*;
+import static modules.MySQLConnector.MySQLConnector.*;
 
 
-public class CloudModule implements MqttCallback
+final class CloudModule extends SensorsMQTTHandler
  {
+  // Max sensors MQTT inactivity in seconds
+  private final static int MQTT_CLI_MAX_INACTIVITY = 50;
 
-  // MQTT Broker endpoint
-  private final static String MQTT_BROKER_ENDPOINT = "tcp://127.0.0.1:1883";
+  private final CloudMySQLConnector cloudMySQLConnector;
 
-  // CloudModule MQTT ClientID
-  private final static String MQTT_CLI_ID = "CloudModule";
-
-
+  /* ==================================== ATTRIBUTES ==================================== */
 
   // Constructor
-  public CloudModule() throws MqttException
+  public CloudModule(CloudMySQLConnector cloudMySQLConnector, HashMap<String,BaseSensor> sensorMap)
    {
-    MqttClient mqttClient = new MqttClient(MQTT_BROKER_ENDPOINT, MQTT_CLI_ID);
-    System.out.println("Connecting to broker: "+MQTT_BROKER_ENDPOINT);
+    // Attempt to initialize the Cloud Module MQTT Handler
+    super("CloudModule",sensorMap);
 
-    mqttClient.setCallback( this );
+    // Set the Cloud MySQL connector
+    this.cloudMySQLConnector = cloudMySQLConnector;
 
-    mqttClient.connect();
+    // Initialize the timer for updating to "false" the connState of all
+    // sensors a MQTT publication was not received from in the database
+    Timer sensorsOfflineUpdateTimer = new Timer();
+    sensorsOfflineUpdateTimer.schedule(new TimerTask()
+     {
+      public void run()
+       {
+        sensorMap.forEach((MAC,sensor) ->
+         {
+          if(!sensor.connState)
+           handleSensorDisconnect(sensor.ID);
+         });
+       }
+     },MQTT_CLI_MAX_INACTIVITY * 1000); // In milliseconds
+   }
 
-    mqttClient.subscribe(BaseSensor.TOPIC_SENSORS_ERRORS);
+  // Handle sensor disconnection
+  public void handleSensorConnect(int sensorID)
+   {
+    try
+     {
+      cloudMySQLConnector.pushSensorConnStatus(sensorID,true);
+      Log.warn("sensor" + sensorID + " is now online");
+     }
+    catch(SQLException sqlExcp)
+     { Log.code(ERR_CLOUD_SENSOR_ONLINE_UPDATE_FAILED,"(sensorID = " + sensorID + ", reason = " + sqlExcp + ")"); }
+   }
 
-    mqttClient.subscribe(BaseSensor.TOPIC_SENSORS_C02);
-    mqttClient.subscribe(BaseSensor.TOPIC_SENSORS_TEMP);
+  // Handle sensor disconnection
+  public void handleSensorDisconnect(int sensorID)
+   {
+    try
+     {
+      cloudMySQLConnector.pushSensorConnStatus(sensorID,false);
+      Log.warn("sensor" + sensorID + " appears to be offline (pushed into the database)");
+     }
+    catch(SQLException sqlExcp)
+     { Log.code(ERR_CLOUD_SENSOR_OFFLINE_UPDATE_FAILED,"(sensorID = " + sensorID + ", reason = " + sqlExcp + ")"); }
    }
 
 
-  public void connectionLost(Throwable cause) {
-   // TODO Auto-generated method stub
-  }
 
-  public void messageArrived(String topic, MqttMessage message) throws Exception {
-   System.out.println(String.format("[%s]: %s", topic, new String(message.getPayload())));
-  }
+  // Handle C02 reading
+  public void handleSensorC02Reading(int sensorID,int newC02)
+   {
+    // Attempt to push the updated C02 value into the database
+    try
+     {
+      cloudMySQLConnector.pushSensorQuantity(ST_DB_SENSORS_TABLE_C02,ST_DB_SENSORS_COLUMN_C02,sensorID,newC02);
+      Log.info("Pushed sensor" + sensorID + " updated C02 density value (" + newC02 + ") into the database");
+     }
+    catch(SQLException sqlExcp)
+     { Log.code(ERR_CLOUD_SENSOR_C02_UPDATE_FAILED,"(sensorID = " + sensorID + ", value = " + newC02 + ", reason = " + sqlExcp + ")"); }
+   }
 
-  public void deliveryComplete(IMqttDeliveryToken token) {
-   // TODO Auto-generated method stub
-  }
-
+  // Handle temperature reading
+  public void handleSensorTempReading(int sensorID,int newTemp)
+   {
+    // Attempt to push the updated temperature value into the database
+    try
+     {
+      cloudMySQLConnector.pushSensorQuantity(ST_DB_SENSORS_TABLE_TEMP,ST_DB_SENSORS_COLUMN_TEMP,sensorID,newTemp);
+      Log.info("Pushed sensor" + sensorID + " updated temperature value (" + newTemp + ") into the database");
+     }
+    catch(SQLException sqlExcp)
+     { Log.code(ERR_CLOUD_SENSOR_TEMP_UPDATE_FAILED,"(sensorID = " + sensorID + ", value = " + newTemp + ", reason = " + sqlExcp + ")"); }
+   }
 
   public static void main(String[] args)
    {
-    try {
+    // Attempt to connect with the SafeTunnels MySQL database
+    CloudMySQLConnector cloudMySQLConnector = new CloudMySQLConnector();
 
-    CloudModule mc = new CloudModule();
+    // Attempt to retrieve the <MAC,BaseSensor> map of sensors in the database
+    HashMap<String,BaseSensor> sensorMap = cloudMySQLConnector.getDBSensorsMap();
 
+    // If LOG_LEVEL = DEBUG, log the map of sensors retrieved from the database (which is surely not null)
+    if(Log.LOG_LEVEL == ErrCodeSeverity.DEBUG)
+     {
+      Log.dbg(sensorMap.size() + "sensors were retrieved from the database <MAC,sensorID>:");
+      sensorMap.forEach((MAC,sensor) -> Log.dbg(" - <" + MAC + "," + sensor.ID + ">"));
+     }
 
-   } catch(MqttException me) {
-
-    me.printStackTrace();
+    // Attempt to initialize the Cloud Sensors MQTT Handler
+    new CloudModule(cloudMySQLConnector,sensorMap);
    }
-  }
-
  }

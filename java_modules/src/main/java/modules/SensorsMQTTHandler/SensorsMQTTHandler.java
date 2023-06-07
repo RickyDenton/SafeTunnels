@@ -1,6 +1,7 @@
 package modules.SensorsMQTTHandler;
 
 // Paho imports
+import devices.sensor.BaseSensor;
 import devices.sensor.SensorErrCode;
 import errors.ErrCodeExcp;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -16,6 +17,8 @@ import static modules.SensorsMQTTHandler.SensorsMQTTHandlerErrCode.*;
 
 import org.json.*;
 
+import java.util.HashMap;
+
 
 public abstract class SensorsMQTTHandler implements MqttCallback
  {
@@ -23,16 +26,40 @@ public abstract class SensorsMQTTHandler implements MqttCallback
   private final static String MQTT_BROKER_ENDPOINT = "tcp://127.0.0.1:1883";
 
   // MQTT Handler PAHO Client module
-  MqttClient MQTTClient;
+  protected MqttClient MQTTClient;
+
+  // Sensors map
+  protected final HashMap<String,BaseSensor> sensorMap;
+
 
   // Constructor
-  public SensorsMQTTHandler(String mqttCliID) throws MqttException
+  public SensorsMQTTHandler(String mqttCliID,HashMap<String,BaseSensor> sensorMap)
    {
-    // Initialize the PAHO MQTT client module
-    MQTTClient = new MqttClient(MQTT_BROKER_ENDPOINT, mqttCliID);
+    // Initialize the sensorMap
+    this.sensorMap = sensorMap;
+
+    // Attempt to initialize the PAHO MQTT client module
+    try
+     { MQTTClient = new MqttClient(MQTT_BROKER_ENDPOINT,mqttCliID); }
+    catch(MqttException mqttExcp)
+     { Log.code(ERR_MQTT_PAHO_INIT_FAILED,"(reason = " + mqttExcp.getMessage() + ")"); }
+
+    // Set the PAHO callback as this object
     MQTTClient.setCallback(this);
 
-    Log.dbg("PAHO MQTT client module initialized, attempting to connect with the MQTT broker @" + MQTT_BROKER_ENDPOINT);
+    Log.dbg("SensorsMQTTHandler MQTT client module initialized");
+
+    // Attempt to connect with the MQTT broker
+    try
+     { connectMQTTBroker(); }
+    catch(MqttException mqttExcp)
+     { Log.code(ERR_MQTT_BROKER_CONN_FAILED,"(reason = " + mqttExcp.getMessage() + ")"); }
+   }
+
+
+  public void connectMQTTBroker() throws MqttException
+   {
+    Log.dbg("Attempting to connect with the MQTT broker @" + MQTT_BROKER_ENDPOINT);
 
     // Attempt to connect with the MQTT broker
     MQTTClient.connect();
@@ -54,20 +81,11 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     // Log that connection with the MQTT broker has been lost
     Log.code(ERR_MQTT_BROKER_DISCONNECTED,cause.toString());
 
+    // Attempt to reconnect with the MQTT broker
     try
-     {
-      // Attempt to reconnect with the MQTT broker
-      MQTTClient.connect();
-
-      Log.info("Reconnected with the MQTT broker @" + MQTT_BROKER_ENDPOINT + ", subscribing on topics");
-
-      // Re-subscribe on topics
-      MQTTClient.subscribe(TOPIC_SENSORS_ERRORS);
-      MQTTClient.subscribe(TOPIC_SENSORS_C02);
-      MQTTClient.subscribe(TOPIC_SENSORS_TEMP);
-     }
+     { connectMQTTBroker(); }
     catch(MqttException mqttExcp)
-     { Log.code(ERR_MQTT_BROKER_RECONN_FAILED,"(reason = " + mqttExcp.getMessage() + ")"); }
+     { Log.code(ERR_MQTT_BROKER_CONN_FAILED,"(reason = " + mqttExcp.getMessage() + ")"); }
    }
 
 
@@ -193,7 +211,9 @@ public abstract class SensorsMQTTHandler implements MqttCallback
 
     // Sensors identifiers
     String sensorMAC;
-    int sensorID;
+    BaseSensor sensor;
+    short sensorID;
+    boolean sensorConnStatus;
 
     // Sensor Errors information
     SensorErrCode sensorErrCode;
@@ -217,8 +237,15 @@ public abstract class SensorsMQTTHandler implements MqttCallback
       // Attempt to extract the required sensor MAC from the MQTT message
       sensorMAC = getSensorMAC(mqttMsgJSON,mqttMsgStr);
 
-      // Retrieve the sensor's ID from its mac
-      sensorID = getSensorID(sensorMAC);
+      // Retrieve the BaseSensor object associated
+      // with the MAC and ensure it to be non-null
+      sensor = sensorMap.get(sensorMAC);
+      if(sensor == null)
+       throw new ErrCodeExcp(ERR_MQTT_MSG_NO_SENSOR_SUCH_MAC,mqttMsgStr);
+
+      // Retrieve the sensor's ID and connection status
+      sensorID = sensor.ID;
+      sensorConnStatus = sensor.connState;
 
       // Depending on the topic on which the message has been received
       switch(topic)
@@ -243,8 +270,13 @@ public abstract class SensorsMQTTHandler implements MqttCallback
 
         // A sensor CO2 density reading has been received
         case TOPIC_SENSORS_C02:
+
          // Attempt to extract the required "C02" attribute from the MQTT message
          recvQuantity = getSensorC02Reading(mqttMsgJSON,mqttMsgStr);
+
+         // If the sensor was offline, call the virtual handler to set its status to online
+         if(!sensorConnStatus)
+          handleSensorConnect(sensorID);
 
          // Pass the information on the C02 sensor reading to the virtual handler
          handleSensorC02Reading(sensorID,recvQuantity);
@@ -255,6 +287,10 @@ public abstract class SensorsMQTTHandler implements MqttCallback
 
          // Attempt to extract the required "temp" attribute from the MQTT message
          recvQuantity = getSensorTempReading(mqttMsgJSON,mqttMsgStr);
+
+         // If the sensor was offline, call the virtual handler to set its status to online
+         if(!sensorConnStatus)
+          handleSensorConnect(sensorID);
 
          // Pass the information on the temperature sensor reading to the virtual handler
          handleSensorTempReading(sensorID,recvQuantity);
@@ -270,8 +306,8 @@ public abstract class SensorsMQTTHandler implements MqttCallback
 
   /* ---- Abstract methods ---- */
 
-  // Get sensorID from its MAC
-  public abstract int getSensorID(String sensorMAC);
+  // Handle sensor connection
+  public abstract void handleSensorConnect(int sensorID);
 
   // Handle sensor disconnection
   public abstract void handleSensorDisconnect(int sensorID);

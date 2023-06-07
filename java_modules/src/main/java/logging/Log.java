@@ -16,10 +16,10 @@ public abstract class Log
   /* ========================== CONFIGURATION PARAMETERS ========================== */
 
   // The minimum LOG_LEVEL to be logged
-  private static final ErrCodeSeverity LOG_LEVEL = ErrCodeSeverity.DEBUG;
+  public static final ErrCodeSeverity LOG_LEVEL = ErrCodeSeverity.DEBUG;
 
   // Whether FATAL errors should terminate the applications
-  private static final boolean EXIT_IF_FATAL = true;
+  public static final boolean EXIT_IF_FATAL = true;
 
   /* ============================= COLORS MANAGEMENT ============================= */
 
@@ -93,7 +93,7 @@ public abstract class Log
   public static void warn(String logStr)
    {
     if(ErrCodeSeverity.WARNING.ordinal() >= LOG_LEVEL.ordinal())
-     System.out.println(COLOR_WARNING + "[WARN]: " + logStr + COLOR_RST);
+     System.out.println(COLOR_WARNING + "[WARNING]: " + logStr + COLOR_RST);
    }
 
   public static void err(String logStr)

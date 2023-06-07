@@ -7,19 +7,23 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import static errors.ErrCodeSeverity.ERROR;
+import static errors.ErrCodeSeverity.FATAL;
 
 
 public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
  {
   /* =========================== Enumeration Values Definition =========================== */
 
-  /* -------------------------- General MQTT Broker Interaction -------------------------- */
+  /* -------------------------------- General MQTT Errors -------------------------------- */
+
+  // Failed to initialize the PAHO MQTT client
+  ERR_MQTT_PAHO_INIT_FAILED,
+
+  // Failed to connect with the MQTT broker
+  ERR_MQTT_BROKER_CONN_FAILED,
 
   // Disconnected from the MQTT broker
   ERR_MQTT_BROKER_DISCONNECTED,
-
-  // Failed to reconnect with the MQTT broker
-  ERR_MQTT_BROKER_RECONN_FAILED,
 
   // An error occurred in publishing an average fan relative speed value
   ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED,
@@ -37,6 +41,9 @@ public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
 
   // The "MAC" attribute in a received MQTT message is null
   ERR_MQTT_MSG_MAC_NULL_STRING,
+
+  // No BaseSensor object associated with the "MAC" attribute received in a MQTT message was found
+  ERR_MQTT_MSG_NO_SENSOR_SUCH_MAC,
 
   // A MQTT message of unknown topic was received
   ERR_MQTT_MSG_UNKNOWN_TOPIC,
@@ -76,9 +83,10 @@ public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
 
   private static final EnumMap<SensorsMQTTHandlerErrCode,ErrCodeInfo> sensorsErrorsInfoMap = new EnumMap<>(Map.ofEntries
    (
-    /* ------------------------ General MQTT Broker Interaction ------------------------ */
+    /* ------------------------------ General MQTT Errors ------------------------------ */
+    Map.entry(ERR_MQTT_PAHO_INIT_FAILED,new ErrCodeInfo(FATAL,"Failed to initialize the PAHO MQTT client")),
+    Map.entry(ERR_MQTT_BROKER_CONN_FAILED,new ErrCodeInfo(FATAL,"Failed to connect with the MQTT broker")),
     Map.entry(ERR_MQTT_BROKER_DISCONNECTED,new ErrCodeInfo(ERROR,"The MQTT Handler has disconnected from the MQTT broker, attempting reconnection...")),
-     Map.entry(ERR_MQTT_BROKER_RECONN_FAILED,new ErrCodeInfo(ERROR,"MQTT Broker reconnection attempt failed, please restart the application to restore MQTT connectivity")),
     Map.entry(ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED,new ErrCodeInfo(ERROR,"An error occurred in publishing an average fan relative speed value")),
 
     /* ------------------ Received MQTT Message General Errors Codes ------------------ */
@@ -86,6 +94,7 @@ public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
     Map.entry(ERR_MQTT_MSG_MAC_MISSING,new ErrCodeInfo(ERROR,"A received MQTT message does not contain the sensor \"MAC\" attribute")),
     Map.entry(ERR_MQTT_MSG_MAC_NOT_STRING,new ErrCodeInfo(ERROR,"The \"MAC\" attribute in a received MQTT message could not be interpreted as a String")),
     Map.entry(ERR_MQTT_MSG_MAC_NULL_STRING,new ErrCodeInfo(ERROR,"The \"MAC\" attribute in a received MQTT message is null")),
+    Map.entry(ERR_MQTT_MSG_NO_SENSOR_SUCH_MAC,new ErrCodeInfo(ERROR,"No BaseSensor object associated with the \"MAC\" attribute received in a MQTT message was found")),
     Map.entry(ERR_MQTT_MSG_UNKNOWN_TOPIC,new ErrCodeInfo(ERROR,"A MQTT message of unknown topic was received")),
 
     /* ------------------- Received MQTT Error Message Errors Codes ------------------- */

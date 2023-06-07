@@ -1,4 +1,14 @@
 package devices;
 
 public interface Device
- { public final String deviceID = null; }
+ {
+  // The device types
+  public enum DevType
+   {
+    sensor,
+    actuator
+   };
+
+  // The device's unique ID in the database
+  public final String deviceID = null;
+ }
