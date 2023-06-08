@@ -1,4 +1,11 @@
+/* SafeTunnels Error Code Interface */
 package errors;
 
+/* =========================== INTERFACE DEFINITION =========================== */
 public interface ErrCode
- { public ErrCodeInfo getErrCodeInfo(); }
+ {
+  /**
+   * @return The errCodeInfo object associated with an error code
+   */
+  ErrCodeInfo getErrCodeInfo();
+ }

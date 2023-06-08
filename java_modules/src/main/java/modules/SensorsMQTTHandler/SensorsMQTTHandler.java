@@ -2,7 +2,7 @@ package modules.SensorsMQTTHandler;
 
 // Paho imports
 import devices.sensor.BaseSensor;
-import devices.sensor.SensorErrCode;
+import devices.sensor.BaseSensorErrCode;
 import errors.ErrCodeExcp;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -129,7 +129,7 @@ public abstract class SensorsMQTTHandler implements MqttCallback
    }
 
 
-  private SensorErrCode getSensorErrCode(JSONObject mqttMsgJSON,String mqttMsgStr) throws  ErrCodeExcp
+  private BaseSensorErrCode getSensorErrCode(JSONObject mqttMsgJSON,String mqttMsgStr) throws  ErrCodeExcp
    {
     // Check if the received MQTT message contains
     // the required sensor "errCode" attribute
@@ -138,7 +138,7 @@ public abstract class SensorsMQTTHandler implements MqttCallback
 
     // Attempt to interpret the sensor "errCode" attribute as an int
     try
-     { return SensorErrCode.values()[mqttMsgJSON.getInt("errCode")]; }
+     { return BaseSensorErrCode.values()[mqttMsgJSON.getInt("errCode")]; }
     catch(JSONException jsonExcp)
      { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRCODE_NOT_INT,"(\"" + mqttMsgStr + "\")"); }
    }
@@ -217,7 +217,7 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     boolean sensorConnStatus;
 
     // Sensor Errors information
-    SensorErrCode sensorErrCode;
+    BaseSensorErrCode sensorErrCode;
     SensorMQTTCliState sensorMQTTCliState;
     String sensorErrDscr;
 
@@ -263,7 +263,7 @@ public abstract class SensorsMQTTHandler implements MqttCallback
          sensorErrDscr = getSensorErrDscr(mqttMsgJSON,mqttMsgStr);
 
          // If the sensor has disconnected
-         if(sensorErrCode == SensorErrCode.ERR_SENSOR_MQTT_DISCONNECTED)
+         if(sensorErrCode == BaseSensorErrCode.ERR_SENSOR_MQTT_DISCONNECTED)
           {
            // Update the sensor connection status
            sensor.connState = false;

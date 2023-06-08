@@ -1,14 +1,15 @@
 package logging;
 
 import devices.DevErrCode;
+import devices.Device.*;
 import errors.*;
 
 import java.util.EnumMap;
 import java.util.Map;
 
 // Testing purposes
-import static devices.actuator.ActuatorErrCode.ERR_LIGHT_PUT_NO_LIGHTSTATE;
-import static devices.sensor.SensorErrCode.ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC;
+import static devices.actuator.BaseActuatorErrCode.ERR_LIGHT_PUT_NO_LIGHTSTATE;
+import static devices.sensor.BaseSensorErrCode.ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC;
 
 
 public abstract class Log
@@ -61,7 +62,7 @@ public abstract class Log
    { return "[" + sev + "] "; }
 
   // Prints the head of a DevErrCode (e.g. [sensor1 - ERR]: ... )
-  private static String printLogHeadDev(String devType, int devID, ErrCodeSeverity sev)
+  private static String printLogHeadDev(DevType devType, int devID, ErrCodeSeverity sev)
    { return "[" + devType + devID + " - " + sev + "]: "; }
 
   // Terminates the program is the error code is of fatal severity

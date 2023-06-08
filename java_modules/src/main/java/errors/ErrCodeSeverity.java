@@ -1,5 +1,8 @@
+/* SafeTunnels Error Codes Severities Definitions */
+
 package errors;
 
+/* ============================== ENUM DEFINITION ============================== */
 public enum ErrCodeSeverity
  {
   DEBUG  { @Override public String toString() { return "DEBUG"; } },

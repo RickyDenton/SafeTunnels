@@ -1,8 +1,17 @@
+/* SafeTunnels Module Error Code Interface Definition */
+
 package errors;
 
+/* =========================== INTERFACE DEFINITION =========================== */
 public interface ModuleErrCode extends ErrCode
  {
-  public ErrCodeInfo getErrCodeInfo();
+  /**
+   * @return The errCodeInfo object associated with a module error code
+   */
+  ErrCodeInfo getErrCodeInfo();
 
-  public String getModuleName();
+  /**
+   * @return The module name associated with a module error code
+   */
+  String getModuleName();
  }

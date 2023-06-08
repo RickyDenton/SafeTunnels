@@ -48,9 +48,13 @@
 
 /* ----------------------------- MQTT Parameters ----------------------------- */
 
-// MQTT messages topics and contents buffers sizes
-#define MQTT_MSG_TOPIC_BUF_SIZE    40
-#define MQTT_MSG_CONTENTS_BUF_SIZE 350
+// Outgoing MQTT messages topics and contents buffers sizes
+#define OUT_MQTT_MSG_TOPIC_BUF_SIZE    40
+#define OUT_MQTT_MSG_CONTENTS_BUF_SIZE 350
+
+// Incoming MQTT messages topics and contents buffers sizes
+#define IN_MQTT_MSG_TOPIC_BUF_SIZE    40
+#define IN_MQTT_MSG_CONTENTS_BUF_SIZE 10
 
 // --------------------------- MQTT Topics Definitions ---------------------------
 

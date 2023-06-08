@@ -47,9 +47,13 @@ static struct ctimer MQTTCommLEDTimer;
 
 /* --------------------------- MQTT Global Variables --------------------------- */
 
-// MQTT messages topics and contents buffers
-static char MQTTMsgTopicBuf[MQTT_MSG_TOPIC_BUF_SIZE];
-static char MQTTMsgContentsBuf[MQTT_MSG_CONTENTS_BUF_SIZE];
+// Outgoing MQTT messages topics and contents buffers
+static char outMQTTMsgTopicBuf[OUT_MQTT_MSG_TOPIC_BUF_SIZE];
+static char outMQTTMsgContentsBuf[OUT_MQTT_MSG_CONTENTS_BUF_SIZE];
+
+// Incoming MQTT messages topics and contents buffers
+static char inMQTTMsgTopicBuf[IN_MQTT_MSG_TOPIC_BUF_SIZE];
+static char inMQTTMsgContentsBuf[IN_MQTT_MSG_CONTENTS_BUF_SIZE];
 
 // Stores the result of a MQTT engine API call
 static mqtt_status_t MQTTEngineAPIRes;
@@ -306,27 +310,27 @@ void logPublishError(enum sensorErrCode sensErrCode)
   else
    {
     // Prepare the topic of the error message to be published
-    snprintf(MQTTMsgTopicBuf, MQTT_MSG_TOPIC_BUF_SIZE, TOPIC_SENSORS_ERRORS);
+    snprintf(outMQTTMsgTopicBuf, OUT_MQTT_MSG_TOPIC_BUF_SIZE, TOPIC_SENSORS_ERRORS);
 
     // Prepare the error message to be published depending on whether
     // its additional description was stored in the "errDscr" buffer
     if(errDscr[0] != '\0')
-     snprintf(MQTTMsgContentsBuf, MQTT_MSG_CONTENTS_BUF_SIZE, "{"
+     snprintf(outMQTTMsgContentsBuf, OUT_MQTT_MSG_CONTENTS_BUF_SIZE, "{"
                                                       " \"MAC\": \"%s\","
                                                       " \"errCode\": %u,"
                                                       " \"errDscr\": \"%s\","
                                                       " \"MQTTCliState\": %u"
                                                       " }", nodeID, sensErrCode, errDscr, MQTTCliState);
     else
-     snprintf(MQTTMsgContentsBuf, MQTT_MSG_CONTENTS_BUF_SIZE, "{"
+     snprintf(outMQTTMsgContentsBuf, OUT_MQTT_MSG_CONTENTS_BUF_SIZE, "{"
                                                       " \"MAC\": \"%s\","
                                                       " \"errCode\": %u,"
                                                       " \"MQTTCliState\": %u"
                                                       " }", nodeID, sensErrCode, MQTTCliState);
 
     // Attempt to publish the error message
-    MQTTEngineAPIRes = mqtt_publish(&mqttConn, NULL, MQTTMsgTopicBuf, (uint8_t*)MQTTMsgContentsBuf,
-                                    strlen(MQTTMsgContentsBuf), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+    MQTTEngineAPIRes = mqtt_publish(&mqttConn, NULL, outMQTTMsgTopicBuf, (uint8_t*)outMQTTMsgContentsBuf,
+                                    strlen(outMQTTMsgContentsBuf), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
 
     // If the error message has been successfully submitted to the broker
     if(MQTTEngineAPIRes == MQTT_STATUS_OK)
@@ -454,17 +458,17 @@ static void MQTTEngineCallback(__attribute__((unused)) struct mqtt_connection* m
 
      // Compute the minimum between the size of a received MQTT message
      // and the size of the client MQTT message contents buffer -1
-     minRecvBufSize = sizeof(MQTTMsgContentsBuf) - 1 > recvMsg->payload_length ?
-                      recvMsg->payload_length : sizeof(MQTTMsgContentsBuf) - 1;
+     minRecvBufSize = sizeof(inMQTTMsgContentsBuf) - 1 > recvMsg->payload_length ?
+                      recvMsg->payload_length : sizeof(inMQTTMsgContentsBuf) - 1;
 
      // Copy the received MQTT message topic and
      // contents into the local MQTT message buffers
-     strcpy(MQTTMsgTopicBuf, recvMsg->topic);
-     memcpy(MQTTMsgContentsBuf, recvMsg->payload_chunk, minRecvBufSize);
+     strcpy(inMQTTMsgTopicBuf, recvMsg->topic);
+     memcpy(inMQTTMsgContentsBuf, recvMsg->payload_chunk, minRecvBufSize);
 
      // Strings safety
-     MQTTMsgTopicBuf[sizeof(MQTTMsgTopicBuf)-1] = '\0';
-     MQTTMsgContentsBuf[minRecvBufSize] = '\0';
+     inMQTTMsgTopicBuf[sizeof(inMQTTMsgTopicBuf) - 1] = '\0';
+     inMQTTMsgContentsBuf[minRecvBufSize] = '\0';
 
      // Poll the sensor main loop to parse the received MQTT message
      // (sensor_MQTT_CLI_STATE_BROKER_SUBSCRIBED_Callback() function)
@@ -530,19 +534,19 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue,
     if(quantityDiffer || (publishInactivityTime > (unsigned long)MQTT_CLI_MAX_INACTIVITY))
      {
       // Prepare MQTT message topic ("SafeTunnels/C02" || "SafeTunnels/temp")
-      snprintf(MQTTMsgTopicBuf, sizeof(MQTTMsgTopicBuf), "SafeTunnels/%s", quantity);
+      snprintf(outMQTTMsgTopicBuf, sizeof(outMQTTMsgTopicBuf), "SafeTunnels/%s", quantity);
 
       // Prepare MQTT message contents
-      snprintf(MQTTMsgContentsBuf,
-               sizeof(MQTTMsgContentsBuf),
+      snprintf(outMQTTMsgContentsBuf,
+               sizeof(outMQTTMsgContentsBuf),
                "{ "
                "\"MAC\": \"%s\", "                      // Node ID/MAC Address
                "\"%s\": %u "                           // "quantity" : value
                "}", nodeID, quantity, quantityValue);
 
       // Attempt to submit the MQTT message to the broker
-      MQTTEngineAPIRes = mqtt_publish(&mqttConn, NULL, MQTTMsgTopicBuf, (uint8_t*)MQTTMsgContentsBuf,
-                                      strlen(MQTTMsgContentsBuf), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
+      MQTTEngineAPIRes = mqtt_publish(&mqttConn, NULL, outMQTTMsgTopicBuf, (uint8_t*)outMQTTMsgContentsBuf,
+                                      strlen(outMQTTMsgContentsBuf), MQTT_QOS_LEVEL_0, MQTT_RETAIN_OFF);
 
       // If the MQTT message was submitted to the MQTT broker
       if(MQTTEngineAPIRes == MQTT_STATUS_OK)
@@ -787,17 +791,17 @@ void sensor_MQTT_CLI_STATE_NET_OK_Callback()
   // Prepare the "last will" message to be automatically
   // published by the MQTT broker on the TOPIC_SENSORS_ERRORS
   // topic should the MQTT client disconnect from it
-  snprintf(MQTTMsgTopicBuf, sizeof(MQTTMsgTopicBuf), TOPIC_SENSORS_ERRORS);
-  snprintf(MQTTMsgContentsBuf,
-           sizeof(MQTTMsgContentsBuf),
+  snprintf(outMQTTMsgTopicBuf, sizeof(outMQTTMsgTopicBuf), TOPIC_SENSORS_ERRORS);
+  snprintf(outMQTTMsgContentsBuf,
+           sizeof(outMQTTMsgContentsBuf),
            "{ "
            "\"MAC\": \"%s\", "    // Node ID/MAC Address)
            "\"errCode\": %u "    // ERR_SENSOR_MQTT_DISCONNECTED
            "}", nodeID, ERR_SENSOR_MQTT_DISCONNECTED);
 
   // Set the MQTT client "last will" message
-  mqtt_set_last_will(&mqttConn, (char*)MQTTMsgTopicBuf,
-                     MQTTMsgContentsBuf, MQTT_QOS_LEVEL_0);
+  mqtt_set_last_will(&mqttConn, (char*)outMQTTMsgTopicBuf,
+                     outMQTTMsgContentsBuf, MQTT_QOS_LEVEL_0);
 
   // Attempt to submit a MQTT broker connection request
   MQTTEngineAPIRes = mqtt_connect(&mqttConn, (char*)MQTTBrokerIPv6Addr, MQTT_BROKER_DEFAULT_PORT,
@@ -841,8 +845,8 @@ void sensor_MQTT_CLI_STATE_BROKER_CONNECTED_Callback()
  {
   // Attempt to submit a subscription on the
   // TOPIC_AVG_FAN_REL_SPEED topic on the MQTT broker
-  snprintf(MQTTMsgTopicBuf, sizeof(MQTTMsgTopicBuf), TOPIC_AVG_FAN_REL_SPEED);
-  MQTTEngineAPIRes = mqtt_subscribe(&mqttConn, NULL, MQTTMsgTopicBuf, MQTT_QOS_LEVEL_0);
+  snprintf(outMQTTMsgTopicBuf, sizeof(outMQTTMsgTopicBuf), TOPIC_AVG_FAN_REL_SPEED);
+  MQTTEngineAPIRes = mqtt_subscribe(&mqttConn, NULL, outMQTTMsgTopicBuf, MQTT_QOS_LEVEL_0);
 
   // If the topic subscription submission was successful
   if(MQTTEngineAPIRes == MQTT_STATUS_OK)
@@ -891,14 +895,14 @@ void sensor_MQTT_CLI_STATE_BROKER_SUBSCRIBED_Callback()
 
   // Ensure the topic of the received MQTT message to be
   // TOPIC_AVG_FAN_REL_SPEED, logging and publishing the error otherwise
-  if(strncmp(MQTTMsgTopicBuf, TOPIC_AVG_FAN_REL_SPEED, sizeof(MQTTMsgTopicBuf)) != 0)
+  if(strncmp(inMQTTMsgTopicBuf, TOPIC_AVG_FAN_REL_SPEED, sizeof(inMQTTMsgTopicBuf)) != 0)
    LOG_PUB_ERROR(ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC,
-                 "(topic = %s, msg = %.100s)", MQTTMsgTopicBuf, MQTTMsgContentsBuf)
+                 "(topic = %s)", inMQTTMsgTopicBuf)
   else
    {
     // Interpret the MQTT message contents as an unsigned (long)
     // integer representing the new "avgFanRelSpeed" value
-    newAvgFanRelSpeed = strtoul(MQTTMsgContentsBuf, NULL, 10);
+    newAvgFanRelSpeed = strtoul(inMQTTMsgContentsBuf, NULL, 10);
 
     // Ensure the received "avgFanRelSpeed" value to be valid
     // (<= 100), logging and publishing the error otherwise
