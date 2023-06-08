@@ -1,4 +1,9 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 
 public class ControlModule extends JFrame
@@ -41,8 +46,7 @@ public class ControlModule extends JFrame
   private JPanel sensor1ImagesPanel;
   private JPanel sensor1TempImagePanel;
   private JPanel sensor1C02ImagePanel;
-  private JLabel sensor1TempImageLabel;
-  private JLabel sensor1TempC02Label;
+  private JLabel sensor1C02ImageLabel;
   private JPanel sensor1ValuesPanel;
   private JPanel sensor1C02ValuePanel;
   private JLabel sensor1C02ValueLabel;
@@ -92,6 +96,7 @@ public class ControlModule extends JFrame
   private JLabel actuator1FanRelSpeedValueLabel;
   private JPanel actuator1LightStateValuePanel;
   private JLabel actuator1LightStateValueLabel;
+  private JLabel sensor1tempImageLabel;
 
   public ControlModule()
    {
@@ -99,21 +104,18 @@ public class ControlModule extends JFrame
     setSize(800,600);
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     setVisible(true);
-    
-    mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-    systemPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-    devicesPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-
-    /*
-    devicesPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-    logPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-    */
 
     setContentPane(mainPanel);
 
-    
+
+
+
+
+
+      sensor2C02ImageLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/C02Icon.png")));
+      sensor2C02ImagePanel.add(sensor2C02ImageLabel);
+
+
    }
 
   public static void main(String[] args)

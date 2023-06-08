@@ -781,7 +781,7 @@
                                 <properties/>
                                 <border type="none"/>
                                 <children>
-                                  <component id="be7df" class="javax.swing.JLabel" binding="sensor1TempImageLabel">
+                                  <component id="7e0" class="javax.swing.JLabel" binding="sensor1tempImageLabel">
                                     <constraints>
                                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                     </constraints>
@@ -799,7 +799,7 @@
                                 <properties/>
                                 <border type="none"/>
                                 <children>
-                                  <component id="41bcc" class="javax.swing.JLabel" binding="sensor1TempC02Label">
+                                  <component id="41bcc" class="javax.swing.JLabel" binding="sensor1C02ImageLabel">
                                     <constraints>
                                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                     </constraints>
