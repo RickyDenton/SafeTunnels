@@ -16,6 +16,10 @@ public class ControlModule extends JFrame
   private JPanel devicesListsPanel;
   private JPanel actuatorsListPanel;
   private JPanel sensorsListPanel;
+  private JTextArea LogArea;
+  private JPanel actuatorsLabelPanel;
+  private JPanel sensorsLabelPanel;
+  private JPanel logLabelPanel;
 
   public ControlModule()
    {
@@ -24,20 +28,26 @@ public class ControlModule extends JFrame
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     setVisible(true);
     
-    mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    //mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    //systemPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+    //devicesPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
 
-    systemPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-    devicesPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+    //sensorsLabelPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+    //actuatorsLabelPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
 
     /*
     devicesPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
     logPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
     */
-
     setContentPane(mainPanel);
 
-    
+
+
+    SensorWidget s = new SensorWidget(); // 1st form
+    sensorsListPanel.add(s);
+
+
    }
 
   public static void main(String[] args)
