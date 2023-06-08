@@ -118,21 +118,14 @@ public abstract class SensorsMQTTHandler implements MqttCallback
 
     // Check if the received MQTT message contains the sensor "MAC" attribute
     if(!mqttMsgJSON.has("MAC"))
-     throw new ErrCodeExcp(ERR_MQTT_MSG_MAC_MISSING,mqttMsgStr);
+     throw new ErrCodeExcp(ERR_MQTT_MSG_MAC_MISSING,"(\"" + mqttMsgStr + "\")");
 
     // Attempt to extract the sensor "MAC" attribute
     // as a String and ensure it to be non-null
     try
-     {
-      sensorMAC = mqttMsgJSON.getString("MAC");
-
-      if(sensorMAC == null)
-       throw new ErrCodeExcp(ERR_MQTT_MSG_MAC_NOT_STRING,mqttMsgStr);
-
-      return sensorMAC;
-     }
+     { return mqttMsgJSON.getString("MAC"); }
     catch(JSONException jsonExcp)
-     { throw new ErrCodeExcp(ERR_MQTT_MSG_MAC_NULL_STRING,mqttMsgStr); }
+     { throw new ErrCodeExcp(ERR_MQTT_MSG_MAC_NOT_NONNULL_STRING,"(\"" + mqttMsgStr + "\")"); }
    }
 
 
@@ -141,13 +134,13 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     // Check if the received MQTT message contains
     // the required sensor "errCode" attribute
     if(!mqttMsgJSON.has("errCode"))
-     throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRCODE_MISSING,mqttMsgStr);
+     throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRCODE_MISSING,"(\"" + mqttMsgStr + "\")");
 
     // Attempt to interpret the sensor "errCode" attribute as an int
     try
      { return SensorErrCode.values()[mqttMsgJSON.getInt("errCode")]; }
     catch(JSONException jsonExcp)
-     { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRCODE_NOT_INT,mqttMsgStr); }
+     { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRCODE_NOT_INT,"(\"" + mqttMsgStr + "\")"); }
    }
 
   private SensorMQTTCliState getSensorMQTTCliState(JSONObject mqttMsgJSON,String mqttMsgStr) throws  ErrCodeExcp
@@ -159,7 +152,7 @@ public abstract class SensorsMQTTHandler implements MqttCallback
       try
        { return SensorMQTTCliState.values()[mqttMsgJSON.getInt("MQTTCliState")]; }
       catch(JSONException jsonExcp)
-       { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_MQTTCLISTATE_NOT_INT,mqttMsgStr); }
+       { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_MQTTCLISTATE_NOT_INT,"(\"" + mqttMsgStr + "\")"); }
      }
     else
      return MQTT_CLI_STATE_UNKNOWN;
@@ -175,7 +168,7 @@ public abstract class SensorsMQTTHandler implements MqttCallback
       try
        { return mqttMsgJSON.getString("errDscr"); }
       catch(JSONException jsonExcp)
-       { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRDSCR_NOT_STRING,mqttMsgStr);}
+       { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRDSCR_NOT_NONNULL_STRING,"(\"" + mqttMsgStr + "\")"); }
      }
     else
      return "";
@@ -187,13 +180,13 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     // Check if the received MQTT message contains
     // the required sensor "C02" attribute
     if(!mqttMsgJSON.has("C02"))
-     throw new ErrCodeExcp(ERR_MQTT_MSG_C02_MISSING,mqttMsgStr);
+     throw new ErrCodeExcp(ERR_MQTT_MSG_C02_MISSING,"(\"" + mqttMsgStr + "\")");
 
     // Attempt to interpret the "C02" attribute as an int
     try
      { return mqttMsgJSON.getInt("C02"); }
     catch(JSONException jsonExcp)
-     { throw new ErrCodeExcp(ERR_MQTT_MSG_C02_NOT_INT,mqttMsgStr); }
+     { throw new ErrCodeExcp(ERR_MQTT_MSG_C02_NOT_INT,"(\"" + mqttMsgStr + "\")"); }
    }
 
   private int getSensorTempReading(JSONObject mqttMsgJSON,String mqttMsgStr) throws  ErrCodeExcp
@@ -201,13 +194,13 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     // Check if the received MQTT message contains
     // the required sensor "temp" attribute
     if(!mqttMsgJSON.has("temp"))
-     throw new ErrCodeExcp(ERR_MQTT_MSG_TEMP_MISSING,mqttMsgStr);
+     throw new ErrCodeExcp(ERR_MQTT_MSG_TEMP_MISSING,"(\"" + mqttMsgStr + "\")");
 
     // Attempt to interpret the "temp" attribute as an int
     try
      { return mqttMsgJSON.getInt("temp"); }
     catch(JSONException jsonExcp)
-     { throw new ErrCodeExcp(ERR_MQTT_MSG_TEMP_NOT_INT,mqttMsgStr); }
+     { throw new ErrCodeExcp(ERR_MQTT_MSG_TEMP_NOT_INT,"(\"" + mqttMsgStr + "\")"); }
    }
 
 
@@ -240,7 +233,7 @@ public abstract class SensorsMQTTHandler implements MqttCallback
       try
        { mqttMsgJSON = new JSONObject(mqttMsgStr); }
       catch(JSONException jsonExcp)
-       { throw new ErrCodeExcp(ERR_MQTT_MSG_NOT_JSON,mqttMsgStr); }
+       { throw new ErrCodeExcp(ERR_MQTT_MSG_NOT_JSON,"(\"" + mqttMsgStr + "\")"); }
 
       // Attempt to extract the required sensor MAC from the MQTT message
       sensorMAC = getSensorMAC(mqttMsgJSON,mqttMsgStr);
@@ -249,7 +242,7 @@ public abstract class SensorsMQTTHandler implements MqttCallback
       // with the MAC and ensure it to be non-null
       sensor = sensorMap.get(sensorMAC);
       if(sensor == null)
-       throw new ErrCodeExcp(ERR_MQTT_MSG_NO_SENSOR_SUCH_MAC,mqttMsgStr);
+       throw new ErrCodeExcp(ERR_MQTT_MSG_NO_SENSOR_SUCH_MAC,"(\"" + mqttMsgStr + "\")");
 
       // Retrieve the sensor's ID and connection status
       sensorID = sensor.ID;
@@ -335,14 +328,14 @@ public abstract class SensorsMQTTHandler implements MqttCallback
   /* ---- Abstract methods ---- */
 
   // Handle sensor connection
-  public abstract void handleSensorConnect(int sensorID);
+  protected abstract void handleSensorConnect(int sensorID);
 
   // Handle sensor disconnection
-  public abstract void handleSensorDisconnect(int sensorID);
+  protected abstract void handleSensorDisconnect(int sensorID);
 
   // Handle C02 reading
-  public abstract void handleSensorC02Reading(int sensorID,int newC02);
+  protected abstract void handleSensorC02Reading(int sensorID,int newC02);
 
   // Handle temperature reading
-  public abstract void handleSensorTempReading(int sensorID,int newTemp);
+  protected abstract void handleSensorTempReading(int sensorID,int newTemp);
  }

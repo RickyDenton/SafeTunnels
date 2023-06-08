@@ -84,7 +84,7 @@ public abstract class MySQLConnector
 
     // Failing to connect with the database is a FATAL error
     catch(java.sql.SQLException sqlExcp)
-     { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp + ")"); }
+     { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp.getMessage() + ")"); }
    }
 
   private void checkDBConn()
@@ -96,7 +96,7 @@ public abstract class MySQLConnector
        connectToDB();
      }
     catch(java.sql.SQLException sqlExcp)
-     { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp + ")"); }
+     { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp.getMessage() + ")"); }
    }
 
 
@@ -124,8 +124,6 @@ public abstract class MySQLConnector
 
 
   /* ================================== PUBLIC METHODS ================================== */
-
-  // TODO: FIXME
 
   // Constructor
   public MySQLConnector()
@@ -189,13 +187,13 @@ public abstract class MySQLConnector
 
         // Retrieving no sensors from the database is a FATAL error
         if(sensorsMap.isEmpty())
-         Log.code(ERR_DB_GET_SENSORS);
+         Log.code(ERR_DB_NO_SENSORS);
        }
      }
 
     // Failing to retrieve the set of sensors in the database is a FATAL error
     catch(SQLException sqlExcp)
-     { Log.code(ERR_DB_GET_SENSORS, "(reason = " + sqlExcp + ")"); }
+     { Log.code(ERR_DB_GET_SENSORS, "(reason = " + sqlExcp.getMessage() + ")"); }
 
     // Return the <MAC,BaseSensor> map of sensors in the database
     return sensorsMap;
@@ -232,7 +230,7 @@ public abstract class MySQLConnector
 
     // Failing to retrieve the set of actuators in the database is a FATAL error
     catch(SQLException sqlExcp)
-     { Log.code(ERR_DB_GET_ACTUATORS, "(reason = " + sqlExcp + ")"); }
+     { Log.code(ERR_DB_GET_ACTUATORS, "(reason = " + sqlExcp.getMessage() + ")"); }
 
     // Return the <MAC,BaseActuator> map of actuators in the database
     return actuatorsMap;
