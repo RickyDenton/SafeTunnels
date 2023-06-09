@@ -1,6 +1,7 @@
 package ControlModule;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.PrintStream;
 
 import GUILogging.ANSIColorPane;
@@ -42,9 +43,12 @@ public class ControlModule extends JFrame
   public ControlModule()
    {
     setTitle("SafeTunnels Control Module");
-    setSize(415,600);
+    setSize(1100,385);
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     setVisible(true);
+
+    // mainPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 385));
+    setResizable(false);
 
     setContentPane(mainPanel);
 

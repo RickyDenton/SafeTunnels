@@ -26,7 +26,7 @@ public class ANSIColorPaneOutputStream extends OutputStream
 
   /**
    * Writes an array of bytes of a given length
-   * at a given offset in the GUI log window
+   * in the GUI log window at a given offset
    * @param buffer The array of bytes to be written
    * @param offset The offset the array must be written to
    * @param length The number of bytes to be written
@@ -34,8 +34,21 @@ public class ANSIColorPaneOutputStream extends OutputStream
   @Override
   public void write(byte[] buffer,int offset,int length)
    {
+    // Convert the array of bytes to be written in the GUI window to a string
     final String strToWrite = new String(buffer,offset,length);
-    SwingUtilities.invokeLater(() -> logWindow.logANSIStr(strToWrite));
+
+    // Set the operations to be performed by the GUI as soon as it is ready
+    SwingUtilities.invokeLater(() ->
+       {
+        // Enable the GUI Log window editing
+        logWindow.setEditable(true);
+
+        // Write the String to the GUI Log window
+        logWindow.logANSIStr(strToWrite);
+
+        // Disable the GUI Log window editing
+        logWindow.setEditable(false);
+       });
    }
 
 

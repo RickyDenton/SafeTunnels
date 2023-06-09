@@ -45,10 +45,13 @@ public class ANSIColorPane extends JTextPane
   /* ============================= PUBLIC METHODS ============================= */
 
   /**
-   * Constructor (same of the superclass)
+   * Constructor, disabling the JTextPane editing functionalities
+   * (which are temporarily reactivated by the
+   * ANSIColorPaneOutputStream write() method when needed)
    */
   public ANSIColorPane()
-   {}
+   { setEditable(false); }
+
 
   /**
    *
