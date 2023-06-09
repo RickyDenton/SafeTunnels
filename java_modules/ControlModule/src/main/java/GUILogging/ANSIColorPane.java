@@ -96,49 +96,49 @@ public class ANSIColorPane extends JTextPane
     // The string to be appended to the GUI Log window
     String strToLog;
 
-   // Only append non-null strings
-   if(ANSIString.length() > 0)
-    {
-     // If there is no ANSI escape sequence in
-     // the passed string, just print it in black
-     if(!ANSIString.startsWith("\033[38;5;"))
-      appendToLog(ANSIString,Color.BLACK);
+    // Only append non-null strings
+    if(ANSIString.length() > 0)
+     {
+      // If there is no ANSI escape sequence in
+      // the passed string, just print it in black
+      if(!ANSIString.startsWith("\033[38;5;"))
+       appendToLog(ANSIString,Color.BLACK);
 
-     // Otherwise, if there is an ANSI
-     // escape sequence in the passed string
-     else
-      {
-       /* ----------------- ANSI Color Retrieval ----------------- */
+       // Otherwise, if there is an ANSI
+       // escape sequence in the passed string
+      else
+       {
+        /* ----------------- ANSI Color Retrieval ----------------- */
 
-       // Retrieve the index of the ANSI escape
-       // sequence 'm' terminating character
-       mIndex = ANSIString.indexOf("m");
+        // Retrieve the index of the ANSI escape
+        // sequence 'm' terminating character
+        mIndex = ANSIString.indexOf("m");
 
-       // Extract the color identifier
-       // from the ANSI escape sequence
-       ANSIColorID = ANSIString.substring(7,mIndex);
+        // Extract the color identifier
+        // from the ANSI escape sequence
+        ANSIColorID = ANSIString.substring(7,mIndex);
 
-       // Instantiate the Color object
-       // associated with such ANSI color
-       ANSIColor = ANSIColorToColor(ANSIColorID);
+        // Instantiate the Color object
+        // associated with such ANSI color
+        ANSIColor = ANSIColorToColor(ANSIColorID);
 
-       /* ----------------- Log String Retrieval ----------------- */
+        /* ----------------- Log String Retrieval ----------------- */
 
-       // Determine the index of the last character of the string to be appended
-       // to the log window (excluding the final 'COLOR_RST' escape sequence)
-       endStringAppendIndex = ANSIString.indexOf("[0");
+        // Determine the index of the last character of the string to be appended
+        // to the log window (excluding the final 'COLOR_RST' escape sequence)
+        endStringAppendIndex = ANSIString.indexOf("[0");
 
-       // If the final 'COLOR_RST' escape sequence
-       // was not found, consider the entire string
-       if(endStringAppendIndex==-1)
-        endStringAppendIndex = ANSIString.length();
+        // If the final 'COLOR_RST' escape sequence
+        // was not found, consider the entire string
+        if(endStringAppendIndex==-1)
+         endStringAppendIndex = ANSIString.length();
 
-       // Extract the string to be appended to the GUI Log window
-       strToLog = ANSIString.substring(mIndex+1,endStringAppendIndex-1);
+        // Extract the string to be appended to the GUI Log window
+        strToLog = ANSIString.substring(mIndex+1,endStringAppendIndex-1);
 
-       // Append the string to the GUI Log window
-       appendToLog(strToLog,ANSIColor);
-      }
-    }
-  }
-}
+        // Append the string to the GUI Log window
+        appendToLog(strToLog,ANSIColor);
+       }
+     }
+   }
+ }
