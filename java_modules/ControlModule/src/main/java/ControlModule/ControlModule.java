@@ -1,6 +1,10 @@
+package ControlModule;
+
 import javax.swing.*;
 import java.io.PrintStream;
 
+import GUILogging.ANSIColorPane;
+import GUILogging.ANSIColorPaneOutputStream;
 import errors.DevErrCodeExcp;
 import errors.ErrCodeExcp;
 import logging.Log;
@@ -45,7 +49,7 @@ public class ControlModule extends JFrame
     setContentPane(mainPanel);
 
 
-    JTextAreaOutputStream out = new JTextAreaOutputStream (ANSIColorPane1);
+    ANSIColorPaneOutputStream out = new ANSIColorPaneOutputStream(ANSIColorPane1);
     System.setOut (new PrintStream(out));
 
     System.out.println("LOGGING TESTING");
