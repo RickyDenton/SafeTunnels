@@ -59,7 +59,7 @@ public class ControlModule extends JFrame
     Log.info("This is a info message");
     Log.warn("This is a warning message");
     Log.err("This is a error message");
-    Log.fatal("This is a fatal message");
+    // Log.fatal("This is a fatal message");
     Log.dbg("This should not be printed with EXIT_IF_FATAL == true");
 
     Log.code(ERR_LIGHT_PUT_NO_LIGHTSTATE,1);

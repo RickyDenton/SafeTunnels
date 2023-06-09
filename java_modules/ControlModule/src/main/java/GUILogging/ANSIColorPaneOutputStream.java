@@ -33,7 +33,10 @@ public class ANSIColorPaneOutputStream extends OutputStream
    */
   @Override
   public void write(byte[] buffer,int offset,int length)
-   { SwingUtilities.invokeLater(() -> logWindow.logANSIStr(new String(buffer,offset,length))); }
+   {
+    final String strToWrite = new String(buffer,offset,length);
+    SwingUtilities.invokeLater(() -> logWindow.logANSIStr(strToWrite));
+   }
 
 
   /**
