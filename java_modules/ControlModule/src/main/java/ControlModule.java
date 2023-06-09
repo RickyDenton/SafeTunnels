@@ -1,5 +1,4 @@
 import javax.swing.*;
-import java.awt.*;
 import java.io.PrintStream;
 
 import errors.DevErrCodeExcp;
@@ -19,7 +18,6 @@ public class ControlModule extends JFrame
   private JPanel logPanel;
   private JLabel LogLabel;
   private JPanel devicesPanel;
-  private JTextPane LogArea;
   private JPanel logLabelPanel;
   private JPanel devicesListsPanel;
   private JPanel actuatorsListPanel;
@@ -35,6 +33,7 @@ public class ControlModule extends JFrame
   private JButton EMERButton;
   private JLabel TryTry;
   private JLabel TryLamp;
+  private ANSIColorPane ANSIColorPane1;
 
   public ControlModule()
    {
@@ -42,11 +41,11 @@ public class ControlModule extends JFrame
     setSize(415,600);
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     setVisible(true);
-    setResizable(false);
+
     setContentPane(mainPanel);
 
 
-    JTextAreaOutputStream out = new JTextAreaOutputStream (LogArea);
+    JTextAreaOutputStream out = new JTextAreaOutputStream (ANSIColorPane1);
     System.setOut (new PrintStream(out));
 
     System.out.println("LOGGING TESTING");
@@ -56,7 +55,7 @@ public class ControlModule extends JFrame
     Log.info("This is a info message");
     Log.warn("This is a warning message");
     Log.err("This is a error message");
-    // Log.fatal("This is a fatal message");
+    Log.fatal("This is a fatal message");
     Log.dbg("This should not be printed with EXIT_IF_FATAL == true");
 
     Log.code(ERR_LIGHT_PUT_NO_LIGHTSTATE,1);

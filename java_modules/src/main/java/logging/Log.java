@@ -6,6 +6,7 @@ import errors.*;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 // Testing purposes
 import static devices.actuator.BaseActuatorErrCode.ERR_LIGHT_PUT_NO_LIGHTSTATE;
@@ -74,6 +75,11 @@ public abstract class Log
     if(sevLev==ErrCodeSeverity.FATAL && EXIT_IF_FATAL)
      {
       System.out.println(COLOR_FATAL + "The application will now exit" + COLOR_RST);
+
+      try
+       { TimeUnit.SECONDS.sleep(5); }
+      catch(InterruptedException excp)
+       { System.exit(1); }
       System.exit(1);
      }
    }
@@ -105,11 +111,16 @@ public abstract class Log
 
   public static void fatal(String logStr)
    {
-    System.out.println(COLOR_FATAL + "[FATAL]: " + logStr);
+    System.out.println(COLOR_FATAL + "[FATAL]: " + logStr + COLOR_RST);
 
     if(EXIT_IF_FATAL)
      {
       System.out.println(COLOR_FATAL + "The application will now exit" + COLOR_RST);
+
+      try
+       { TimeUnit.SECONDS.sleep(5); }
+      catch(InterruptedException excp)
+       { System.exit(1);}
       System.exit(1);
      }
    }

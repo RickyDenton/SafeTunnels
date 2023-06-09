@@ -6,9 +6,9 @@ import java.io.OutputStream;
 
 public class JTextAreaOutputStream extends OutputStream
  {
-  private final JTextPane destination;
+  private final ANSIColorPane destination;
 
-  public JTextAreaOutputStream(JTextPane destination)
+  public JTextAreaOutputStream(ANSIColorPane destination)
    {
     if(destination==null)
      throw new IllegalArgumentException("Destination is null");
@@ -25,12 +25,18 @@ public class JTextAreaOutputStream extends OutputStream
       @Override
       public void run()
        {
+        destination.appendANSI(text);
+       }
+        /*
         try
          {
-          destination.getStyledDocument().insertString(destination.getStyledDocument().getLength(),text,null);
+          //destination.getStyledDocument().insertString(destination.getStyledDocument().getLength(),text,null);
+          destination.appendANSI(text);
          }
         catch(BadLocationException badLoc)
          { System.out.println("shit"); }}
+
+         */
      });
    }
 
