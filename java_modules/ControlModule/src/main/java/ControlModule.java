@@ -1,4 +1,13 @@
 import javax.swing.*;
+import java.awt.*;
+import java.io.PrintStream;
+
+import errors.DevErrCodeExcp;
+import errors.ErrCodeExcp;
+import logging.Log;
+
+import static devices.actuator.BaseActuatorErrCode.ERR_LIGHT_PUT_NO_LIGHTSTATE;
+import static devices.sensor.BaseSensorErrCode.ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC;
 
 
 public class ControlModule extends JFrame
@@ -10,7 +19,7 @@ public class ControlModule extends JFrame
   private JPanel logPanel;
   private JLabel LogLabel;
   private JPanel devicesPanel;
-  private JTextArea LogArea;
+  private JTextPane LogArea;
   private JPanel logLabelPanel;
   private JPanel devicesListsPanel;
   private JPanel actuatorsListPanel;
@@ -24,24 +33,65 @@ public class ControlModule extends JFrame
   private JButton ONButton;
   private JButton ALERTButton;
   private JButton EMERButton;
+  private JLabel TryTry;
+  private JLabel TryLamp;
 
   public ControlModule()
    {
     setTitle("SafeTunnels Control Module");
-    setSize(425,600);
+    setSize(415,600);
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     setVisible(true);
     setResizable(false);
     setContentPane(mainPanel);
 
 
+    JTextAreaOutputStream out = new JTextAreaOutputStream (LogArea);
+    System.setOut (new PrintStream(out));
 
+    System.out.println("LOGGING TESTING");
+    System.out.println("===============");
 
-/*
+    Log.dbg("This is a debug message");
+    Log.info("This is a info message");
+    Log.warn("This is a warning message");
+    Log.err("This is a error message");
+    // Log.fatal("This is a fatal message");
+    Log.dbg("This should not be printed with EXIT_IF_FATAL == true");
 
-      sensor2C02ImageLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/C02Icon.png")));
-      sensor2C02ImagePanel.add(sensor2C02ImageLabel);
-*/
+    Log.code(ERR_LIGHT_PUT_NO_LIGHTSTATE,1);
+    Log.code(ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC,2,"(<additional description>)");
+
+    try
+     { throw new ErrCodeExcp(ERR_LIGHT_PUT_NO_LIGHTSTATE); }
+    catch(ErrCodeExcp excp)
+     { Log.excp(excp); }
+
+    try
+     { throw new ErrCodeExcp(ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC,"(<additional description>)"); }
+    catch(ErrCodeExcp excp)
+     { Log.excp(excp); }
+
+    try
+     { throw new DevErrCodeExcp(ERR_LIGHT_PUT_NO_LIGHTSTATE,1); }
+    catch(ErrCodeExcp excp)
+     { Log.excp(excp); }
+
+    try
+     { throw new DevErrCodeExcp(ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC,2,"(<additional description>)"); }
+    catch(ErrCodeExcp excp)
+     { Log.excp(excp); }
+
+    /* TODO: WORKING!
+
+    // Change a JPanel text and color
+    TryTry.setText("fuffa");
+    TryTry.setForeground(new Color(255,0,0));
+
+    // Change a JPanel icon
+    ImageIcon iconLogo = new ImageIcon("ControlModule/src/main/resources/LightBulb_ALERT_Icon_30.png");
+    TryLamp.setIcon(iconLogo);
+    */
 
    }
 

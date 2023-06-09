@@ -55,14 +55,13 @@
                 <properties/>
                 <border type="none"/>
                 <children>
-                  <component id="621cc" class="javax.swing.JTextArea" binding="LogArea">
+                  <component id="fa54c" class="javax.swing.JTextPane" binding="LogArea">
                     <constraints>
                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
+                      <background color="-1"/>
                       <editable value="false"/>
-                      <enabled value="true"/>
-                      <text value="ExampleLog"/>
                     </properties>
                   </component>
                 </children>
@@ -255,7 +254,7 @@
                                 <properties>
                                   <background color="-2302756"/>
                                   <font size="16"/>
-                                  <text value="80%"/>
+                                  <text value="-- %"/>
                                 </properties>
                               </component>
                             </children>
@@ -286,7 +285,7 @@
                             <children>
                               <component id="da35f" class="javax.swing.JLabel">
                                 <constraints>
-                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
                                   <background color="-2302756"/>
@@ -368,7 +367,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="OFF"/>
+                                  <text value="---"/>
                                 </properties>
                               </component>
                             </children>
@@ -518,7 +517,7 @@
                                 <properties>
                                   <background color="-2302756"/>
                                   <font size="16"/>
-                                  <text value="80%"/>
+                                  <text value="-- %"/>
                                 </properties>
                               </component>
                             </children>
@@ -547,9 +546,9 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="7ffd7" class="javax.swing.JLabel">
+                              <component id="7ffd7" class="javax.swing.JLabel" binding="TryLamp">
                                 <constraints>
-                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
                                   <background color="-2302756"/>
@@ -631,7 +630,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="OFF"/>
+                                  <text value="---"/>
                                 </properties>
                               </component>
                             </children>
@@ -748,7 +747,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="250 PPM"/>
+                                  <text value="--- PPM"/>
                                 </properties>
                               </component>
                             </children>
@@ -808,7 +807,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="30 °C"/>
+                                  <text value="-- °C"/>
                                 </properties>
                               </component>
                             </children>
@@ -925,7 +924,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="aae87" class="javax.swing.JLabel">
+                              <component id="aae87" class="javax.swing.JLabel" binding="TryTry">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -934,7 +933,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="250 PPM"/>
+                                  <text value="--- PPM"/>
                                 </properties>
                               </component>
                             </children>
@@ -994,7 +993,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="30 °C"/>
+                                  <text value="-- °C"/>
                                 </properties>
                               </component>
                             </children>
