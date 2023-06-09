@@ -28,10 +28,10 @@ public class ControlModule extends JFrame
   public ControlModule()
    {
     setTitle("SafeTunnels Control Module");
-    setSize(800,600);
+    setSize(425,600);
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     setVisible(true);
-
+    setResizable(false);
     setContentPane(mainPanel);
 
 
