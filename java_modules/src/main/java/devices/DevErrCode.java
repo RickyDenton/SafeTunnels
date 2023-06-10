@@ -7,8 +7,7 @@ package devices;
 /* --------------------------- SafeTunnels Packages --------------------------- */
 import errors.ErrCodeInfo;
 import errors.ErrCode;
-import devices.Device.DevType;
-
+import devices.BaseDevice.DevType;
 
 /* =========================== INTERFACE DEFINITION =========================== */
 public interface DevErrCode extends ErrCode

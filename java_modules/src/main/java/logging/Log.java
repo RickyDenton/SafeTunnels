@@ -1,7 +1,7 @@
 package logging;
 
 import devices.DevErrCode;
-import devices.Device.*;
+import devices.BaseDevice.DevType;
 import errors.*;
 
 import java.util.EnumMap;

@@ -5,12 +5,14 @@ package CloudModule;
 /* ================================== IMPORTS ================================== */
 
 /* -------------------------- Java Standard Libraries -------------------------- */
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.ArrayList;
 
 /* --------------------------- SafeTunnels Packages --------------------------- */
-import devices.sensor.BaseSensor;
 import errors.ErrCodeSeverity;
 import logging.Log;
+import modules.MySQLConnector.DevMACIDPair;
+import modules.SensorsMQTTHandler.SensorsMQTTHandler;
 
 
 /* ============================== CLASS DEFINITION ============================== */
@@ -21,12 +23,8 @@ final class CloudModule
   // The SafeTunnels MySQL database connector used by the Cloud Module
   final CloudMySQLConnector cloudMySQLConnector;
 
-  // The <MAC,BaseSensor> map of sensors read from the
-  // SafeTunnels database to receive MQTT publications from
-  final HashMap<String,BaseSensor> sensorMap;
-
-  // The Cloud Module MQTT Client Handler
-  final CloudSensorsMQTTHandler cloudSensorsMQTTHandler;
+  // The Cloud Module's sensors MQTT Client Handler
+  final SensorsMQTTHandler sensorsMQTTHandler;
 
   /* ============================== PRIVATE METHODS ============================== */
 
@@ -38,23 +36,33 @@ final class CloudModule
     // Attempt to connect with the SafeTunnels MySQL database
     cloudMySQLConnector = new CloudMySQLConnector();
 
-    // Attempt to retrieve the <MAC,BaseSensor> map of sensors from the database
-    sensorMap = cloudMySQLConnector.getDBSensorsMap();
+    // Attempt to retrieve the <MAC,sensorID> list of sensors stored in the database
+    ArrayList<DevMACIDPair> sensorsList = cloudMySQLConnector.getDBSensorsList();
 
-    // If LOG_LEVEL = DEBUG, log the map of sensors retrieved from the database
-    // (which is ascertained to be non-null by the getDBSensorsMap() method)
+    // If LOG_LEVEL = DEBUG, log the list of sensors retrieved from the database
+    // (which is ascertained to be non-null by the getDBSensorsList() method)
     if(Log.LOG_LEVEL == ErrCodeSeverity.DEBUG)
      {
-      Log.dbg(sensorMap.size() + " sensors were retrieved from the database <MAC,sensorID>:");
-      sensorMap.forEach((MAC,sensor) -> Log.dbg("|- <" + MAC + "," + sensor.ID + ">"));
+      Log.dbg(sensorsList.size() + " sensors were retrieved from the database <sensorID,MAC>:");
+      sensorsList.forEach((sensor) -> Log.dbg("|- <" + sensor.ID + "," + sensor.MAC + ">"));
      }
 
-    // Attempt to instantiate the MQTT Client Handler and connect with the MQTT broker
-    cloudSensorsMQTTHandler = new CloudSensorsMQTTHandler(cloudMySQLConnector,sensorMap);
+    // Initialize and populate the ArrayList of
+    // CloudSensorManagers to be passed to the SensorMQTTHandler
+    ArrayList<CloudSensorManager> sensorsManagersList = new ArrayList<>();
+    sensorsList.forEach(sensor -> sensorsManagersList.add
+                       (new CloudSensorManager(sensor.MAC,sensor.ID,cloudMySQLConnector)));
 
-    // Log that the Cloud Module initialization was successful
+    // Sort the ArrayList by increasing sensorID
+    Collections.sort(sensorsManagersList);
+
+    // Attempt to instantiate the Cloud MQTT Client Handler
+    sensorsMQTTHandler = new SensorsMQTTHandler("CloudModule",sensorsManagersList);
+
+    // Log that the Cloud Module has been successfully initialized
     Log.info("Cloud Module successfully initialized");
    }
+
 
   /**
    * Cloud Module application entry point

@@ -1,28 +1,26 @@
 package modules.SensorsMQTTHandler;
 
 // Paho imports
+
 import devices.sensor.BaseSensor;
 import devices.sensor.BaseSensorErrCode;
 import errors.ErrCodeExcp;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-
 import logging.Log;
+import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static devices.sensor.BaseSensor.*;
 import static devices.sensor.BaseSensor.SensorMQTTCliState.MQTT_CLI_STATE_UNKNOWN;
 import static modules.SensorsMQTTHandler.SensorsMQTTHandlerErrCode.*;
 
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.json.*;
 
-import java.util.HashMap;
-
-
-public abstract class SensorsMQTTHandler implements MqttCallback
+public class SensorsMQTTHandler implements MqttCallback
  {
   // MQTT Broker endpoint
   private final static String MQTT_BROKER_ENDPOINT = "tcp://127.0.0.1:1883";
@@ -30,15 +28,24 @@ public abstract class SensorsMQTTHandler implements MqttCallback
   // MQTT Handler PAHO Client module
   protected MqttClient MQTTClient;
 
-  // Sensors map
-  protected final HashMap<String,BaseSensor> sensorMap;
+  // Sensors list
+  ArrayList<? extends BaseSensor> sensorsList;
 
+  // The estimated maximum sensor MQTT inactivity in seconds
+  // for tuning the sensors' boostrap inactivity timer
+  // which, once triggered, properly updates all sensors
+  // publications have not been received from as offline
+  private final static int MQTT_CLI_MAX_INACTIVITY = 50;
+
+
+  // Whether the sensor offline bootstrap timer has run
+  public boolean sensorsOfflineBootstrapTimerHasRun;
 
   // Constructor
-  public SensorsMQTTHandler(String mqttCliID,HashMap<String,BaseSensor> sensorMap)
+  public SensorsMQTTHandler(String mqttCliID,ArrayList<? extends BaseSensor> sensorsList)
    {
-    // Initialize the sensorMap
-    this.sensorMap = sensorMap;
+    // Initialize the sensorList reference
+    this.sensorsList = sensorsList;
 
     /*
      * Attempt to initialize the PAHO MQTT client module
@@ -54,13 +61,32 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     // Set the PAHO callback as this object
     MQTTClient.setCallback(this);
 
-    Log.dbg("SensorsMQTTHandler MQTT client module initialized");
+    Log.dbg("Sensors MQTT client module initialized");
 
     // Attempt to connect with the MQTT broker
     try
      { connectMQTTBroker(); }
     catch(MqttException mqttExcp)
      { Log.code(ERR_MQTT_BROKER_CONN_FAILED,"(reason = " + mqttExcp.getMessage() + ")"); }
+
+    // Initialize the sensors' boostrap inactivity timer
+    // which, once triggered, properly updates all sensors
+    // publications have not been received from as offline
+    Timer sensorsOfflineUpdateTimer = new Timer();
+    sensorsOfflineUpdateTimer.schedule(new TimerTask()
+     {
+      public void run()
+       {
+        sensorsList.forEach((sensor) ->
+         {
+          if(!sensor.getConnState())
+           sensor.setConnStateOffline();
+         });
+
+        // Set that the timer has run
+        sensorsOfflineBootstrapTimerHasRun = true;
+       }
+     },MQTT_CLI_MAX_INACTIVITY * 1000); // In milliseconds
    }
 
 
@@ -100,13 +126,22 @@ public abstract class SensorsMQTTHandler implements MqttCallback
   public void deliveryComplete(IMqttDeliveryToken token)
    {}
 
-  // Publish an updated "AvgFanRelSpeed" value to the MQTT broker
-  public void publishAvgFanRelSpeed(int avgFanRelSpeed)
+  // Attempts to publish an updated "AvgFanRelSpeed" value to the MQTT broker
+  public void publishAvgFanRelSpeed(int newAvgFanRelSpeed)
    {
-    MqttMessage message = new MqttMessage(String.valueOf(avgFanRelSpeed).getBytes());
+    // Ensure the avgFanRelSpeed value to be valid
+    if(newAvgFanRelSpeed < 0 || newAvgFanRelSpeed > 100)
+     {
+      Log.code(ERR_MQTT_AVGFANRELSPEED_VALUE_INVALID,"(" + newAvgFanRelSpeed + ")");
+      return;
+     }
 
+    // Create the message to be published
+    MqttMessage newAvgFanRelSpeedMQTTMsg = new MqttMessage(String.valueOf(newAvgFanRelSpeed).getBytes());
+
+    // Attempt to publish the message on the "TOPIC_AVG_FAN_REL_SPEED" topic
     try
-     { MQTTClient.publish(TOPIC_AVG_FAN_REL_SPEED, message); }
+     { MQTTClient.publish(TOPIC_AVG_FAN_REL_SPEED, newAvgFanRelSpeedMQTTMsg); }
     catch(MqttException mqttExcp)
      { Log.code(ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED,"(reason = " + mqttExcp.getMessage() + ")"); }
    }
@@ -221,7 +256,6 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     String sensorMAC;
     BaseSensor sensor;
     short sensorID;
-    boolean sensorConnStatus;
 
     // Sensor Errors information
     BaseSensorErrCode sensorErrCode;
@@ -245,16 +279,19 @@ public abstract class SensorsMQTTHandler implements MqttCallback
       // Attempt to extract the required sensor MAC from the MQTT message
       sensorMAC = getSensorMAC(mqttMsgJSON,mqttMsgStr);
 
-      // Retrieve the BaseSensor object associated
-      // with the MAC and ensure it to be non-null
-      sensor = sensorMap.get(sensorMAC);
+      // Retrieve the BaseSensor object associated with the MAC
+      sensor = sensorsList.stream()
+               .filter(sensorMac -> sensorMAC.equals(sensorMac.MAC))
+               .findFirst()
+               .orElse(null);
+
+      // Ensure that a BaseSensor object was found
       if(sensor == null)
        throw new ErrCodeExcp(ERR_MQTT_MSG_NO_SENSOR_SUCH_MAC,"(\"" + mqttMsgStr + "\")");
 
       // Retrieve the sensor's ID and connection status
       sensorID = sensor.ID;
-      sensorConnStatus = sensor.connState;
-
+      
       // Depending on the topic on which the message has been received
       switch(topic)
        {
@@ -268,15 +305,21 @@ public abstract class SensorsMQTTHandler implements MqttCallback
 
          // Attempt to extract the optional "errDscr" attribute from the MQTT error message
          sensorErrDscr = getSensorErrDscr(mqttMsgJSON,mqttMsgStr);
-
-         // If the sensor has disconnected
+         
+         // If the sensor has disconnected,
          if(sensorErrCode == BaseSensorErrCode.ERR_SENSOR_MQTT_DISCONNECTED)
           {
-           // Update the sensor connection status
-           sensor.connState = false;
+           /*
+            * If the sensors' bootstrap inactivity timer has not run
+            * yet, the method was called upon receiving a sensor's last
+            * will disconnection message of a past execution that was
+            * retained by the MQTT broker, and that can be ignored
+            */
+           if(!sensorsOfflineBootstrapTimerHasRun)
+            return;
 
-           // Invoke the sensor disconnection abstract handler
-           handleSensorDisconnect(sensorID);
+           // Otherwise call the sensor's abstract disconnection handler
+           sensor.setConnStateOffline();
           }
 
          // Otherwise, just log the reported sensor error
@@ -289,19 +332,9 @@ public abstract class SensorsMQTTHandler implements MqttCallback
 
          // Attempt to extract the required "C02" attribute from the MQTT message
          recvQuantity = getSensorC02Reading(mqttMsgJSON,mqttMsgStr);
-
-         // If the sensor was offline
-         if(!sensorConnStatus)
-          {
-           // Update the sensor connection status
-           sensor.connState = true;
-
-           // Invoke the sensor connection abstract handler
-           handleSensorConnect(sensorID);
-          }
-
-         // Pass the information on the C02 sensor reading to the virtual handler
-         handleSensorC02Reading(sensorID,recvQuantity);
+         
+         // Call the sensor's setC02 abstract handler
+         sensor.setC02(recvQuantity);
          break;
 
         // A sensor temperature reading has been received
@@ -310,18 +343,8 @@ public abstract class SensorsMQTTHandler implements MqttCallback
          // Attempt to extract the required "temp" attribute from the MQTT message
          recvQuantity = getSensorTempReading(mqttMsgJSON,mqttMsgStr);
 
-         // If the sensor was offline
-         if(!sensorConnStatus)
-          {
-           // Update the sensor connection status
-           sensor.connState = true;
-
-           // Invoke the sensor connection abstract handler
-           handleSensorConnect(sensorID);
-          }
-
-         // Pass the information on the temperature sensor reading to the virtual handler
-         handleSensorTempReading(sensorID,recvQuantity);
+         // Call the sensor's temperature abstract handler
+         sensor.setTemp(recvQuantity);
          break;
 
         default:
@@ -331,18 +354,4 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     catch(ErrCodeExcp errCodeExcp)
      { Log.excp(errCodeExcp);}
    }
-
-  /* ---- Abstract methods ---- */
-
-  // Handle sensor connection
-  protected abstract void handleSensorConnect(int sensorID);
-
-  // Handle sensor disconnection
-  protected abstract void handleSensorDisconnect(int sensorID);
-
-  // Handle C02 reading
-  protected abstract void handleSensorC02Reading(int sensorID,int newC02);
-
-  // Handle temperature reading
-  protected abstract void handleSensorTempReading(int sensorID,int newTemp);
  }

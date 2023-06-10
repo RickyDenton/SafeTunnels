@@ -5,15 +5,17 @@ package devices.sensor;
 /* ================================== IMPORTS ================================== */
 
 /* -------------------------- Java Standard Libraries -------------------------- */
+
+import devices.BaseDevice.DevType;
+import devices.DevErrCode;
+import errors.ErrCodeInfo;
+
 import java.util.EnumMap;
 import java.util.Map;
 
-/* --------------------------- SafeTunnels Packages --------------------------- */
-import devices.DevErrCode;
-import devices.Device.*;
-import errors.ErrCodeInfo;
-import static devices.Device.DevType.sensor;
-import static errors.ErrCodeSeverity.*;
+import static devices.BaseDevice.DevType.sensor;
+import static errors.ErrCodeSeverity.ERROR;
+import static errors.ErrCodeSeverity.WARNING;
 
 
 /* ============================== ENUM DEFINITION ============================== */
@@ -87,7 +89,7 @@ public enum BaseSensorErrCode implements DevErrCode
    { return baseSensorErrCodeInfoMap.get(this); }
 
   /**
-   * @return The ModuleErrCode's name
+   * @return The DevErrCode's devType
    */
   public DevType getDevType()
    { return sensor; }
