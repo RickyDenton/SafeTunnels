@@ -14,7 +14,7 @@ public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
  {
   /* =========================== Enumeration Values Definition =========================== */
 
-  /* -------------------------------- General MQTT Errors -------------------------------- */
+  /* ---------------------------- MQTT Initialization Errors ---------------------------- */
 
   // Failed to initialize the PAHO MQTT client
   ERR_MQTT_PAHO_INIT_FAILED,
@@ -24,9 +24,6 @@ public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
 
   // Disconnected from the MQTT broker
   ERR_MQTT_BROKER_DISCONNECTED,
-
-  // An error occurred in publishing an average fan relative speed value
-  ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED,
 
   /* -------------------- Received MQTT Message General Errors Codes -------------------- */
 
@@ -77,17 +74,25 @@ public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
   ERR_MQTT_MSG_TEMP_MISSING,
 
   // The "temp" attribute in a MQTT temperature reading could not be interpreted as an integer
-  ERR_MQTT_MSG_TEMP_NOT_INT;
+  ERR_MQTT_MSG_TEMP_NOT_INT,
+
+  /* ------------------------------ MQTT Publishing Errors ------------------------------ */
+
+  // Attempting to publish an invalid average fan relative speed
+  ERR_MQTT_AVGFANRELSPEED_VALUE_INVALID,
+
+  // An error occurred in publishing an average fan relative speed value
+  ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED;
+
 
   /* ===================== SensorsMQTTHandlerErrCode ErrCodeInfo Map ===================== */
 
   private static final EnumMap<SensorsMQTTHandlerErrCode,ErrCodeInfo> sensorsErrorsInfoMap = new EnumMap<>(Map.ofEntries
    (
-    /* ------------------------------ General MQTT Errors ------------------------------ */
+    /* -------------------------- MQTT Initialization Errors -------------------------- */
     Map.entry(ERR_MQTT_PAHO_INIT_FAILED,new ErrCodeInfo(FATAL,"Failed to initialize the PAHO MQTT client")),
     Map.entry(ERR_MQTT_BROKER_CONN_FAILED,new ErrCodeInfo(FATAL,"Failed to connect with the MQTT broker")),
     Map.entry(ERR_MQTT_BROKER_DISCONNECTED,new ErrCodeInfo(ERROR,"The MQTT Handler has disconnected from the MQTT broker, attempting reconnection...")),
-    Map.entry(ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED,new ErrCodeInfo(ERROR,"An error occurred in publishing an average fan relative speed value")),
 
     /* ------------------ Received MQTT Message General Errors Codes ------------------ */
     Map.entry(ERR_MQTT_MSG_NOT_JSON,new ErrCodeInfo(ERROR,"A received MQTT message could not be interpreted in JSON format")),
@@ -108,7 +113,11 @@ public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
     Map.entry(ERR_MQTT_MSG_C02_MISSING,new ErrCodeInfo(ERROR,"A received MQTT C02 reading does not contain the \"C02\" attribute")),
     Map.entry(ERR_MQTT_MSG_C02_NOT_INT,new ErrCodeInfo(ERROR,"The \"C02\" attribute in a MQTT C02 reading could not be interpreted as an integer")),
     Map.entry(ERR_MQTT_MSG_TEMP_MISSING,new ErrCodeInfo(ERROR,"A received MQTT temperature reading does not contain the \"temp\" attribute")),
-    Map.entry(ERR_MQTT_MSG_TEMP_NOT_INT,new ErrCodeInfo(ERROR,"The \"temp\" attribute in a MQTT temperature reading could not be interpreted as an integer"))
+    Map.entry(ERR_MQTT_MSG_TEMP_NOT_INT,new ErrCodeInfo(ERROR,"The \"temp\" attribute in a MQTT temperature reading could not be interpreted as an integer")),
+
+    /* ------------------------------ MQTT Publishing Errors ------------------------------ */
+     Map.entry(ERR_MQTT_AVGFANRELSPEED_VALUE_INVALID,new ErrCodeInfo(ERROR,"Attempting to publish an invalid average fan relative speed")),
+     Map.entry(ERR_MQTT_AVGFANRELSPEED_PUBLISH_FAILED,new ErrCodeInfo(ERROR,"An error occurred in publishing an average fan relative speed value"))
    ));
 
   /* ================================ Enumeration Methods  ================================ */

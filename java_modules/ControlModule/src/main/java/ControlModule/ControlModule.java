@@ -5,7 +5,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.PrintStream;
 
-import DevicesManagers.SensorManager;
+import DevicesManagers.ControlSensorManager;
 import GUILogging.ANSIColorPane;
 import GUILogging.ANSIColorPaneOutputStream;
 import Parameters.OperatingState;
@@ -60,7 +60,7 @@ public class ControlModule extends JFrame
   boolean autoMode;
   OperatingState systemOperatingState;
 
-  SensorManager[] sensorsList;
+  ControlSensorManager[] sensorsList;
 
 
 
@@ -186,7 +186,7 @@ public class ControlModule extends JFrame
       {
        OperatingState maxSensorOperatingState = OperatingState.NOMINAL;
 
-       for(SensorManager sens : sensorsList)
+       for(ControlSensorManager sens : sensorsList)
         { maxSensorOperatingState = OperatingState.values()[max(maxSensorOperatingState.ordinal(),sens.getSensorOperatingState().ordinal())]; }
 
        // If the state has changed (passed to a lower severity)

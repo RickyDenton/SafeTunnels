@@ -5,12 +5,12 @@ package devices.sensor;
 /* ================================== IMPORTS ================================== */
 
 /* --------------------------- SafeTunnels Packages --------------------------- */
-import devices.Device;
-import static devices.Device.DevType.sensor;
+import devices.BaseDevice;
+import static devices.BaseDevice.DevType.sensor;
 
 
 /* ============================== CLASS DEFINITION ============================== */
-public class BaseSensor implements Device
+public abstract class BaseSensor extends BaseDevice
  {
   /* --------------------------- Sensors MQTT Topics --------------------------- */
 
@@ -23,7 +23,6 @@ public class BaseSensor implements Device
 
   // Average Fan Relative Speed subscription topic
   public final static String TOPIC_AVG_FAN_REL_SPEED = "SafeTunnels/avgFanRelSpeed";
-
 
   /* ----------------------- Sensors MQTT Client States ----------------------- */
   public enum SensorMQTTCliState
@@ -52,40 +51,39 @@ public class BaseSensor implements Device
     MQTT_CLI_STATE_BROKER_SUBSCRIBED,
 
     // Unknown sensor MQTT client state (used if not specified in error messages)
-    MQTT_CLI_STATE_UNKNOWN,
+    MQTT_CLI_STATE_UNKNOWN
    }
 
+  /* --------------------------- Sensors Quantities --------------------------- */
+  public enum SensorQuantity
+   {
+    // C02 Density (ppm)
+    C02  { @Override public String toString() { return "C02 density"; } },
 
-  /* ============================ PUBLIC ATTRIBUTES ============================ */
-
-  // The sensor's unique ID in the SafeTunnels database
-  public final short ID;
-
-  // The sensor's current connection state (false -> offline, true -> online)
-  public boolean connState;
-
+    // Temperature (°C)
+    TEMP { @Override public String toString() { return "temperature"; } },
+   }
 
   /* ============================= PUBLIC METHODS ============================= */
 
   /**
    * BaseSensor constructor, initializing its attributes
+   * @param MAC The sensor's (unique) MAC
    * @param ID The sensor's unique ID in the SafeTunnels database
    */
-  public BaseSensor(short ID)
-   {
-    this.ID = ID;
-    this.connState = false;
-   }
-
-  /**
-   * @return The sensor's unique ID in the SafeTunnels database
-   */
-  public short getID()
-   { return ID; }
+  public BaseSensor(String MAC, short ID)
+   { super(MAC,ID); }
 
   /**
    * @return The sensor's device type
    */
   public DevType getDevType()
    { return sensor; }
+
+  // TODO: ALSO, if sensor was offline, update its state to online
+  public abstract void setC02(int newC02);
+
+  // TODO: ALSO, if sensor was offline, update its state to online
+  public abstract void setTemp(int newTemp);
+
  }

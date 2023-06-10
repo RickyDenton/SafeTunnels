@@ -1,11 +1,9 @@
 package modules.MySQLConnector;
 
-import devices.actuator.BaseActuator;
-import devices.sensor.BaseSensor;
 import logging.Log;
 
 import java.sql.*;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import static modules.MySQLConnector.MySQLConnectorErrCode.*;
@@ -56,26 +54,9 @@ public abstract class MySQLConnector
   // SafeTunnels Database connection properties
   Properties STDBConnProperties;
 
+
   /* ================================= PROTECTED METHODS ================================= */
 
-  // TODO: See if needed
-  /*
-  protected String getConnStateSeriesTable(DevType devType)
-   {
-    if(devType == DevType.sensor)
-     return ST_DB_TABLE_SENSORS_CONNSTATE_SERIES;
-    else
-     return ST_DB_TABLE_ACTUATORS_CONNSTATE_SERIES;
-   }
-
-  protected String getDevIDColumn(DevType devType)
-   {
-    if(devType == DevType.sensor)
-     return "sensorID";
-    else
-     return "actuatorID";
-   }
-  */
 
   private void connectToDB()
    {
@@ -98,7 +79,6 @@ public abstract class MySQLConnector
     catch(java.sql.SQLException sqlExcp)
      { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp.getMessage() + ")"); }
    }
-
 
 
   protected void pushDevState(String seriesTable, String devIDColumn, String valueColumn, int devID, String value) throws java.sql.SQLException
@@ -128,6 +108,8 @@ public abstract class MySQLConnector
   // Constructor
   public MySQLConnector()
    {
+    // Initialize the database mutex
+
     // Initialize the database connection properties
     STDBConnProperties = new Properties();
     STDBConnProperties.put("user",ST_DB_USER);
@@ -140,62 +122,41 @@ public abstract class MySQLConnector
    }
 
 
-  /*
-  THIS SHOULD MAYBE BE CALLED ALWAYS?
 
-  public static Connection getConnection() throws Exception
+  // Returns the <MAC,sensorID> list of sensors stored in the database
+  public ArrayList<DevMACIDPair> getDBSensorsList()
    {
-    if(STDBConn==null || STDBConn.isClosed())
-     {
-      java.util.Properties connProperties = new java.util.Properties();
-      connProperties.put("user",ST_DB_USER);
-      connProperties.put("password",ST_DB_PWD);
-      connProperties.put("autoReconnect","true");
-      connProperties.put("maxReconnects","4");
-
-      STDBConn = DriverManager.getConnection(ST_DB_ENDPOINT,connProperties);
-     }
-    return STDBConn;
-   }
-
-   */
-
-
-
-  // Returns the <MAC,BaseSensor> map of sensors in the database
-  public HashMap<String,BaseSensor> getDBSensorsMap()
-   {
-    // <MAC,BaseSensor> map of sensors in the database to be returned
-    HashMap<String,BaseSensor> sensorsMap = new HashMap<>();
+    // <MAC,sensorID> list of sensors stored in the database to be returned
+    ArrayList<DevMACIDPair> sensorsList = new ArrayList<>();
 
     // Ensure the database connection to be active
     checkDBConn();
 
-    // Query to retrieve all sensors in the database
+    // Query to retrieve the list of sensors in the database
     String getAllSensorsQuery = "SELECT * FROM " + ST_DB_SENSORS_TABLE;
 
-    // Attempt to initialize the statement
+    // Attempt to initialize the statement for retrieving the list of sensors
     try(Statement mySQLStmt = STDBConn.createStatement())
      {
-      // Attempt to retrieve the set of sensors in the database
+      // Attempt to execute the statement
       try(ResultSet sensorsSet = mySQLStmt.executeQuery(getAllSensorsQuery))
        {
         // For every sensor tuple returned, initialize and append
-        // its associated <MAC,BaseSensor> element in the sensorMap
+        // its associated DevMACIDPair element in the sensorsList
         while(sensorsSet.next())
-         { sensorsMap.put(sensorsSet.getString("mac"),new BaseSensor(sensorsSet.getShort("sensorID"))); }
+         sensorsList.add(new DevMACIDPair(sensorsSet.getString("mac"),sensorsSet.getShort("sensorID")));
 
         // Retrieving no sensors from the database is a FATAL error
-        if(sensorsMap.isEmpty())
+        if(sensorsList.isEmpty())
          Log.code(ERR_DB_NO_SENSORS);
        }
      }
 
-    // Failing to retrieve the set of sensors in the database is a FATAL error
+    // Failing to retrieve the list of sensors in the database is a FATAL error
     catch(SQLException sqlExcp)
      { Log.code(ERR_DB_GET_SENSORS, "(reason = " + sqlExcp.getMessage() + ")"); }
 
-    // Return the <MAC,BaseSensor> map of sensors in the database
-    return sensorsMap;
+    // Return the <MAC,sensorID> list of sensors stored in the database
+    return sensorsList;
    }
  }

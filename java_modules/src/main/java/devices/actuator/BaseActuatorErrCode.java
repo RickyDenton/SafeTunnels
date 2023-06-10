@@ -9,10 +9,11 @@ import java.util.EnumMap;
 import java.util.Map;
 
 /* --------------------------- SafeTunnels Packages --------------------------- */
+import devices.BaseDevice.DevType;
 import devices.DevErrCode;
-import devices.Device.*;
 import errors.ErrCodeInfo;
-import static devices.Device.DevType.actuator;
+
+import static devices.BaseDevice.DevType.actuator;
 import static errors.ErrCodeSeverity.WARNING;
 
 

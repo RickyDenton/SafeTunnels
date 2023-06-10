@@ -6,18 +6,13 @@ package ControlModule;
 
 /* -------------------------- Java Standard Libraries -------------------------- */
 
-import DevicesManagers.SensorManager;
+import DevicesManagers.ControlSensorManager;
 import devices.sensor.BaseSensor;
-import logging.Log;
 import modules.SensorsMQTTHandler.SensorsMQTTHandler;
 
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.locks.ReentrantLock;
-
-import static modules.MySQLConnector.MySQLConnector.*;
 
 
 /* ============================== CLASS DEFINITION ============================== */
@@ -33,7 +28,7 @@ final class ControlSensorsMQTTHandler extends SensorsMQTTHandler
   // Whether the sensor offline bootstrap timer has run
   private boolean sensorsOfflineBootstrapTimerHasRun;
 
-  HashMap<Integer,SensorManager> sensorIDMap;
+  HashMap<Integer,ControlSensorManager> sensorIDMap;
 
 
   /* ============================= PROTECTED METHODS ============================= */
@@ -111,7 +106,7 @@ final class ControlSensorsMQTTHandler extends SensorsMQTTHandler
    */
 
 
-  ControlSensorsMQTTHandler(HashMap<String,BaseSensor> sensorMacMap,HashMap<Integer,SensorManager> sensorIDMap)
+  ControlSensorsMQTTHandler(HashMap<String,BaseSensor> sensorMacMap,HashMap<Integer,ControlSensorManager> sensorIDMap)
    {
     // Attempt to initialize the Cloud Module MQTT
     // Client Handler and connect with the MQTT broker
