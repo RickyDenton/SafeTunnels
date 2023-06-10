@@ -51,7 +51,7 @@ public abstract class MySQLConnector
   /* ==================================== ATTRIBUTES ==================================== */
 
   // SafeTunnels Database connection
-  private Connection STDBConn;
+  protected Connection STDBConn;
 
   // SafeTunnels Database connection properties
   Properties STDBConnProperties;
@@ -87,7 +87,7 @@ public abstract class MySQLConnector
      { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp.getMessage() + ")"); }
    }
 
-  private void checkDBConn()
+  protected void checkDBConn()
    {
     try
      {
@@ -197,42 +197,5 @@ public abstract class MySQLConnector
 
     // Return the <MAC,BaseSensor> map of sensors in the database
     return sensorsMap;
-   }
-
-  // Returns the <MAC,BaseActuator> map of actuators in the database
-  public HashMap<String,BaseActuator> getDBActuatorsMap()
-   {
-    // <MAC,BaseActuator> map of sensors in the database to be returned
-    HashMap<String,BaseActuator> actuatorsMap = new HashMap<>();
-
-    // Ensure the database connection to be active
-    checkDBConn();
-
-    // Query to retrieve all actuators in the database
-    String getAllActuatorsQuery = "SELECT * FROM " + ST_DB_ACTUATORS_TABLE;
-
-    // Attempt to initialize the statement
-    try(Statement mySQLStmt = STDBConn.createStatement())
-     {
-      // Attempt to retrieve the set of actuators in the database
-      try(ResultSet actuatorsSet = mySQLStmt.executeQuery(getAllActuatorsQuery))
-       {
-        // For every actuator tuple returned, initialize and append
-        // its associated <MAC,BaseActuator> element in the actuatorsMap
-        while(actuatorsSet.next())
-         { actuatorsMap.put(actuatorsSet.getString("mac"),new BaseActuator(actuatorsSet.getShort("actuatorID"))); }
-
-        // Retrieving no actuators from the database is a FATAL error
-        if(actuatorsMap.isEmpty())
-         Log.code(ERR_DB_GET_ACTUATORS);
-       }
-     }
-
-    // Failing to retrieve the set of actuators in the database is a FATAL error
-    catch(SQLException sqlExcp)
-     { Log.code(ERR_DB_GET_ACTUATORS, "(reason = " + sqlExcp.getMessage() + ")"); }
-
-    // Return the <MAC,BaseActuator> map of actuators in the database
-    return actuatorsMap;
    }
  }
