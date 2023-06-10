@@ -3,7 +3,7 @@
   <grid id="27dc6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="10" left="10" bottom="10" right="10"/>
     <constraints>
-      <xy x="26" y="22" width="676" height="450"/>
+      <xy x="26" y="22" width="777" height="456"/>
     </constraints>
     <properties/>
     <border type="none">
@@ -45,15 +45,16 @@
               <text value=" Automatic Mode"/>
             </properties>
           </component>
-          <component id="b2a77" class="javax.swing.JLabel">
+          <component id="b2a77" class="javax.swing.JLabel" binding="systemOperatingStateLabel">
             <constraints>
               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
               <font size="16"/>
+              <foreground color="-13861622"/>
               <horizontalAlignment value="2"/>
               <horizontalTextPosition value="2"/>
-              <text value="Nominal"/>
+              <text value="NOMINAL"/>
             </properties>
           </component>
         </children>
@@ -97,7 +98,7 @@
                     <border type="bevel-raised"/>
                     <children>
                       <grid id="a3af3" binding="actuator1HeaderPanel" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                        <margin top="2" left="5" bottom="2" right="2"/>
+                        <margin top="5" left="5" bottom="2" right="2"/>
                         <constraints>
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -132,7 +133,7 @@
                       <grid id="825cb" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                         <margin top="0" left="0" bottom="0" right="0"/>
                         <constraints>
-                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <background color="-2302756"/>
@@ -140,7 +141,7 @@
                         <border type="none"/>
                         <children>
                           <grid id="7b15d" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                            <margin top="2" left="5" bottom="0" right="2"/>
+                            <margin top="2" left="5" bottom="0" right="10"/>
                             <constraints>
                               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
@@ -164,17 +165,16 @@
                           <grid id="4dd58" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                             <margin top="0" left="0" bottom="0" right="0"/>
                             <constraints>
-                              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                             </constraints>
-                            <properties/>
+                            <properties>
+                              <background color="-2302756"/>
+                            </properties>
                             <border type="none"/>
                             <children>
                               <component id="11a81" class="javax.swing.JSlider" binding="slider1" default-binding="true">
                                 <constraints>
-                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false">
-                                    <preferred-size width="161" height="-1"/>
-                                    <maximum-size width="161" height="-1"/>
-                                  </grid>
+                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
                                   <background color="-2302756"/>
@@ -190,7 +190,7 @@
                             </children>
                           </grid>
                           <grid id="4d39b" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                            <margin top="0" left="0" bottom="0" right="0"/>
+                            <margin top="0" left="0" bottom="0" right="6"/>
                             <constraints>
                               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
@@ -206,7 +206,7 @@
                                 <properties>
                                   <background color="-2302756"/>
                                   <font size="16"/>
-                                  <text value="-- %"/>
+                                  <text value="--- %"/>
                                 </properties>
                               </component>
                             </children>
@@ -261,7 +261,7 @@
                             <children>
                               <component id="dac64" class="javax.swing.JButton" binding="OFFButton" default-binding="true">
                                 <constraints>
-                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
+                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
                                   <background color="-855310"/>
@@ -269,37 +269,37 @@
                                   <text value="OFF"/>
                                 </properties>
                               </component>
-                              <component id="8a535" class="javax.swing.JButton" binding="ONButton" default-binding="true">
+                              <component id="8a535" class="javax.swing.JButton" binding="WARNINGButton" default-binding="true">
                                 <constraints>
                                   <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
-                                  <background color="-13566"/>
-                                  <text value="ON"/>
+                                  <background color="-889853"/>
+                                  <text value="WARNING"/>
                                 </properties>
                               </component>
                               <component id="99f8" class="javax.swing.JButton" binding="ALERTButton" default-binding="true">
                                 <constraints>
-                                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+                                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
-                                  <background color="-38400"/>
+                                  <background color="-3461632"/>
                                   <text value="ALERT"/>
                                 </properties>
                               </component>
-                              <component id="15323" class="javax.swing.JButton" binding="EMERButton" default-binding="true">
+                              <component id="15323" class="javax.swing.JButton" binding="EMERGENCYButton" default-binding="true">
                                 <constraints>
                                   <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
-                                  <background color="-65536"/>
-                                  <text value="EMER."/>
+                                  <background color="-968448"/>
+                                  <text value="EMERGENCY"/>
                                 </properties>
                               </component>
                             </children>
                           </grid>
                           <grid id="78c17" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                            <margin top="0" left="4" bottom="0" right="0"/>
+                            <margin top="0" left="4" bottom="0" right="3"/>
                             <constraints>
                               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false">
                                 <preferred-size width="38" height="24"/>
@@ -319,7 +319,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="---"/>
+                                  <text value="-------"/>
                                 </properties>
                               </component>
                             </children>
@@ -360,7 +360,7 @@
                     <border type="bevel-raised"/>
                     <children>
                       <grid id="103ce" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                        <margin top="2" left="5" bottom="2" right="2"/>
+                        <margin top="5" left="5" bottom="2" right="2"/>
                         <constraints>
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -395,7 +395,7 @@
                       <grid id="b2fd2" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                         <margin top="0" left="0" bottom="0" right="0"/>
                         <constraints>
-                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
+                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                         </constraints>
                         <properties>
                           <background color="-2302756"/>
@@ -403,7 +403,7 @@
                         <border type="none"/>
                         <children>
                           <grid id="8b058" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                            <margin top="2" left="5" bottom="0" right="2"/>
+                            <margin top="2" left="5" bottom="0" right="10"/>
                             <constraints>
                               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
@@ -427,17 +427,16 @@
                           <grid id="3c3e7" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                             <margin top="0" left="0" bottom="0" right="0"/>
                             <constraints>
-                              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                             </constraints>
-                            <properties/>
+                            <properties>
+                              <background color="-2302756"/>
+                            </properties>
                             <border type="none"/>
                             <children>
                               <component id="f3191" class="javax.swing.JSlider" default-binding="true">
                                 <constraints>
-                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false">
-                                    <preferred-size width="161" height="-1"/>
-                                    <maximum-size width="161" height="-1"/>
-                                  </grid>
+                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
                                   <background color="-2302756"/>
@@ -453,7 +452,7 @@
                             </children>
                           </grid>
                           <grid id="acb1" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                            <margin top="0" left="0" bottom="0" right="0"/>
+                            <margin top="0" left="0" bottom="0" right="6"/>
                             <constraints>
                               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
@@ -469,7 +468,7 @@
                                 <properties>
                                   <background color="-2302756"/>
                                   <font size="16"/>
-                                  <text value="-- %"/>
+                                  <text value="--- %"/>
                                 </properties>
                               </component>
                             </children>
@@ -524,7 +523,7 @@
                             <children>
                               <component id="8c455" class="javax.swing.JButton" default-binding="true">
                                 <constraints>
-                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
+                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
                                   <background color="-855310"/>
@@ -537,16 +536,16 @@
                                   <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
-                                  <background color="-13566"/>
-                                  <text value="ON"/>
+                                  <background color="-889853"/>
+                                  <text value="WARNING"/>
                                 </properties>
                               </component>
                               <component id="be7ec" class="javax.swing.JButton" default-binding="true">
                                 <constraints>
-                                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+                                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
-                                  <background color="-38400"/>
+                                  <background color="-3461632"/>
                                   <text value="ALERT"/>
                                 </properties>
                               </component>
@@ -555,14 +554,14 @@
                                   <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
-                                  <background color="-65536"/>
-                                  <text value="EMER."/>
+                                  <background color="-968448"/>
+                                  <text value="EMERGENCY"/>
                                 </properties>
                               </component>
                             </children>
                           </grid>
                           <grid id="6b717" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                            <margin top="0" left="4" bottom="0" right="0"/>
+                            <margin top="0" left="4" bottom="0" right="3"/>
                             <constraints>
                               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false">
                                 <preferred-size width="38" height="24"/>
@@ -582,7 +581,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="---"/>
+                                  <text value="-------"/>
                                 </properties>
                               </component>
                             </children>
@@ -614,7 +613,7 @@
                     <border type="bevel-raised"/>
                     <children>
                       <grid id="4935d" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                        <margin top="2" left="5" bottom="2" right="2"/>
+                        <margin top="5" left="5" bottom="2" right="2"/>
                         <constraints>
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -636,7 +635,7 @@
                               <text value="Sensor1"/>
                             </properties>
                           </component>
-                          <component id="e62a1" class="javax.swing.JLabel">
+                          <component id="e62a1" class="javax.swing.JLabel" binding="sensor1ConnStateLED">
                             <constraints>
                               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
@@ -699,7 +698,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="--- PPM"/>
+                                  <text value="------ PPM"/>
                                 </properties>
                               </component>
                             </children>
@@ -759,7 +758,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="-- °C"/>
+                                  <text value="--- °C"/>
                                 </properties>
                               </component>
                             </children>
@@ -800,7 +799,7 @@
                     <border type="bevel-raised"/>
                     <children>
                       <grid id="810f0" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                        <margin top="2" left="5" bottom="2" right="2"/>
+                        <margin top="5" left="5" bottom="2" right="2"/>
                         <constraints>
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -885,7 +884,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="--- PPM"/>
+                                  <text value="------ PPM"/>
                                 </properties>
                               </component>
                             </children>
@@ -945,7 +944,7 @@
                                   <font size="16"/>
                                   <horizontalAlignment value="2"/>
                                   <horizontalTextPosition value="2"/>
-                                  <text value="-- °C"/>
+                                  <text value="---- °C"/>
                                 </properties>
                               </component>
                             </children>

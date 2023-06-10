@@ -114,8 +114,6 @@ public abstract class SensorsMQTTHandler implements MqttCallback
 
   private String getSensorMAC(JSONObject mqttMsgJSON,String mqttMsgStr) throws  ErrCodeExcp
    {
-    String sensorMAC;
-
     // Check if the received MQTT message contains the sensor "MAC" attribute
     if(!mqttMsgJSON.has("MAC"))
      throw new ErrCodeExcp(ERR_MQTT_MSG_MAC_MISSING,"(\"" + mqttMsgStr + "\")");
@@ -148,9 +146,18 @@ public abstract class SensorsMQTTHandler implements MqttCallback
     // If the received MQTT message contains the optional sensor "MQTTCliState" attribute
     if(mqttMsgJSON.has("MQTTCliState"))
      {
-      // Attempt to extract the sensor "MQTTCliState" attribute as a String
       try
-       { return SensorMQTTCliState.values()[mqttMsgJSON.getInt("MQTTCliState")]; }
+       {
+        // Attempt to extract the sensor "MQTTCliState" attribute as a String
+        SensorMQTTCliState sensorMQTTCliState = SensorMQTTCliState.values()[mqttMsgJSON.getInt("MQTTCliState")];
+
+        // If the received integer does not map to any valid sensor's MQTT client states, throw an error
+        if(sensorMQTTCliState == null)
+         throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_MQTTCLISTATE_UNKNOWN,"(\"" + mqttMsgStr + "\")");
+
+        // Otherwise return the valid sensor's MQTT client state
+        return sensorMQTTCliState;
+       }
       catch(JSONException jsonExcp)
        { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_MQTTCLISTATE_NOT_INT,"(\"" + mqttMsgStr + "\")"); }
      }
