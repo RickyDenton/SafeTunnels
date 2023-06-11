@@ -1,6 +1,6 @@
 /* An output stream used to redirect stdout to the GUI Log window */
 
-package GUILogging;
+package ControlModule.GUILogging;
 
 /* ================================== IMPORTS ================================== */
 

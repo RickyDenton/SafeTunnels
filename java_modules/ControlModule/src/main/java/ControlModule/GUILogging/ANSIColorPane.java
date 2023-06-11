@@ -1,6 +1,6 @@
 /* A JTextPane used for printing formatted logging into the GUI Log window */
 
-package GUILogging;
+package ControlModule.GUILogging;
 
 /* ================================== IMPORTS ================================== */
 

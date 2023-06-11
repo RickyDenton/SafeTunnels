@@ -1,6 +1,6 @@
 /* Cloud Module SafeTunnels MySQL Database Connector */
 
-package CloudModule;
+package CloudModule.CloudMySQLConnector;
 
 /* ================================== IMPORTS ================================== */
 
@@ -10,15 +10,14 @@ import java.sql.SQLException;
 /* --------------------------- SafeTunnels Resources --------------------------- */
 import logging.Log;
 import modules.MySQLConnector.MySQLConnector;
-import static CloudModule.CloudMySQLConnectorErrCode.*;
+import static CloudModule.CloudMySQLConnector.CloudMySQLConnectorErrCode.*;
 import devices.sensor.BaseSensor.SensorQuantity;
 import static devices.sensor.BaseSensor.SensorQuantity.C02;
 
 
 /* ============================== CLASS DEFINITION ============================== */
-final class CloudMySQLConnector extends MySQLConnector
+final public class CloudMySQLConnector extends MySQLConnector
  {
-
   /* ============================= PRIVATE METHODS ============================= */
 
   /**
@@ -50,14 +49,13 @@ final class CloudMySQLConnector extends MySQLConnector
      return ST_DB_SENSORS_COLUMN_TEMP;
    }
 
-
-  /* ============================== PACKAGE METHODS ============================== */
+  /* ============================== PUBLIC METHODS ============================== */
 
   /**
    *  Cloud MySQL Connector constructor, attempting to establish
    *  a connection with the SafeTunnels MySQL database
    */
-  CloudMySQLConnector()
+  public CloudMySQLConnector()
    { super(); }
 
 
@@ -67,7 +65,7 @@ final class CloudMySQLConnector extends MySQLConnector
    * @param connState The sensor updated connection state as a
    *                  boolean (false -> offline, true -> online)
    */
-  void pushSensorConnState(int sensorID, boolean connState)
+  public void pushSensorConnState(int sensorID, boolean connState)
    {
     // Convert the boolean "connState" into a (short) bit (0 -> offline, 1 -> online)
     short connStatusBit = connState?(short)1:(short)0;
@@ -96,20 +94,20 @@ final class CloudMySQLConnector extends MySQLConnector
    * @param sensorQuantity The sensor quantity to be updated (C02 || TEMP)
    * @param quantityValue The updated quantity value
    */
-  void pushSensorQuantityValue(int sensorID, SensorQuantity sensorQuantity, int quantityValue)
+  public void pushSensorQuantityValue(int sensorID, SensorQuantity sensorQuantity, int quantityValue)
    {
     // Retrieve the names of the database table and
     // column associated with the quantity to be updated
-    String sensorQuantityTable = getSensorQuantityTableName(sensorQuantity);
-    String sensorQuantityColumn = getSensorQuantityColumnName(sensorQuantity);
+    String sensorQuantityTableName = getSensorQuantityTableName(sensorQuantity);
+    String sensorQuantityColumnName = getSensorQuantityColumnName(sensorQuantity);
 
     try
      {
       // Attempt to push the updated sensor quantity value into the database
-      pushDevState(sensorQuantityTable,ST_DB_SENSORS_COLUMN_ID,sensorQuantityColumn,sensorID,String.valueOf(quantityValue));
+      pushDevState(sensorQuantityTableName,ST_DB_SENSORS_COLUMN_ID,sensorQuantityColumnName,sensorID,String.valueOf(quantityValue));
 
       // If successful, log the updated sensor quantity
-      Log.info("Pushed sensor" + sensorID + " updated " + sensorQuantity + " (" + quantityValue + ") into the database");
+      Log.dbg("Pushed sensor" + sensorID + " updated " + sensorQuantity + " (" + quantityValue + ") into the database");
      }
     catch(SQLException sqlExcp)
      { Log.code(ERR_CLOUD_PUSH_QUANTITY_FAILED,"(sensorID = " + sensorID + ", quantity = "

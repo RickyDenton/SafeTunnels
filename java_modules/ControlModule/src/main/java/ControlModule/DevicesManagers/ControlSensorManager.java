@@ -1,7 +1,7 @@
-package DevicesManagers;
+package ControlModule.DevicesManagers;
 
 import ControlModule.ControlModule;
-import Parameters.OperatingState;
+import ControlModule.OpState;
 import devices.sensor.BaseSensor;
 import logging.Log;
 
@@ -27,11 +27,11 @@ public class ControlSensorManager extends BaseSensor
   private int temp;
 
   // Sensor quantities operating states
-  private OperatingState C02OperatingState;
-  private OperatingState tempOperatingState;
+  private OpState C02OpState;
+  private OpState tempOpState;
 
   // Sensor overall operating state
-  private OperatingState sensorOperatingState;
+  private OpState sensorOpState;
 
   // Controller Module reference
   private final ControlModule controlModule;
@@ -79,32 +79,45 @@ public class ControlSensorManager extends BaseSensor
     connStateLED = null;
     C02Label = null;
     tempLabel = null;
-    C02OperatingState = OperatingState.NOMINAL;
-    tempOperatingState = OperatingState.NOMINAL;
-    sensorOperatingState = OperatingState.NOMINAL;
+    C02OpState = OpState.NOMINAL;
+    tempOpState = OpState.NOMINAL;
+    sensorOpState = OpState.NOMINAL;
    }
 
 
 
-  // Possibly update the sensor's operating state
+  // Possibly update the sensor's and the system's operating states
   private void updateSensorOperatingState()
-   { sensorOperatingState = OperatingState.values()[max(C02OperatingState.ordinal(),tempOperatingState.ordinal())]; }
+   {
+    // Save the current sensor operating state
+    OpState oldOpState = sensorOpState;
+
+    // Set the sensor operating state as its maximum
+    // between its C02 and temperature operating states
+    sensorOpState = OpState.values()[max(C02OpState.ordinal(),tempOpState.ordinal())];
+
+    // If the sensor operating state has changed,
+    // possibly update the system's operating state
+    if(sensorOpState != oldOpState)
+     controlModule.updateSystemOpState(sensorOpState);
+   }
 
 
   // Possibly updates the C02 and the sensor's operating states
   private void updateC02OperatingState()
    {
     if(C02 < C02ThresholdWARNING)
-     C02OperatingState = OperatingState.NOMINAL;
+     C02OpState = OpState.NOMINAL;
     else
      if(C02 < C02ThresholdALERT)
-      C02OperatingState = OperatingState.WARNING;
+      C02OpState = OpState.WARNING;
      else
       if(C02 < C02ThresholdEMERGENCY)
-       C02OperatingState = OperatingState.ALERT;
+       C02OpState = OpState.ALERT;
       else
-       C02OperatingState = OperatingState.EMERGENCY;
+       C02OpState = OpState.EMERGENCY;
 
+    // Possibly update the sensor's operating state
     updateSensorOperatingState();
    }
 
@@ -112,27 +125,31 @@ public class ControlSensorManager extends BaseSensor
   private void updateTempOperatingState()
    {
     if(temp < tempThresholdWARNING)
-     tempOperatingState = OperatingState.NOMINAL;
+     tempOpState = OpState.NOMINAL;
     else
      if(temp < tempThresholdALERT)
-      tempOperatingState = OperatingState.WARNING;
+      tempOpState = OpState.WARNING;
      else
       if(temp < tempThresholdEMERGENCY)
-       tempOperatingState = OperatingState.ALERT;
+       tempOpState = OpState.ALERT;
       else
-       tempOperatingState = OperatingState.EMERGENCY;
+       tempOpState = OpState.EMERGENCY;
 
+    // Possibly update the sensor's operating state
     updateSensorOperatingState();
    }
 
-  public OperatingState getSensorOperatingState()
-   { return sensorOperatingState; }
+  public OpState getSensorOperatingState()
+   { return sensorOpState; }
 
 
 
   @Override
   public void setConnStateOffline()
    {
+    // Set the sensor as offline
+    connState = false;
+
     // Log that the sensor appears to be offline
     Log.warn("sensor" + ID + " appears to be offline");
 
@@ -145,6 +162,9 @@ public class ControlSensorManager extends BaseSensor
   @Override
   protected void setConnStateOnline()
    {
+    // Set the sensor as online
+    connState = true;
+
     // Log that the sensor is now online
     Log.info("sensor" + ID + " is now online");
 
@@ -157,52 +177,57 @@ public class ControlSensorManager extends BaseSensor
   @Override
   public void setC02(int newC02)
    {
-    OperatingState oldSensorOperatingState = sensorOperatingState;
+    // If the sensor was offline, set it online
+    if(!connState)
+     setConnStateOnline();
 
-    // Update the C02
-    C02 = newC02;
+    // Log the sensor's updated C02 value
+    Log.dbg("Received sensor" + ID + " updated C02 value (" + newC02 + ")");
 
-    // Log the updated C02
-    Log.info("Received sensor" + ID + " updated C02 value (" + newC02 + ")");
-
-    // Possibly update the C02 and the sensor's operating state
-    updateC02OperatingState();
-
-    // If the sensor's operating state has changed, possibly update the system's operating state
-    if(sensorOperatingState != oldSensorOperatingState)
-     controlModule.updateOperatingState(sensorOperatingState);
-
-    // If bound to a GUI element, update the sensor's widget C02 value
-    if(GUIBound)
+    // If its updated differs from its current C02 value
+    if(newC02 != C02)
      {
-      C02Label.setText(C02 + " ppm");
-      C02Label.setForeground(C02OperatingState.getColor());
+      // Update the sensor's C02 value
+      C02 = newC02;
+
+      // Possibly update the C02 and the sensor's overall operating states
+      updateC02OperatingState();
+
+      // If bound to a GUI element, update the sensor's widget C02 value
+      if(GUIBound)
+       {
+        C02Label.setText(C02 + " ppm");
+        C02Label.setForeground(C02OpState.getColor());
+       }
      }
    }
 
   @Override
   public void setTemp(int newTemp)
    {
-    OperatingState oldSensorOperatingState = sensorOperatingState;
+    // If the sensor was offline, set it online
+    if(!connState)
+     setConnStateOnline();
 
-    // Update the temperature
-    temp = newTemp;
+    // Log the sensor's updated temperature value
+    Log.dbg("Received sensor" + ID + " updated temperature value (" + newTemp + ")");
 
-    // Log the updated temperature
-    Log.info("Received sensor" + ID + " updated temperature value (" + newTemp + ")");
-
-    // Possibly update the temperature and the sensor's operating state
-    updateTempOperatingState();
-
-    // If the sensor's operating state has changed, possibly update the system's operating state
-    if(sensorOperatingState != oldSensorOperatingState)
-     controlModule.updateOperatingState(sensorOperatingState);
-
-    // If bound to a GUI element, update the sensor's widget temperature value
-    if(GUIBound)
+    // If its updated differs from its current temperature value
+    if(newTemp != temp)
      {
-      tempLabel.setText(temp + " °C");
-      tempLabel.setForeground(tempOperatingState.getColor());
+      // Update the sensor's temperature value
+      temp = newTemp;
+
+      // Possibly update the temperature and the sensor's overall operating states
+      updateTempOperatingState();
+
+      // If bound to a GUI element, update the sensor's widget temperature value
+      if(GUIBound)
+       {
+        tempLabel.setText(temp + " °C");
+        tempLabel.setForeground(tempOpState.getColor());
+       }
      }
    }
+
  }

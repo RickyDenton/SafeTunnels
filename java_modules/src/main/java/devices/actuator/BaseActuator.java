@@ -13,6 +13,16 @@ import static devices.BaseDevice.DevType.actuator;
 /* ============================== CLASS DEFINITION ============================== */
 public abstract class BaseActuator extends BaseDevice
  {
+  /* --------------------------- Actuators Quantities --------------------------- */
+  public enum ActuatorQuantity
+   {
+    // Fan relative speed
+    FANRELSPEED  { @Override public String toString() { return "fan relative speed"; } },
+
+    // Temperature (°C)
+    LIGHTSTATE { @Override public String toString() { return "light state"; } },
+   }
+
   /* -------------------------- Actuator Light States -------------------------- */
   public enum LightState
    {

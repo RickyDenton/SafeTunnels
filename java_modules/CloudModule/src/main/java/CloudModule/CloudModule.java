@@ -4,14 +4,17 @@ package CloudModule;
 
 /* ================================== IMPORTS ================================== */
 
-/* -------------------------- Java Standard Libraries -------------------------- */
+/* --------------------- Java Standard Libraries Resources --------------------- */
 import java.util.Collections;
 import java.util.ArrayList;
 
-/* --------------------------- SafeTunnels Packages --------------------------- */
-import errors.ErrCodeSeverity;
+/* --------------------------- SafeTunnels Resources --------------------------- */
 import logging.Log;
+import errors.ErrCodeSeverity;
 import modules.MySQLConnector.DevMACIDPair;
+import static devices.BaseDevice.DevType.sensor;
+import CloudModule.CloudMySQLConnector.CloudMySQLConnector;
+import CloudModule.DevicesManagers.CloudSensorManager;
 import modules.SensorsMQTTHandler.SensorsMQTTHandler;
 
 
@@ -24,7 +27,7 @@ final class CloudModule
   final CloudMySQLConnector cloudMySQLConnector;
 
   // The Cloud Module's sensors MQTT Client Handler
-  final SensorsMQTTHandler sensorsMQTTHandler;
+  final SensorsMQTTHandler cloudMQTTHandler;
 
   /* ============================== PRIVATE METHODS ============================== */
 
@@ -37,10 +40,10 @@ final class CloudModule
     cloudMySQLConnector = new CloudMySQLConnector();
 
     // Attempt to retrieve the <MAC,sensorID> list of sensors stored in the database
-    ArrayList<DevMACIDPair> sensorsList = cloudMySQLConnector.getDBSensorsList();
+    ArrayList<DevMACIDPair> sensorsList = cloudMySQLConnector.getDBDevicesList(sensor);
 
     // If LOG_LEVEL = DEBUG, log the list of sensors retrieved from the database
-    // (which is ascertained to be non-null by the getDBSensorsList() method)
+    // (which is ascertained to be non-null by the getDBDevicesList() method)
     if(Log.LOG_LEVEL == ErrCodeSeverity.DEBUG)
      {
       Log.dbg(sensorsList.size() + " sensors were retrieved from the database <sensorID,MAC>:");
@@ -49,15 +52,15 @@ final class CloudModule
 
     // Initialize and populate the ArrayList of
     // CloudSensorManagers to be passed to the SensorMQTTHandler
-    ArrayList<CloudSensorManager> sensorsManagersList = new ArrayList<>();
-    sensorsList.forEach(sensor -> sensorsManagersList.add
+    ArrayList<CloudSensorManager> cloudSensorsManagersList = new ArrayList<>();
+    sensorsList.forEach(sensor -> cloudSensorsManagersList.add
                        (new CloudSensorManager(sensor.MAC,sensor.ID,cloudMySQLConnector)));
 
-    // Sort the ArrayList by increasing sensorID
-    Collections.sort(sensorsManagersList);
+    // Sort the CloudSensorManagers by increasing sensorID
+    Collections.sort(cloudSensorsManagersList);
 
-    // Attempt to instantiate the Cloud MQTT Client Handler
-    sensorsMQTTHandler = new SensorsMQTTHandler("CloudModule",sensorsManagersList);
+    // Attempt to instantiate the Cloud Module MQTT Client Handler
+    cloudMQTTHandler = new SensorsMQTTHandler("CloudModule",cloudSensorsManagersList);
 
     // Log that the Cloud Module has been successfully initialized
     Log.info("Cloud Module successfully initialized");
