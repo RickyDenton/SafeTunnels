@@ -1,14 +1,14 @@
 /* SafeTunnels Cloud MySQL Connector Errors Definitions */
 
-package CloudModule;
+package CloudModule.CloudMySQLConnector;
 
 /* ================================== IMPORTS ================================== */
 
-/* -------------------------- Java Standard Libraries -------------------------- */
+/* --------------------- Java Standard Libraries Resources --------------------- */
 import java.util.EnumMap;
 import java.util.Map;
 
-/* --------------------------- SafeTunnels Packages --------------------------- */
+/* --------------------------- SafeTunnels Resources --------------------------- */
 import errors.ErrCodeInfo;
 import errors.ModuleErrCode;
 import static errors.ErrCodeSeverity.ERROR;
@@ -26,7 +26,7 @@ public enum CloudMySQLConnectorErrCode implements ModuleErrCode
   ERR_CLOUD_PUSH_QUANTITY_FAILED;
 
 
-  /* ================= CloudSensorsMQTTHandler ErrCodeInfo Map ================= */
+  /* =================== CloudMySQLConnector ErrCodeInfo Map =================== */
 
   private static final EnumMap<CloudMySQLConnectorErrCode,ErrCodeInfo> CloudMySQLConnectorErrCodeInfoMap = new EnumMap<>(Map.ofEntries
    (

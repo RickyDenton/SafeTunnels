@@ -1,11 +1,13 @@
 package modules.MySQLConnector;
 
+import devices.BaseDevice.DevType;
 import logging.Log;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import static devices.BaseDevice.DevType.sensor;
 import static modules.MySQLConnector.MySQLConnectorErrCode.*;
 
 
@@ -55,7 +57,35 @@ public abstract class MySQLConnector
   Properties STDBConnProperties;
 
 
-  /* ================================= PROTECTED METHODS ================================= */
+  /* ================================== PRIVATE METHODS ================================== */
+
+  /**
+   * @param devType The device type to retrieve the
+   *                database table name (sensor || actuator)
+   * @return The SafeTunnels database table name
+   *         associated with a device type
+   */
+  private String getDevTableName(DevType devType)
+   {
+    if(devType == sensor)
+     return ST_DB_SENSORS_TABLE;
+    else
+     return ST_DB_ACTUATORS_TABLE;
+   }
+
+  /**
+   * @param devType The device type to retrieve the database
+   *                column ID name (sensor || actuator)
+   * @return The SafeTunnels database column ID name
+   *         associated with a device type
+   */
+  private String getDevColumnIDName(DevType devType)
+   {
+    if(devType == sensor)
+     return ST_DB_SENSORS_COLUMN_ID;
+    else
+     return ST_DB_ACTUATORS_COLUMN_ID;
+   }
 
 
   private void connectToDB()
@@ -68,7 +98,7 @@ public abstract class MySQLConnector
      { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp.getMessage() + ")"); }
    }
 
-  protected void checkDBConn()
+  private void checkDBConn()
    {
     try
      {
@@ -80,6 +110,8 @@ public abstract class MySQLConnector
      { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp.getMessage() + ")"); }
    }
 
+
+  /* ================================= PROTECTED METHODS ================================= */
 
   protected void pushDevState(String seriesTable, String devIDColumn, String valueColumn, int devID, String value) throws java.sql.SQLException
    {
@@ -102,7 +134,6 @@ public abstract class MySQLConnector
    }
 
 
-
   /* ================================== PUBLIC METHODS ================================== */
 
   // Constructor
@@ -122,41 +153,49 @@ public abstract class MySQLConnector
    }
 
 
-
-  // Returns the <MAC,sensorID> list of sensors stored in the database
-  public ArrayList<DevMACIDPair> getDBSensorsList()
+  // Returns the DevMACIDPair (<MAC,sensorID> pairs) list of
+  // the devices of a given devType stored in the database
+  public ArrayList<DevMACIDPair> getDBDevicesList(DevType devType)
    {
-    // <MAC,sensorID> list of sensors stored in the database to be returned
-    ArrayList<DevMACIDPair> sensorsList = new ArrayList<>();
+    // DevMACIDPair list of devType devices
+    // stored in the database to be returned
+    ArrayList<DevMACIDPair> devicesList = new ArrayList<>();
+
+    // Retrieve the names of the database table and column ID
+    // associated with the devType of devices to be retrieved
+    String devTableName = getDevTableName(devType);
+    String devColumnIDName = getDevColumnIDName(devType);
 
     // Ensure the database connection to be active
     checkDBConn();
 
-    // Query to retrieve the list of sensors in the database
-    String getAllSensorsQuery = "SELECT * FROM " + ST_DB_SENSORS_TABLE;
+    // Build the query to retrieve the list
+    // of devType devices from the database
+    String getDevicesQuery = "SELECT * FROM " + devTableName;
 
-    // Attempt to initialize the statement for retrieving the list of sensors
+    // Attempt to initialize the statement for retrieving
+    // the list of devType devices from the database
     try(Statement mySQLStmt = STDBConn.createStatement())
      {
       // Attempt to execute the statement
-      try(ResultSet sensorsSet = mySQLStmt.executeQuery(getAllSensorsQuery))
+      try(ResultSet devSet = mySQLStmt.executeQuery(getDevicesQuery))
        {
-        // For every sensor tuple returned, initialize and append
-        // its associated DevMACIDPair element in the sensorsList
-        while(sensorsSet.next())
-         sensorsList.add(new DevMACIDPair(sensorsSet.getString("mac"),sensorsSet.getShort("sensorID")));
+        // For every device tuple returned, initialize and append
+        // its associated DevMACIDPair element in the devicesList
+        while(devSet.next())
+         devicesList.add(new DevMACIDPair(devSet.getString("mac"),devSet.getShort(devColumnIDName)));
 
-        // Retrieving no sensors from the database is a FATAL error
-        if(sensorsList.isEmpty())
-         Log.code(ERR_DB_NO_SENSORS);
+        // Retrieving no devices from the database is a FATAL error
+        if(devicesList.isEmpty())
+         Log.code(ERR_DB_NO_DEVICES,"(" + devType + "s)");
        }
      }
 
-    // Failing to retrieve the list of sensors in the database is a FATAL error
+    // Failing to retrieve the list of devType devices in the database is a FATAL error
     catch(SQLException sqlExcp)
-     { Log.code(ERR_DB_GET_SENSORS, "(reason = " + sqlExcp.getMessage() + ")"); }
+     { Log.code(ERR_DB_GET_DEVICES, "(" + devType + "s, reason = " + sqlExcp.getMessage() + ")"); }
 
-    // Return the <MAC,sensorID> list of sensors stored in the database
-    return sensorsList;
+    // Return the DevMACIDPair list of devType devices retrieved from the database
+    return devicesList;
    }
  }

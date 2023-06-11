@@ -1,13 +1,14 @@
 /* Cloud Module SafeTunnels Sensor Manager */
 
-package CloudModule;
+package CloudModule.DevicesManagers;
 
 /* ================================== IMPORTS ================================== */
 
-/* --------------------------- SafeTunnels Packages --------------------------- */
+/* --------------------------- SafeTunnels Resources --------------------------- */
 import devices.sensor.BaseSensor;
 import static devices.sensor.BaseSensor.SensorQuantity.C02;
 import static devices.sensor.BaseSensor.SensorQuantity.TEMP;
+import CloudModule.CloudMySQLConnector.CloudMySQLConnector;
 
 
 /* ============================== CLASS DEFINITION ============================== */
@@ -16,7 +17,7 @@ final public class CloudSensorManager extends BaseSensor
   /* ============================ PRIVATE ATTRIBUTES ============================ */
 
   // A reference to the Cloud MySQL connector to
-  //  be used for pushing the updated sensor state
+  // be used for pushing the updated sensor state
   private final CloudMySQLConnector cloudMySQLConnector;
 
 
@@ -37,7 +38,7 @@ final public class CloudSensorManager extends BaseSensor
    }
 
 
-  /* ============================= PACKAGE METHODS ============================= */
+  /* ============================== PUBLIC METHODS ============================== */
 
   /**
    * CloudSensorManager constructor, initializing the BaseSensor
@@ -46,14 +47,12 @@ final public class CloudSensorManager extends BaseSensor
    * @param ID The sensor's unique ID in the SafeTunnels Database
    * @param cloudMySQLConnector A reference to the Cloud MySQL Connector
    */
-  CloudSensorManager(String MAC, short ID,CloudMySQLConnector cloudMySQLConnector)
+  public CloudSensorManager(String MAC, short ID,CloudMySQLConnector cloudMySQLConnector)
    {
     super(MAC,ID);
     this.cloudMySQLConnector = cloudMySQLConnector;
    }
 
-
-  /* ============================== PUBLIC METHODS ============================== */
 
   /**
    *  Sensor Disconnection Handler, invoked by the Cloud MQTT Client Handler upon
