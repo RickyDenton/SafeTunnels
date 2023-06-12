@@ -167,8 +167,9 @@ static void light_GET_handler(__attribute__((unused)) coap_message_t* request,
   // CoAP response length
   uint8_t respLength;
 
-  // Set the GET CoAP response body as the current light state in JSON format
-  sprintf((char*)buffer, "{ \"lightState\": \"%s\" }",lightStateStr);
+  // Set the GET CoAP response body as the
+  // current light state enum in JSON format
+  sprintf((char*)buffer, "{ \"lightState\": %u }",lightState);
 
   // Prepare the metadata of the CoAP response to be returned to the client(s)
   respLength = strlen((char*)buffer);

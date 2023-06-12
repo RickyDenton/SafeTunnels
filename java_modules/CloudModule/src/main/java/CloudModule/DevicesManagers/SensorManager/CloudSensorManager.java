@@ -1,6 +1,6 @@
 /* Cloud Module SafeTunnels Sensor Manager */
 
-package CloudModule.DevicesManagers;
+package CloudModule.DevicesManagers.SensorManager;
 
 /* ================================== IMPORTS ================================== */
 
@@ -28,7 +28,7 @@ final public class CloudSensorManager extends BaseSensor
    *  upon receiving an updated quantity value with the sensor is offline
    */
   @Override
-  protected void setConnStateOnline()
+  public void setConnStateOnline()
    {
     // Set that the sensor is now online
     connState = true;

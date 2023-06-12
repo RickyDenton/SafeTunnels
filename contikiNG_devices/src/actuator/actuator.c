@@ -83,11 +83,11 @@ PROCESS_THREAD(safetunnels_actuator_process, ev, data)
   // Contiki-NG process start macro
   PROCESS_BEGIN()
 
-  // Set the node's ID as its MAC address
-  initNodeID();
+  // Retrieve the node's MAC address
+  getNodeMACAddr();
 
   // Log that the actuator node has started and its MAC
-  LOG_INFO("SafeTunnels actuator node started, MAC = %s\n", nodeID);
+  LOG_INFO("SafeTunnels actuator node started, MAC = %s\n", nodeMACAddr);
 
   // Activate the actuator's CoAP server resources
   coap_activate_resource(&actuatorLight, "light");

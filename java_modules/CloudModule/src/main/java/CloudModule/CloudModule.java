@@ -14,7 +14,7 @@ import errors.ErrCodeSeverity;
 import modules.MySQLConnector.DevMACIDPair;
 import static devices.BaseDevice.DevType.sensor;
 import CloudModule.CloudMySQLConnector.CloudMySQLConnector;
-import CloudModule.DevicesManagers.CloudSensorManager;
+import CloudModule.DevicesManagers.SensorManager.CloudSensorManager;
 import modules.SensorsMQTTHandler.SensorsMQTTHandler;
 
 

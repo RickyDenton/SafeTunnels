@@ -320,13 +320,13 @@ void logPublishError(enum sensorErrCode sensErrCode)
                                                       " \"errCode\": %u,"
                                                       " \"errDscr\": \"%s\","
                                                       " \"MQTTCliState\": %u"
-                                                      " }", nodeID, sensErrCode, errDscr, MQTTCliState);
+                                                      " }", nodeMACAddr, sensErrCode, errDscr, MQTTCliState);
     else
      snprintf(outMQTTMsgContentsBuf, OUT_MQTT_MSG_CONTENTS_BUF_SIZE, "{"
                                                       " \"MAC\": \"%s\","
                                                       " \"errCode\": %u,"
                                                       " \"MQTTCliState\": %u"
-                                                      " }", nodeID, sensErrCode, MQTTCliState);
+                                                      " }", nodeMACAddr, sensErrCode, MQTTCliState);
 
     // Attempt to publish the error message
     MQTTEngineAPIRes = mqtt_publish(&mqttConn, NULL, outMQTTMsgTopicBuf, (uint8_t*)outMQTTMsgContentsBuf,
@@ -542,7 +542,7 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue,
                "{ "
                "\"MAC\": \"%s\", "                      // Node ID/MAC Address
                "\"%s\": %u "                           // "quantity" : value
-               "}", nodeID, quantity, quantityValue);
+               "}", nodeMACAddr, quantity, quantityValue);
 
       // Attempt to submit the MQTT message to the broker
       MQTTEngineAPIRes = mqtt_publish(&mqttConn, NULL, outMQTTMsgTopicBuf, (uint8_t*)outMQTTMsgContentsBuf,
@@ -623,7 +623,7 @@ static void C02Sampling(__attribute__((unused)) void* ptr)
    {
     /* --- TODO: Correlate the generated C02 with the "avgFanRelSpeed" value, if available --- */
 
-    newC02Density = random_rand();
+    newC02Density = random_rand() % 12000;
 
     // LOG_DBG("New sampled C02 density: %u\n",newC02Density);
 
@@ -675,7 +675,7 @@ static void tempSampling(__attribute__((unused)) void* ptr)
    {
     /* --- TODO: Correlate the generated C02 with the "avgFanRelSpeed" value, if available --- */
 
-    newTemp = random_rand();
+    newTemp = random_rand() % 60;
 
     // LOG_DBG("New sampled temperature: %u\n",newTemp);
 
@@ -709,7 +709,7 @@ void sensor_MQTT_CLI_STATE_INIT_Callback()
  {
   // Attempt to initialize the MQTT Engine
   MQTTEngineAPIRes = mqtt_register(&mqttConn, &safetunnels_sensor_process,
-                                   nodeID, MQTTEngineCallback, MQTT_MAX_TCP_SEGMENT_SIZE);
+                                   nodeMACAddr, MQTTEngineCallback, MQTT_MAX_TCP_SEGMENT_SIZE);
 
   // If the MQTT Engine has been successfully initialized
   if(MQTTEngineAPIRes == MQTT_STATUS_OK)
@@ -797,7 +797,7 @@ void sensor_MQTT_CLI_STATE_NET_OK_Callback()
            "{ "
            "\"MAC\": \"%s\", "    // Node ID/MAC Address)
            "\"errCode\": %u "    // ERR_SENSOR_MQTT_DISCONNECTED
-           "}", nodeID, ERR_SENSOR_MQTT_DISCONNECTED);
+           "}", nodeMACAddr, ERR_SENSOR_MQTT_DISCONNECTED);
 
   // Set the MQTT client "last will" message
   mqtt_set_last_will(&mqttConn, (char*)outMQTTMsgTopicBuf,
@@ -944,11 +944,11 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
  // Turn ON the POWER_LED at power on
  leds_single_on(POWER_LED);
 
- // Set the node's ID as its MAC address
- initNodeID();
+ // Retrieve the node's MAC address
+ getNodeMACAddr();
 
  // Log that the sensor node has started and its MAC
- LOG_INFO("SafeTunnels sensor node started, MAC = %s\n",nodeID);
+ LOG_INFO("SafeTunnels sensor node started, MAC = %s\n", nodeMACAddr);
 
  /*
   * As they do not depend on its connection status, start

@@ -119,7 +119,7 @@
                               <text value="Actuator1"/>
                             </properties>
                           </component>
-                          <component id="d331e" class="javax.swing.JLabel" binding="actuator1ConnStateImg">
+                          <component id="d331e" class="javax.swing.JLabel" binding="actuator1ConnStateLEDIcon">
                             <constraints>
                               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
@@ -150,7 +150,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="69a5c" class="javax.swing.JLabel">
+                              <component id="69a5c" class="javax.swing.JLabel" binding="actuator1FanIcon">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -172,7 +172,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="11a81" class="javax.swing.JSlider" binding="slider1" default-binding="true">
+                              <component id="11a81" class="javax.swing.JSlider" binding="actuator1FanRelSpeedSlider">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -199,7 +199,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="2c30c" class="javax.swing.JLabel">
+                              <component id="2c30c" class="javax.swing.JLabel" binding="actuator1FanRelSpeedValue">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -235,7 +235,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="da35f" class="javax.swing.JLabel">
+                              <component id="da35f" class="javax.swing.JLabel" binding="actuator1LightIcon">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -259,7 +259,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="dac64" class="javax.swing.JButton" binding="OFFButton" default-binding="true">
+                              <component id="dac64" class="javax.swing.JButton" binding="actuator1LightStateButtonOFF">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -269,7 +269,7 @@
                                   <text value="OFF"/>
                                 </properties>
                               </component>
-                              <component id="8a535" class="javax.swing.JButton" binding="WARNINGButton" default-binding="true">
+                              <component id="8a535" class="javax.swing.JButton" binding="actuator1LightStateButtonWARNING">
                                 <constraints>
                                   <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -278,7 +278,7 @@
                                   <text value="WARNING"/>
                                 </properties>
                               </component>
-                              <component id="99f8" class="javax.swing.JButton" binding="ALERTButton" default-binding="true">
+                              <component id="99f8" class="javax.swing.JButton" binding="actuator1LightStateButtonALERT">
                                 <constraints>
                                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -287,7 +287,7 @@
                                   <text value="ALERT"/>
                                 </properties>
                               </component>
-                              <component id="15323" class="javax.swing.JButton" binding="EMERGENCYButton" default-binding="true">
+                              <component id="15323" class="javax.swing.JButton" binding="actuator1LightStateButtonEMERGENCY">
                                 <constraints>
                                   <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -310,7 +310,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="94e1" class="javax.swing.JLabel">
+                              <component id="94e1" class="javax.swing.JLabel" binding="actuator1LightStateStr">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -381,7 +381,7 @@
                               <text value="Actuator2"/>
                             </properties>
                           </component>
-                          <component id="a7585" class="javax.swing.JLabel">
+                          <component id="a7585" class="javax.swing.JLabel" binding="actuator2ConnStateLEDIcon">
                             <constraints>
                               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
@@ -412,7 +412,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="f775c" class="javax.swing.JLabel">
+                              <component id="f775c" class="javax.swing.JLabel" binding="actuator2FanIcon">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -434,7 +434,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="f3191" class="javax.swing.JSlider" default-binding="true">
+                              <component id="f3191" class="javax.swing.JSlider" binding="actuator2FanRelSpeedSlider">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -461,7 +461,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="99b9c" class="javax.swing.JLabel">
+                              <component id="99b9c" class="javax.swing.JLabel" binding="actuator2FanRelSpeedValue">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -497,7 +497,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="7ffd7" class="javax.swing.JLabel" binding="TryLamp">
+                              <component id="7ffd7" class="javax.swing.JLabel" binding="actuator2LightIcon">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -521,7 +521,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="8c455" class="javax.swing.JButton" default-binding="true">
+                              <component id="8c455" class="javax.swing.JButton" binding="actuator2LightStateButtonOFF">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -531,7 +531,7 @@
                                   <text value="OFF"/>
                                 </properties>
                               </component>
-                              <component id="4dcca" class="javax.swing.JButton" default-binding="true">
+                              <component id="4dcca" class="javax.swing.JButton" binding="actuator2LightStateButtonWARNING">
                                 <constraints>
                                   <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -540,7 +540,7 @@
                                   <text value="WARNING"/>
                                 </properties>
                               </component>
-                              <component id="be7ec" class="javax.swing.JButton" default-binding="true">
+                              <component id="be7ec" class="javax.swing.JButton" binding="actuator2LightStateButtonALERT">
                                 <constraints>
                                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -549,7 +549,7 @@
                                   <text value="ALERT"/>
                                 </properties>
                               </component>
-                              <component id="9dd0" class="javax.swing.JButton" default-binding="true">
+                              <component id="9dd0" class="javax.swing.JButton" binding="actuator2LightStateButtonEMERGENCY">
                                 <constraints>
                                   <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -572,7 +572,7 @@
                             </properties>
                             <border type="none"/>
                             <children>
-                              <component id="66213" class="javax.swing.JLabel">
+                              <component id="66213" class="javax.swing.JLabel" binding="actuator2LightStateStr">
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -635,7 +635,7 @@
                               <text value="Sensor1"/>
                             </properties>
                           </component>
-                          <component id="e62a1" class="javax.swing.JLabel" binding="sensor1ConnStateLED">
+                          <component id="e62a1" class="javax.swing.JLabel" binding="sensor1ConnStateLEDIcon">
                             <constraints>
                               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>
@@ -824,7 +824,7 @@
                               <text value="Sensor2"/>
                             </properties>
                           </component>
-                          <component id="70388" class="javax.swing.JLabel" binding="sensor2ConnStateLED">
+                          <component id="70388" class="javax.swing.JLabel" binding="sensor2ConnStateLEDIcon">
                             <constraints>
                               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                             </constraints>

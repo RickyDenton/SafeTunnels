@@ -76,19 +76,19 @@
 enum lightResState
  {
   // The light is OFF (NOMINAL)
-  LIGHT_OFF,
+  LIGHT_OFF = 0,
 
   // The light is ON (WARNING)
-  LIGHT_ON,
+  LIGHT_ON = 1,
 
   // The light is blinking slowly (ALERT)
-  LIGHT_BLINK_ALERT,
+  LIGHT_BLINK_ALERT = 2,
 
   // The light is blinking fast (EMERGENCY)
-  LIGHT_BLINK_EMERGENCY,
+  LIGHT_BLINK_EMERGENCY = 3,
 
   // Invalid light state used for validating a received new light state
-  LIGHT_STATE_INVALID
+  LIGHT_STATE_INVALID = 4
  };
 
 

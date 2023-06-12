@@ -2,39 +2,64 @@
 
 /* ================================== INCLUDES ================================== */
 
-/* ------------------------------- System Headers ------------------------------- */
-#include "contiki.h"
-#include "net/routing/routing.h"
-#include "net/ipv6/uip-ds6.h"
+/* ------------------------------ Standard Headers ------------------------------ */
 #include <stdio.h>
 
-/* ------------------------------- Other Headers ------------------------------- */
+/* ----------------------------- Contiki-NG Headers ----------------------------- */
+#include "contiki.h"
+#include "net/routing/routing.h"
+#include "os/net/linkaddr.h"
+#include "net/ipv6/uip-ds6.h"
+
+/* ------------------------ SafeTunnels Service Headers ------------------------ */
 #include "devUtilities.h"
 
 
-// The node ID consisting of its stringyfied MAC address
-char nodeID[MAC_ADDRESS_STR_SIZE];
+/* ============================== GLOBAL VARIABLES ============================== */
+
+// The node's 8-byte MAC address in hexadecimal
+// format with each byte separated by ':'
+char nodeMACAddr[MAC_ADDR_HEX_STR_SIZE] = "";
 
 
 /* =========================== FUNCTIONS DEFINITIONS =========================== */
 
-// Initializes the node's ID as its stringyfied MAC address
-void initNodeID()
+/**
+ * @brief Stores the node's 8-byte MAC address in hexadecimal
+ *        format into the 'nodeMACAddr' global variable
+ */
+void getNodeMACAddr()
  {
-  snprintf(nodeID, sizeof(nodeID), "%02x:%02x:%02x:%02x:%02x:%02x",
-           linkaddr_node_addr.u8[0], linkaddr_node_addr.u8[1],
-           linkaddr_node_addr.u8[2], linkaddr_node_addr.u8[5],
-           linkaddr_node_addr.u8[6], linkaddr_node_addr.u8[7]);
+  // MAC address printing index
+  unsigned int i = 0;
+
+  // Print the first MAC address byte in hexadecimal
+  // format into the 'nodeMAC' global variable
+  sprintf(nodeMACAddr, "%02x", linkaddr_node_addr.u8[i++]);
+
+  // Print the remaining 7 MAC address bytes in hexadecimal
+  // format into the 'nodeMAC' global variable separated by ':'
+  for(; i < LINKADDR_SIZE; i++)
+   {
+    sprintf(nodeMACAddr + strlen(nodeMACAddr), ":");
+    sprintf(nodeMACAddr + strlen(nodeMACAddr)
+            , "%02x", linkaddr_node_addr.u8[i]);
+   }
  }
 
 
-
-// Whether the node can communicate with hosts external to the
-// LLN, which is verified if one of its interfaces has a global
-// IPv6 address assigned and has a neighbor to route packets to
+/**
+ * @return Whether a node can communicate with hosts
+ *         external to the LLN, which is verified if:
+ *           1) One of its NIC has assigned a global IPv6 address
+ *           2) Has a parent in the DODAG to forward packets to
+ *           3) The node is supposedly reachable downwards in the DODAG
+ */
 bool isNodeOnline()
  {
-  if(uip_ds6_get_global(ADDR_PREFERRED) == NULL || uip_ds6_defrt_choose() == NULL)
-   return false;
-  return true;
+  if(uip_ds6_get_global(ADDR_PREFERRED) != NULL &&   // 1)
+     uip_ds6_defrt_choose() != NULL &&               // 2)
+     NETSTACK_ROUTING.node_is_reachable())           // 3)
+   return true;
+  return false;
  }

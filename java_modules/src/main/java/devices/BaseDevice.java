@@ -27,7 +27,7 @@ public abstract class BaseDevice implements Comparable<BaseDevice>
   public abstract void setConnStateOffline();
 
   // Set the device online (subclasses only)
-  protected abstract void setConnStateOnline();
+  public abstract void setConnStateOnline();
 
   // Get the connection state
   public boolean getConnState()

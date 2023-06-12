@@ -7,12 +7,20 @@ package devices.actuator;
 /* --------------------------- SafeTunnels Packages --------------------------- */
 import devices.BaseDevice;
 
+import javax.swing.*;
+
 import static devices.BaseDevice.DevType.actuator;
 
 
 /* ============================== CLASS DEFINITION ============================== */
 public abstract class BaseActuator extends BaseDevice
  {
+  /* ------------------- Actuators Resources Relative Paths ------------------- */
+  protected static final String actuatorFanRelSpeedResRelPath = "fan";
+  protected static final String actuatorLightStateResRelPath = "light";
+  protected static final String actuatorErrorsResRelPath = "actuatorErrors";
+
+
   /* --------------------------- Actuators Quantities --------------------------- */
   public enum ActuatorQuantity
    {
@@ -22,6 +30,7 @@ public abstract class BaseActuator extends BaseDevice
     // Temperature (°C)
     LIGHTSTATE { @Override public String toString() { return "light state"; } },
    }
+
 
   /* -------------------------- Actuator Light States -------------------------- */
   public enum LightState
@@ -42,6 +51,7 @@ public abstract class BaseActuator extends BaseDevice
     LIGHT_STATE_INVALID
    }
 
+
   /* ============================= PUBLIC METHODS ============================= */
 
   /**
@@ -58,4 +68,8 @@ public abstract class BaseActuator extends BaseDevice
    */
   public DevType getDevType()
    { return actuator; }
+
+  public abstract void setFanRelSpeed(int newFanRelSpeed);
+
+  public abstract void setLightState(LightState newLightState);
  }
