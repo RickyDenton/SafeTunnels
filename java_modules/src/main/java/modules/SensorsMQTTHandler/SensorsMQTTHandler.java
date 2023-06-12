@@ -169,9 +169,18 @@ public class SensorsMQTTHandler implements MqttCallback
     if(!mqttMsgJSON.has("errCode"))
      throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRCODE_MISSING,"(\"" + mqttMsgStr + "\")");
 
-    // Attempt to interpret the sensor "errCode" attribute as an int
     try
-     { return BaseSensorErrCode.values()[mqttMsgJSON.getInt("errCode")]; }
+     {
+      // Attempt to extract the sensor "errCode" attribute
+      BaseSensorErrCode sensorErrCode = BaseSensorErrCode.values()[mqttMsgJSON.getInt("errCode")];
+
+      // If the received integer does not map to any valid base sensor error codes, throw an error
+      if(sensorErrCode == null)
+       throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRCODE_UNKNOWN,"(\"" + mqttMsgStr + "\")");
+
+      // Otherwise return the valid sensor error code
+      return sensorErrCode;
+     }
     catch(JSONException jsonExcp)
      { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRCODE_NOT_INT,"(\"" + mqttMsgStr + "\")"); }
    }
@@ -183,7 +192,7 @@ public class SensorsMQTTHandler implements MqttCallback
      {
       try
        {
-        // Attempt to extract the sensor "MQTTCliState" attribute as a String
+        // Attempt to extract the sensor "MQTTCliState" attribute
         SensorMQTTCliState sensorMQTTCliState = SensorMQTTCliState.values()[mqttMsgJSON.getInt("MQTTCliState")];
 
         // If the received integer does not map to any valid sensor's MQTT client states, throw an error
@@ -212,8 +221,10 @@ public class SensorsMQTTHandler implements MqttCallback
       catch(JSONException jsonExcp)
        { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRDSCR_NOT_NONNULL_STRING,"(\"" + mqttMsgStr + "\")"); }
      }
+
+    // Otherwise, return null
     else
-     return "";
+     return null;
    }
 
 
@@ -322,9 +333,13 @@ public class SensorsMQTTHandler implements MqttCallback
            sensor.setConnStateOffline();
           }
 
-         // Otherwise, just log the reported sensor error
+         // Otherwise, just log the reported sensor error depending
+         // on whether an additional description was provided
          else
-          Log.code(sensorErrCode,sensorID,sensorErrDscr + " (MQTT_CLI_STATE = '" + sensorMQTTCliState + "')");
+          if(sensorErrDscr == null)
+           Log.code(sensorErrCode,sensorID,"(MQTT_CLI_STATE = '" + sensorMQTTCliState + "')");
+          else
+           Log.code(sensorErrCode,sensorID,sensorErrDscr + " (MQTT_CLI_STATE = '" + sensorMQTTCliState + "')");
          break;
 
         // A sensor CO2 density reading has been received

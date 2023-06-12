@@ -85,5 +85,4 @@ public abstract class BaseSensor extends BaseDevice
 
   // TODO: ALSO, if sensor was offline, update its state to online
   public abstract void setTemp(int newTemp);
-
  }

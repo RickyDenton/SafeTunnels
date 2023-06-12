@@ -1,4 +1,4 @@
-package ControlModule.DevicesManagers;
+package ControlModule.DevicesManagers.SensorManager;
 
 import ControlModule.ControlModule;
 import ControlModule.OpState;
@@ -71,10 +71,10 @@ public class ControlSensorManager extends BaseSensor
     // Call the parent's constructor, initializing the sensor's connState to false
     super(MAC,ID);
 
-    // Initialize the other SensorManager attributes
+    // Initialize the other ControlSensorManager's attributes
+    this.controlModule = controlModule;
     temp = -1;
     C02 = -1;
-    this.controlModule = controlModule;
     GUIBound = false;
     connStateLED = null;
     C02Label = null;
@@ -160,7 +160,7 @@ public class ControlSensorManager extends BaseSensor
    }
 
   @Override
-  protected void setConnStateOnline()
+  public void setConnStateOnline()
    {
     // Set the sensor as online
     connState = true;

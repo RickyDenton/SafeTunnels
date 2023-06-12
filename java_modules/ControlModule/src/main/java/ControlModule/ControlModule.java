@@ -7,19 +7,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import ControlModule.ControlMySQLConnector.ControlMySQLConnector;
-import ControlModule.DevicesManagers.ControlSensorManager;
+import ControlModule.DevicesManagers.SensorManager.ControlSensorManager;
 import ControlModule.GUILogging.ANSIColorPane;
 import ControlModule.GUILogging.ANSIColorPaneOutputStream;
-import errors.DevErrCodeExcp;
-import errors.ErrCodeExcp;
 import errors.ErrCodeSeverity;
 import logging.Log;
 import modules.MySQLConnector.DevMACIDPair;
 import modules.SensorsMQTTHandler.SensorsMQTTHandler;
 
 import static devices.BaseDevice.DevType.sensor;
-import static devices.actuator.BaseActuatorErrCode.ERR_LIGHT_PUT_NO_LIGHTSTATE;
-import static devices.sensor.BaseSensorErrCode.ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC;
 import static java.lang.Math.max;
 
 
@@ -49,23 +45,36 @@ public class ControlModule extends JFrame
   private JPanel actuator1Panel;
   private JPanel actuator1HeaderPanel;
   private JLabel actuator1Name;
-  private JLabel actuator1ConnStateImg;
+  private JLabel actuator1ConnStateLEDIcon;
   private JPanel sensorsListPanel;
-  private JSlider slider1;
-  private JButton OFFButton;
-  private JButton WARNINGButton;
-  private JButton ALERTButton;
-  private JButton EMERGENCYButton;
+  private JSlider actuator1FanRelSpeedSlider;
+  private JButton actuator1LightStateButtonOFF;
+  private JButton actuator1LightStateButtonWARNING;
+  private JButton actuator1LightStateButtonALERT;
+  private JButton actuator1LightStateButtonEMERGENCY;
   private JLabel sensor2C02DensityValue;
-  private JLabel TryLamp;
+  private JLabel actuator2LightIcon;
   private ANSIColorPane ANSIColorPane1;
-  private JLabel sensor1ConnStateLED;
+  private JLabel sensor1ConnStateLEDIcon;
   private JLabel systemOperatingStateLabel;
   private JPanel sensor2Panel;
   private JLabel sensor1C02DensityValue;
   private JLabel sensor1TempValue;
-  private JLabel sensor2ConnStateLED;
+  private JLabel sensor2ConnStateLEDIcon;
   private JLabel sensor2TempValue;
+  private JSlider actuator2FanRelSpeedSlider;
+  private JLabel actuator2ConnStateLEDIcon;
+  private JLabel actuator1FanRelSpeedValue;
+  private JLabel actuator2FanRelSpeedValue;
+  private JLabel actuator1LightStateStr;
+  private JLabel actuator2LightStateStr;
+  private JLabel actuator1FanIcon;
+  private JLabel actuator2FanIcon;
+  private JLabel actuator1LightIcon;
+  private JButton actuator2LightStateButtonOFF;
+  private JButton actuator2LightStateButtonWARNING;
+  private JButton actuator2LightStateButtonALERT;
+  private JButton actuator2LightStateButtonEMERGENCY;
 
   boolean autoMode;
   OpState systemOpState;
@@ -166,10 +175,10 @@ public class ControlModule extends JFrame
     Collections.sort(ctrlSensorsManagersList);
 
     // Bind the sensors with sensorID 1 and 2 to the GUI
-    ctrlSensorsManagersList.get(0).bindToGUI(sensor1ConnStateLED,sensor1C02DensityValue,
+    ctrlSensorsManagersList.get(0).bindToGUI(sensor1ConnStateLEDIcon,sensor1C02DensityValue,
                                                                  sensor1TempValue);
     if(ctrlSensorsManagersList.size() > 1)
-     ctrlSensorsManagersList.get(1).bindToGUI(sensor2ConnStateLED,sensor2C02DensityValue,
+     ctrlSensorsManagersList.get(1).bindToGUI(sensor2ConnStateLEDIcon,sensor2C02DensityValue,
                                                                   sensor2TempValue);
    }
 
@@ -198,9 +207,51 @@ public class ControlModule extends JFrame
     // Log that the Control Module has been successfully initialized
     Log.info("Control Module successfully initialized");
 
+
+
+
+    // TODO: MAC ADDRESS -> IPV6 ADDR TRY
+
+    /* TRY 1 (WORKING)
+
+    String MAC = "00:04:00:04:00:04:00:04";
+    int byteIndex = 1; // the second byte
+
+
+    String MACNoColons = MAC.replace(":","");
+
+    Log.info("MACNoColons = " + MACNoColons);
+
+    byte secByte = (byte)Integer.parseInt(MACNoColons.substring(0,2));
+
+    Log.info("secByteBeforeXOR = " + secByte);
+
+    secByte = (byte)(secByte ^ 0x02);
+
+    Log.info("secByteAfterXOR = " + secByte);
+
+    int secByteInt = secByte;
+
+    // Pad with zero
+    String firstGroup = String.format("%02d", secByteInt);
+
+    Log.info("firstGroup = " + firstGroup);
+
+    String IID = firstGroup + MACNoColons.substring(2,4) + ":" + MACNoColons.substring(4,8) + ":" + MACNoColons.substring(8,12) + ":" + MACNoColons.substring(12,16);
+
+    Log.info("IID = " + IID);
+
+    String IPv6Addr = "fd00::" + IID;
+
+    Log.info("IPv6Addr = " + IPv6Addr);
+
+    */
+
+
+
+
+
     /*
-    // Log that the Cloud Module has been successfully initialized
-    Log.info("Cloud Module successfully initialized");
 
     System.out.println("LOGGING TESTING");
     System.out.println("===============");
@@ -243,7 +294,7 @@ public class ControlModule extends JFrame
 
     // Change a JPanel icon
     ImageIcon iconLogo = new ImageIcon("ControlModule/src/main/resources/LightBulb_ALERT_Icon_30.png");
-    TryLamp.setIcon(iconLogo);
+    actuator2LightIcon.setIcon(iconLogo);
     */
 
 

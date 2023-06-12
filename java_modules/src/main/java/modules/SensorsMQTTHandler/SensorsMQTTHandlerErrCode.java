@@ -50,6 +50,9 @@ public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
   // The "errCode" attribute in a received MQTT error message could not be interpreted as an integer
   ERR_MQTT_ERR_MSG_ERRCODE_NOT_INT,
 
+  // The "errCode" attribute in a received MQTT error message could not be mapped to a valid sensor error code
+  ERR_MQTT_ERR_MSG_ERRCODE_UNKNOWN,
+
   // A received MQTT error message does not contain the sensor "MQTTCliState" attribute
   ERR_MQTT_ERR_MSG_MQTTCLISTATE_MISSING,
 
@@ -104,6 +107,7 @@ public enum SensorsMQTTHandlerErrCode implements ModuleErrCode
     /* ------------------- Received MQTT Error Message Errors Codes ------------------- */
     Map.entry(ERR_MQTT_ERR_MSG_ERRCODE_MISSING,new ErrCodeInfo(ERROR,"A received MQTT error message lacks the sensor \"errCode\" attribute")),
     Map.entry(ERR_MQTT_ERR_MSG_ERRCODE_NOT_INT,new ErrCodeInfo(ERROR,"The \"errCode\" attribute in a received MQTT error message could not be interpreted as an integer")),
+    Map.entry(ERR_MQTT_ERR_MSG_ERRCODE_UNKNOWN,new ErrCodeInfo(ERROR,"The \"errCode\" attribute in a received MQTT error message could not be mapped to a valid sensor error code")),
     Map.entry(ERR_MQTT_ERR_MSG_MQTTCLISTATE_MISSING,new ErrCodeInfo(ERROR,"A received MQTT error message does not contain the sensor \"MQTTCliState\" attribute")),
     Map.entry(ERR_MQTT_ERR_MSG_MQTTCLISTATE_NOT_INT,new ErrCodeInfo(ERROR,"The \"MQTTCliState\" attribute in a received MQTT error message could not be interpreted as an integer")),
     Map.entry(ERR_MQTT_ERR_MSG_MQTTCLISTATE_UNKNOWN,new ErrCodeInfo(ERROR,"The \"MQTTCliState\" attribute in a received MQTT error message could not be mapped to a valid sensor MQTT client state")),
