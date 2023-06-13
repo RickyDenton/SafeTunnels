@@ -5,13 +5,13 @@ package devices.actuator;
 /* ================================== IMPORTS ================================== */
 
 /* -------------------------- Java Standard Libraries -------------------------- */
-import java.util.EnumMap;
-import java.util.Map;
 
-/* --------------------------- SafeTunnels Packages --------------------------- */
 import devices.BaseDevice.DevType;
 import devices.DevErrCode;
 import errors.ErrCodeInfo;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 import static devices.BaseDevice.DevType.actuator;
 import static errors.ErrCodeSeverity.WARNING;
@@ -40,6 +40,10 @@ public enum BaseActuatorErrCode implements DevErrCode
 
   // An invalid "fanRelSpeed" value was received in a fan PUT request
   ERR_FAN_PUT_FANRELSPEED_INVALID;
+
+
+  /* ================== BaseSensorErrCode Values Lookup Array ================== */
+  public static final BaseActuatorErrCode[] values = BaseActuatorErrCode.values();
 
 
   /* ====================== BaseActuator ErrCodeInfo Map ====================== */

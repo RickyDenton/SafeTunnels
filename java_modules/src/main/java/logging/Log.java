@@ -100,7 +100,7 @@ public abstract class Log
   public static void warn(String logStr)
    {
     if(ErrCodeSeverity.WARNING.ordinal() >= LOG_LEVEL.ordinal())
-     System.out.println(COLOR_WARNING + "[WARNING]: " + logStr + COLOR_RST);
+     System.out.println(COLOR_WARNING + "[WARN]: " + logStr + COLOR_RST);
    }
 
   public static void err(String logStr)

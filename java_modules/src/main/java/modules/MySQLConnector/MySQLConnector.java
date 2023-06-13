@@ -41,8 +41,8 @@ public abstract class MySQLConnector
   // ------------------------------------- Actuators -------------------------------------
   protected final static String ST_DB_ACTUATORS_TABLE = "actuators";
   protected final static String ST_DB_ACTUATORS_TABLE_CONNSTATE = "actuatorsConnStateSeries";
-  protected final static String ST_DB_ACTUATORS_TABLE_LIGHTSTATE = "actuatorsConnLightSeries";
-  protected final static String ST_DB_ACTUATORS_TABLE_FANRELSPEED = "actuatorsConnFanSeries";
+  protected final static String ST_DB_ACTUATORS_TABLE_LIGHTSTATE = "actuatorsLightSeries";
+  protected final static String ST_DB_ACTUATORS_TABLE_FANRELSPEED = "actuatorsFanSeries";
 
   protected final static String ST_DB_ACTUATORS_COLUMN_ID = "actuatorID";
   protected final static String ST_DB_ACTUATORS_COLUMN_LIGHTSTATE = "lightState";
