@@ -76,12 +76,6 @@ final public class ControlMySQLConnector extends MySQLConnector
       // Attempt to push the updated actuator connection state into the database
       pushDevState(ST_DB_ACTUATORS_TABLE_CONNSTATE,ST_DB_ACTUATORS_COLUMN_ID,
         ST_DB_COMMON_COLUMN_CONNSTATE,actuatorID,String.valueOf(connStatusBit));
-
-      // If successful, log the updated actuator connection state
-      if(connState)
-       Log.info("actuator" + actuatorID + " is now online (pushed into the database)");
-      else
-       Log.warn("actuator" + actuatorID + " appears to be offline (pushed into the database)");
      }
     catch(SQLException sqlExcp)
      { Log.code(ERR_CONTROL_PUSH_CONNSTATE_FAILED,"(actuatorID = " + actuatorID + ", "
@@ -95,7 +89,7 @@ final public class ControlMySQLConnector extends MySQLConnector
    * @param actuatorQuantity The actuator quantity to be updated (FANRELSPEED || LIGHTSTATE)
    * @param quantityValue The updated quantity value
    */
-  public void pushSensorQuantityValue(int actuatorID, ActuatorQuantity actuatorQuantity, int quantityValue)
+  public void pushActuatorQuantityValue(int actuatorID, ActuatorQuantity actuatorQuantity, int quantityValue)
    {
     // Retrieve the names of the database table and
     // column associated with the quantity to be updated
@@ -107,13 +101,9 @@ final public class ControlMySQLConnector extends MySQLConnector
       // Attempt to push the updated actuator quantity value into the database
       pushDevState(actuatorQuantityTableName,ST_DB_ACTUATORS_COLUMN_ID,
                    actuatorQuantityColumnName,actuatorID,String.valueOf(quantityValue));
-
-      // If successful, log the updated actuator quantity
-      Log.info("Pushed actuator" + actuatorID + " updated " +
-               actuatorQuantity + " (" + quantityValue + ") into the database");
      }
     catch(SQLException sqlExcp)
-     { Log.code(ERR_CONTROL_PUSH_QUANTITY_FAILED,"(sensorID = " + actuatorID + ", quantity = "
+     { Log.code(ERR_CONTROL_PUSH_QUANTITY_FAILED,"(actuatorID = " + actuatorID + ", quantity = "
        + actuatorQuantity + ", value = " + quantityValue + ", reason = " + sqlExcp.getMessage() + ")"); }
    }
  }

@@ -3,12 +3,18 @@ package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandle
 import ControlModule.DevicesManagers.ActuatorManager.ControlActuatorManager;
 import devices.actuator.BaseActuator.LightState;
 import errors.ErrCodeExcp;
+import errors.ErrCodeInfo;
 import logging.Log;
 import org.eclipse.californium.core.CoapHandler;
 import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.coap.ClientObserveRelation;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Map;
+
+import static ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientLightHandler.CoAPClientLightHandlerErrCode.*;
+import static errors.ErrCodeSeverity.ERROR;
 
 
 public class CoAPClientLightHandler implements CoapHandler
@@ -63,7 +69,7 @@ public class CoAPClientLightHandler implements CoapHandler
     // Ensure that a successful response was received
     if(!coapResponse.isSuccess())
      {
-      Log.code(ERR_COAP_CLI_LIGHT_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode() + ")");
+      Log.code(ERR_COAP_CLI_LIGHT_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode().toString() + ")");
       return;
      }
 
@@ -93,7 +99,8 @@ public class CoAPClientLightHandler implements CoapHandler
   public void onError()
    {
     // Log the error
-    Log.code(ERR_COAP_CLI_LIGHT_OBSERVE_ERROR);
+    Log.err("An error occurred in observing the \"light\" resource on actuator"
+            + controlActuatorManager.ID + ", attempting to re-establish the observing relationship");
 
     // Proactively cancel the resource observing to attempt to recover
     // from the error at the next actuatorWatchdogTimer execution

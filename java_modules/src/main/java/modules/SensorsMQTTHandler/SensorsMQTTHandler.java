@@ -171,14 +171,17 @@ public class SensorsMQTTHandler implements MqttCallback
 
     try
      {
-      // Attempt to extract the sensor "errCode" attribute
-      BaseSensorErrCode sensorErrCode = BaseSensorErrCode.values()[mqttMsgJSON.getInt("errCode")];
+      // The MQTT message "errCode" mapped into a BaseSensorErrCode
+      BaseSensorErrCode sensorErrCode;
 
-      // If the received integer does not map to any valid base sensor error codes, throw an error
-      if(sensorErrCode == null)
-       throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRCODE_UNKNOWN,"(\"" + mqttMsgStr + "\")");
+      // Attempt to interpret the MQTT message's "errCode" attribute as an integer and map it into
+      // a BaseSensorErrCode, throwing an exception if no BaseSensorErrCode of such index exists
+      try
+       { sensorErrCode = BaseSensorErrCode.values[mqttMsgJSON.getInt("errCode")]; }
+      catch(ArrayIndexOutOfBoundsException outOfBoundsException)
+       { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_ERRCODE_UNKNOWN,"(\"" + mqttMsgStr + "\")"); }
 
-      // Otherwise return the valid sensor error code
+      // Return the valid sensor error code
       return sensorErrCode;
      }
     catch(JSONException jsonExcp)
@@ -192,14 +195,17 @@ public class SensorsMQTTHandler implements MqttCallback
      {
       try
        {
-        // Attempt to extract the sensor "MQTTCliState" attribute
-        SensorMQTTCliState sensorMQTTCliState = SensorMQTTCliState.values()[mqttMsgJSON.getInt("MQTTCliState")];
+        // The MQTT message "MQTTCliState" mapped into a SensorMQTTCliState
+        SensorMQTTCliState sensorMQTTCliState;
 
-        // If the received integer does not map to any valid sensor's MQTT client states, throw an error
-        if(sensorMQTTCliState == null)
-         throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_MQTTCLISTATE_UNKNOWN,"(\"" + mqttMsgStr + "\")");
+        // Attempt to interpret the MQTT message's "MQTTCliState" attribute as an integer and map it into
+        // a SensorMQTTCliState, throwing an exception if no SensorMQTTCliState of such index exists
+        try
+         { sensorMQTTCliState = SensorMQTTCliState.values()[mqttMsgJSON.getInt("MQTTCliState")]; }
+        catch(ArrayIndexOutOfBoundsException outOfBoundsException)
+         { throw new ErrCodeExcp(ERR_MQTT_ERR_MSG_MQTTCLISTATE_UNKNOWN,"(\"" + mqttMsgStr + "\")"); }
 
-        // Otherwise return the valid sensor's MQTT client state
+        // Return the valid sensor's MQTT client state
         return sensorMQTTCliState;
        }
       catch(JSONException jsonExcp)

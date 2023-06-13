@@ -61,6 +61,10 @@ public enum BaseSensorErrCode implements DevErrCode
   ERR_SENSOR_MAIN_LOOP_EXITED;
 
 
+  /* ================== BaseSensorErrCode Values Lookup Array ================== */
+  public static final BaseSensorErrCode[] values = BaseSensorErrCode.values();
+
+
   /* ======================= BaseSensor ErrCodeInfo Map ======================= */
   private static final EnumMap<BaseSensorErrCode,ErrCodeInfo> baseSensorErrCodeInfoMap = new EnumMap<>(Map.ofEntries
    (

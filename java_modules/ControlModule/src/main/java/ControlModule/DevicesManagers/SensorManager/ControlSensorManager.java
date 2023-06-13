@@ -185,18 +185,18 @@ public class ControlSensorManager extends BaseSensor
     Log.dbg("Received sensor" + ID + " updated C02 value (" + newC02 + ")");
 
     // If its updated differs from its current C02 value
-    if(newC02 != C02)
+    if(newC02 != this.C02)
      {
       // Update the sensor's C02 value
-      C02 = newC02;
+      this.C02 = newC02;
 
       // Possibly update the C02 and the sensor's overall operating states
       updateC02OperatingState();
 
-      // If bound to a GUI element, update the sensor's widget C02 value
+      // If bound to a GUI widget, update its C02 value
       if(GUIBound)
        {
-        C02Label.setText(C02 + " ppm");
+        C02Label.setText(this.C02 + " ppm");
         C02Label.setForeground(C02OpState.getColor());
        }
      }
@@ -213,7 +213,7 @@ public class ControlSensorManager extends BaseSensor
     Log.dbg("Received sensor" + ID + " updated temperature value (" + newTemp + ")");
 
     // If its updated differs from its current temperature value
-    if(newTemp != temp)
+    if(newTemp != this.temp)
      {
       // Update the sensor's temperature value
       temp = newTemp;
@@ -221,7 +221,7 @@ public class ControlSensorManager extends BaseSensor
       // Possibly update the temperature and the sensor's overall operating states
       updateTempOperatingState();
 
-      // If bound to a GUI element, update the sensor's widget temperature value
+      // If bound to a GUI widget, update its temperature value
       if(GUIBound)
        {
         tempLabel.setText(temp + " °C");

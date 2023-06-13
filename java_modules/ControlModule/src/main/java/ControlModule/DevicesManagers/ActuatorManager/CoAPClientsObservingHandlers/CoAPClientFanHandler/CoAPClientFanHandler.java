@@ -54,7 +54,7 @@ public class CoAPClientFanHandler implements CoapHandler
     // Ensure that a successful response was received
     if(!coapResponse.isSuccess())
      {
-      Log.code(ERR_COAP_CLI_FAN_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode() + ")");
+      Log.code(ERR_COAP_CLI_FAN_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode().toString() + ")");
       return;
      }
 
@@ -88,7 +88,8 @@ public class CoAPClientFanHandler implements CoapHandler
   public void onError()
    {
     // Log the error
-    Log.code(ERR_COAP_CLI_FAN_OBSERVE_ERROR);
+    Log.err("An error occurred in observing the \"fan\" resource on actuator"
+      + controlActuatorManager.ID + ", attempting to re-establish the observing relationship");
 
     // Proactively cancel the resource observing to attempt to recover
     // from the error at the next actuatorWatcherTimer execution

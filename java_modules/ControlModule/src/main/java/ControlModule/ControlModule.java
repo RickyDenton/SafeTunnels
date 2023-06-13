@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import ControlModule.ControlMySQLConnector.ControlMySQLConnector;
+import ControlModule.DevicesManagers.ActuatorManager.ControlActuatorManager;
 import ControlModule.DevicesManagers.SensorManager.ControlSensorManager;
 import ControlModule.GUILogging.ANSIColorPane;
 import ControlModule.GUILogging.ANSIColorPaneOutputStream;
@@ -15,6 +16,7 @@ import logging.Log;
 import modules.MySQLConnector.DevMACIDPair;
 import modules.SensorsMQTTHandler.SensorsMQTTHandler;
 
+import static devices.BaseDevice.DevType.actuator;
 import static devices.BaseDevice.DevType.sensor;
 import static java.lang.Math.max;
 
@@ -75,15 +77,19 @@ public class ControlModule extends JFrame
   private JButton actuator2LightStateButtonWARNING;
   private JButton actuator2LightStateButtonALERT;
   private JButton actuator2LightStateButtonEMERGENCY;
+  private JPanel actuator2Panel;
 
   boolean autoMode;
   OpState systemOpState;
 
+  // The system's average fan relative speed (also known by sensors)
+  private int avgFanRelSpeed;
+
   ControlMySQLConnector controlMySQLConnector;
   SensorsMQTTHandler controlMQTTHandler;
 
-  ArrayList<ControlSensorManager> ctrlSensorsManagersList;
-
+  ArrayList<ControlSensorManager> ctrlSensorManagersList;
+  ArrayList<ControlActuatorManager> ctrlActuatorManagersList;
 
   private void initGUI()
    {
@@ -141,9 +147,9 @@ public class ControlModule extends JFrame
       case 1:
 
        // Warn that a single sensor was retrieved from the database and
-       // that the second sensor panel will so be hidden from the GUI
+       // that the second sensor widget will so be hidden from the GUI
        Log.warn("A single sensor was retrieved from the database,"
-                      + "hiding the second sensor panel from the GUI");
+                      + "hiding the second sensor widget from the GUI");
 
        // Hide the "sensor2" JPanel
        sensor2Panel.setVisible(false);
@@ -158,8 +164,8 @@ public class ControlModule extends JFrame
       default:
 
        // Warn that the Control Module GUI currently supports displaying only two sensors
-       Log.warn(sensorsList.size() + " sensors were retrieved from the database,"
-                + "with only the first two that will be displayed in the GUI");
+       Log.warn(sensorsList.size() + " sensors were retrieved from the database, "
+         + "with the GUI currently supporting displaying only the first two");
      }
 
     // If LOG_LEVEL = DEBUG, log the list of sensors retrieved from the database
@@ -167,19 +173,76 @@ public class ControlModule extends JFrame
      sensorsList.forEach((sensor) -> Log.dbg("|- <" + sensor.ID + "," + sensor.MAC + ">"));
 
     // Initialize and populate the ArrayList of ControlSensorManagers
-    ctrlSensorsManagersList = new ArrayList<>();
-    sensorsList.forEach(sensor -> ctrlSensorsManagersList.add
+    ctrlSensorManagersList = new ArrayList<>();
+    sensorsList.forEach(sensor -> ctrlSensorManagersList.add
       (new ControlSensorManager(sensor.MAC,sensor.ID,this)));
 
-    // Sort the ControlSensorManagers by increasing sensorID
-    Collections.sort(ctrlSensorsManagersList);
+    // Sort the ControlSensorManagers list by increasing sensorID
+    Collections.sort(ctrlSensorManagersList);
 
     // Bind the sensors with sensorID 1 and 2 to the GUI
-    ctrlSensorsManagersList.get(0).bindToGUI(sensor1ConnStateLEDIcon,sensor1C02DensityValue,
+    ctrlSensorManagersList.get(0).bindToGUI(sensor1ConnStateLEDIcon,sensor1C02DensityValue,
                                                                  sensor1TempValue);
-    if(ctrlSensorsManagersList.size() > 1)
-     ctrlSensorsManagersList.get(1).bindToGUI(sensor2ConnStateLEDIcon,sensor2C02DensityValue,
+    if(ctrlSensorManagersList.size() > 1)
+     ctrlSensorManagersList.get(1).bindToGUI(sensor2ConnStateLEDIcon,sensor2C02DensityValue,
                                                                   sensor2TempValue);
+   }
+
+
+  private void initActuators()
+   {
+    // Attempt to retrieve the <MAC,actuatorID> list of actuators stored in the database
+    ArrayList<DevMACIDPair> actuatorsList = controlMySQLConnector.getDBDevicesList(actuator);
+
+    // Depending on the number of actuators that were retrieved from the database
+    // (which is ascertained to be >0 by the getDBDevicesList() method)
+    switch(actuatorsList.size())
+     {
+      /* ---------- A single actuator was retrieved from the database ---------- */
+      case 1:
+
+       // Warn that a single actuator was retrieved from the database and
+       // that the second actuator widget will so be hidden from the GUI
+       Log.warn("A single actuator was retrieved from the database,"
+         + "hiding the second actuator widget from the GUI");
+
+       // Hide the "actuator2" JPanel
+       actuator2Panel.setVisible(false);
+       break;
+
+      /* ---- The (expected) two actuators were retrieved from the database ---- */
+      case 2:
+       Log.dbg("2 actuators were retrieved from the database:");
+       break;
+
+      /* ------ More than two actuators were retrieved from the database ------ */
+      default:
+
+       // Warn that the Control Module GUI currently supports displaying only two actuators
+       Log.warn(actuatorsList.size() + " actuators were retrieved from the "
+         + "database, with the GUI currently supporting displaying only the first two");
+     }
+
+    // If LOG_LEVEL = DEBUG, log the list of actuators retrieved from the database
+    if(Log.LOG_LEVEL == ErrCodeSeverity.DEBUG)
+     actuatorsList.forEach((actuator) -> Log.dbg("|- <" + actuator.ID + "," + actuator.MAC + ">"));
+
+    // Initialize and populate the ArrayList of ControlActuatorManagers
+    ctrlActuatorManagersList = new ArrayList<>();
+    actuatorsList.forEach(actuator -> ctrlActuatorManagersList.add
+      (new ControlActuatorManager(actuator.MAC,actuator.ID,this,controlMySQLConnector)));
+
+    // Sort the ControlActuatorManagers list by increasing actuatorID
+    Collections.sort(ctrlActuatorManagersList);
+
+    // Bind the actuators with actuatorID 1 and 2 to the GUI
+    ctrlActuatorManagersList.get(0).bindToGUI(actuator1ConnStateLEDIcon,actuator1FanRelSpeedValue,
+                                              actuator1LightStateStr,actuator1FanIcon,
+                                              actuator1LightIcon,actuator1FanRelSpeedSlider);
+    if(ctrlActuatorManagersList.size() > 1)
+     ctrlActuatorManagersList.get(1).bindToGUI(actuator2ConnStateLEDIcon,actuator2FanRelSpeedValue,
+                                               actuator2LightStateStr,actuator2FanIcon,
+                                               actuator2LightIcon,actuator2FanRelSpeedSlider);
    }
 
 
@@ -188,6 +251,7 @@ public class ControlModule extends JFrame
     // Initialize the system's attributes
     autoMode = true;
     systemOpState = OpState.NOMINAL;
+    avgFanRelSpeed = -1;
 
     // Initialize the GUI window
     initGUI();
@@ -199,10 +263,10 @@ public class ControlModule extends JFrame
     initSensors();
 
     // Initialize the system's actuators
-    // TODO
+    initActuators();
 
     // Attempt to instantiate the Control Module MQTT Client Handler
-    controlMQTTHandler = new SensorsMQTTHandler("ControlModule",ctrlSensorsManagersList);
+    controlMQTTHandler = new SensorsMQTTHandler("ControlModule",ctrlSensorManagersList);
 
     // Log that the Control Module has been successfully initialized
     Log.info("Control Module successfully initialized");
@@ -331,7 +395,7 @@ public class ControlModule extends JFrame
        OpState maxSensorOpState = OpState.NOMINAL;
 
        // Compute the maximum among all the sensor's operating states
-       for(ControlSensorManager ctrlSensorMgr : ctrlSensorsManagersList)
+       for(ControlSensorManager ctrlSensorMgr : ctrlSensorManagersList)
         maxSensorOpState = OpState.values()
                             [
                              max(maxSensorOpState.ordinal(),
@@ -364,6 +428,42 @@ public class ControlModule extends JFrame
        {
         // TODO!
        }
+     }
+   }
+
+  public void updateAvgFanRelSpeed()
+   {
+    int numFansToCount = 0;
+    int totFanRelSpeed = 0;
+
+    for (ControlActuatorManager ctrlActuatorManager : ctrlActuatorManagersList)
+     {
+      // The actuator's fan relative speed
+      int actFanRelSpeed = ctrlActuatorManager.getFanRelSpeed();
+
+      // If a valid fan relative speed was received by the actuator
+      if(actFanRelSpeed != -1)
+       {
+        totFanRelSpeed += actFanRelSpeed;
+        numFansToCount++;
+       }
+     }
+
+    // New average fan relative speed
+    int newAvgFanRelSpeed = totFanRelSpeed / numFansToCount;
+
+    // If the new average fan relative speed differs from its previous value
+    if(avgFanRelSpeed != newAvgFanRelSpeed)
+     {
+      // Update the system's average fan relative speed
+      avgFanRelSpeed = newAvgFanRelSpeed;
+
+      // Attempt to publish the new system average fan relative
+      // speed on the sensor's MQTT 'TOPIC_AVG_FAN_REL_SPEED' topic
+      controlMQTTHandler.publishAvgFanRelSpeed(avgFanRelSpeed);
+
+      // Log the new system average fan relative speed
+      Log.info("Published new system average fan relative speed: " + avgFanRelSpeed);
      }
    }
 

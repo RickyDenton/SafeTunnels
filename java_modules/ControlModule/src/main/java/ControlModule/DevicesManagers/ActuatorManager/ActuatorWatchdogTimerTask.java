@@ -3,6 +3,7 @@ package ControlModule.DevicesManagers.ActuatorManager;
 import ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientErrorsHandler.CoAPClientErrorsHandler;
 import ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientFanHandler.CoAPClientFanHandler;
 import ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientLightHandler.CoAPClientLightHandler;
+import logging.Log;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.coap.ClientObserveRelation;
 
@@ -10,6 +11,9 @@ import java.util.TimerTask;
 
 class ActuatorWatchdogTimerTask extends TimerTask
  {
+  // The CoAP standard 'accept' JSON value
+  public static final int COAP_ACCEPT_JSON = 50;
+
   // Control actuator manager reference
   ControlActuatorManager ctrlActuatorManager;
 
@@ -51,7 +55,7 @@ class ActuatorWatchdogTimerTask extends TimerTask
 
     // Otherwise, verify whether the actuator is
     // online by CoAP-pinging it using any CoAP client
-    actuatorRepliedPing = coapClientFan.ping(2000); // in ms
+    actuatorRepliedPing = coapClientFan.ping(3000); // in ms
 
     // If the actuator is online and was online or this is the first ping,
     // attempt to push its updated 'OFFLINE' connState into the database
@@ -70,16 +74,22 @@ class ActuatorWatchdogTimerTask extends TimerTask
        if(!ctrlActuatorManager.getConnState())
         ctrlActuatorManager.setConnStateOnline();
 
-       // In any case, attempt to make the CoAP clients observe their
-       // associated resources if they are not already doing so
+       // In any case, attempt to make the CoAP clients observe their associated
+       // resources if not already observing, specifying via the CoAP 'accept'
+       // attribute that they expected responses to be in JSON format
        if(coapClientFanObserveRel == null || coapClientFanObserveRel.isCanceled())
-        coapClientFanObserveRel = coapClientFan.observe(new CoAPClientFanHandler(ctrlActuatorManager,coapClientFanObserveRel));
+        coapClientFanObserveRel = coapClientFan.observe(new CoAPClientFanHandler(ctrlActuatorManager,coapClientFanObserveRel),COAP_ACCEPT_JSON);
 
        if(coapClientLightObserveRel == null || coapClientLightObserveRel.isCanceled())
-        coapClientLightObserveRel = coapClientLight.observe(new CoAPClientLightHandler(ctrlActuatorManager,coapClientLightObserveRel));
+        coapClientLightObserveRel = coapClientLight.observe(new CoAPClientLightHandler(ctrlActuatorManager,coapClientLightObserveRel),COAP_ACCEPT_JSON);
 
        if(coapClientErrorsObserveRel == null || coapClientErrorsObserveRel.isCanceled())
-        coapClientErrorsObserveRel = coapClientErrors.observe(new CoAPClientErrorsHandler(ctrlActuatorManager,coapClientErrorsObserveRel));
+        coapClientErrorsObserveRel = coapClientErrors.observe(new CoAPClientErrorsHandler(ctrlActuatorManager,coapClientErrorsObserveRel),COAP_ACCEPT_JSON);
+
+       // If all CoAP clients are now observing their associated resources, log it
+       if((coapClientFanObserveRel!=null && !coapClientFanObserveRel.isCanceled()) && (coapClientLightObserveRel!=null && !coapClientLightObserveRel.isCanceled()) && (coapClientErrorsObserveRel!=null
+         && !coapClientErrorsObserveRel.isCanceled()))
+        Log.dbg("Successfully observing all actuator" + ctrlActuatorManager.ID + " resources");
       }
    }
  }

@@ -10,12 +10,13 @@ import org.eclipse.californium.core.coap.ClientObserveRelation;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import static ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientErrorsHandler.CoAPClientErrorsHandlerErrCode.*;
+
 
 public class CoAPClientErrorsHandler implements CoapHandler
  {
   ControlActuatorManager controlActuatorManager;
   ClientObserveRelation coapClientErrorsObserveRel;
-
 
   private BaseActuatorErrCode getActuatorErrCode(JSONObject coapResponseJSON, String coapResponseStr) throws  ErrCodeExcp
    {
@@ -25,12 +26,15 @@ public class CoAPClientErrorsHandler implements CoapHandler
 
     try
      {
-      // Attempt to extract the response's "errCode" attribute
-      BaseActuatorErrCode actuatorErrCode = BaseActuatorErrCode.values()[coapResponseJSON.getInt("errCode")];
+      // The CoAP response's "errCode" mapped into a BaseActuatorErrCode
+      BaseActuatorErrCode actuatorErrCode;
 
-      // If the received integer does not map to any valid base actuator error codes, throw an error
-      if(actuatorErrCode == null)
-       throw new ErrCodeExcp(ERR_COAP_CLI_ERRORS_ERRCODE_UNKNOWN,"(\"" + coapResponseStr + "\")");
+      // Attempt to interpret the response's "errCode" attribute as an integer and map it into a
+      // BaseActuatorErrCode, throwing an exception if no BaseActuatorErrCode of such index exists
+      try
+       { actuatorErrCode = BaseActuatorErrCode.values[coapResponseJSON.getInt("errCode")]; }
+      catch(ArrayIndexOutOfBoundsException outOfBoundsException)
+       { throw new ErrCodeExcp(ERR_COAP_CLI_ERRORS_ERRCODE_UNKNOWN,"(\"" + coapResponseStr + "\")"); }
 
       // Otherwise return the valid actuator error code
       return actuatorErrCode;
@@ -101,12 +105,17 @@ public class CoAPClientErrorsHandler implements CoapHandler
     // Ensure that a successful response was received
     if(!coapResponse.isSuccess())
      {
-      Log.code(ERR_COAP_CLI_ERRORS_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode() + ")");
+      Log.code(ERR_COAP_CLI_ERRORS_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode().toString() + ")");
       return;
      }
 
     // Retrieve the CoAP response's payload as a String
     String coapResponseStr = coapResponse.getResponseText();
+
+    // Empty CoAP responses are associated with the "actuatorErrors"
+    // observing confirmation and periodic refreshing, and so can be ignored
+    if(coapResponseStr.isEmpty())
+     { return; }
 
     try
      {
@@ -140,7 +149,8 @@ public class CoAPClientErrorsHandler implements CoapHandler
   public void onError()
    {
     // Log the error
-    Log.code(ERR_COAP_CLI_ERRORS_OBSERVE_ERROR);
+    Log.err("An error occurred in observing the \"errors\" resource on actuator"
+      + controlActuatorManager.ID + ", attempting to re-establish the observing relationship");
 
     // Proactively cancel the resource observing to attempt to recover
     // from the error at the next actuatorWatchdogTimer execution
