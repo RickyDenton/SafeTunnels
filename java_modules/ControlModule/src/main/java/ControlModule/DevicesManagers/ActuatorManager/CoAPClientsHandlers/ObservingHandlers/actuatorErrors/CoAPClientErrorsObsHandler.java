@@ -1,4 +1,4 @@
-package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientErrorsHandler;
+package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.ObservingHandlers.actuatorErrors;
 
 import ControlModule.DevicesManagers.ActuatorManager.ControlActuatorManager;
 import devices.actuator.BaseActuatorErrCode;
@@ -10,10 +10,10 @@ import org.eclipse.californium.core.coap.ClientObserveRelation;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import static ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientErrorsHandler.CoAPClientErrorsHandlerErrCode.*;
+import static ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.ObservingHandlers.actuatorErrors.CoAPClientErrorsHandlerObsErrCode.*;
 
 
-public class CoAPClientErrorsHandler implements CoapHandler
+public class CoAPClientErrorsObsHandler implements CoapHandler
  {
   ControlActuatorManager controlActuatorManager;
   ClientObserveRelation coapClientErrorsObserveRel;
@@ -79,7 +79,7 @@ public class CoAPClientErrorsHandler implements CoapHandler
 
 
 
-  public CoAPClientErrorsHandler(ControlActuatorManager controlActuatorManager,ClientObserveRelation coapClientErrorsObserveRel)
+  public CoAPClientErrorsObsHandler(ControlActuatorManager controlActuatorManager,ClientObserveRelation coapClientErrorsObserveRel)
    {
     this.controlActuatorManager = controlActuatorManager;
     this.coapClientErrorsObserveRel = coapClientErrorsObserveRel;

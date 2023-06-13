@@ -103,7 +103,17 @@ final public class ControlMySQLConnector extends MySQLConnector
                    actuatorQuantityColumnName,actuatorID,String.valueOf(quantityValue));
      }
     catch(SQLException sqlExcp)
-     { Log.code(ERR_CONTROL_PUSH_QUANTITY_FAILED,"(actuatorID = " + actuatorID + ", quantity = "
-       + actuatorQuantity + ", value = " + quantityValue + ", reason = " + sqlExcp.getMessage() + ")"); }
+     {
+      /*
+       * Error code 1062 is associated with failing to insert a new record because a
+       * record with such primary key (the timestamp) already exists in the destination
+       * table, which may occur for actuators in auto mode and so can be ignored
+       */
+      if(sqlExcp.getErrorCode() == 1062)
+       return;
+      else
+       Log.code(ERR_CONTROL_PUSH_QUANTITY_FAILED,"(actuatorID = " + actuatorID + ", quantity = "
+        + actuatorQuantity + ", value = " + quantityValue + ", reason = " + sqlExcp.getMessage() + ",tostr =  " + sqlExcp.toString() + ",errCode =  " + sqlExcp.getErrorCode() + ")");
+     }
    }
  }
