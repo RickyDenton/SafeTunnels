@@ -43,13 +43,8 @@ public class ControlModule extends JFrame
   private JLabel stateLabel;
   private JPanel logPanel;
   private JLabel LogLabel;
-  private JPanel devicesPanel;
   private JPanel logLabelPanel;
-  private JPanel devicesListsPanel;
   private JPanel actuatorsListPanel;
-  private JPanel actuator1Panel;
-  private JPanel actuator1HeaderPanel;
-  private JLabel actuator1Name;
   private JLabel actuator1ConnStateLEDIcon;
   private JPanel sensorsListPanel;
   private JSlider actuator1FanRelSpeedSlider;
@@ -82,6 +77,11 @@ public class ControlModule extends JFrame
   private JButton actuator2LightStateButtonEMERGENCY;
   private JPanel actuator2Panel;
   private JLabel avgFanRelSpeedLabel;
+  private JButton ALERTButton;
+  private JButton EMERButton;
+  private JButton ONButton;
+  private JButton OFFButton;
+  private JSlider slider1;
 
   boolean autoMode;
   OpState systemOpState;
@@ -586,4 +586,5 @@ public class ControlModule extends JFrame
    */
   public static void main(String[] args)
    { new ControlModule(); }
+
  }
