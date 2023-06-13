@@ -91,11 +91,17 @@ public class ControlActuatorManager extends BaseActuator
   private JLabel fanIcon;
   private JLabel lightIcon;
   private JSlider fanRelSpeedSlider;
+  private JButton lightStateButtonOFF;
+  private JButton lightStateButtonWARNING;
+  private JButton lightStateButtonALERT;
+  private JButton lightStateButtonEMERGENCY;
 
 
   // Binds this actuator to an actuator widget in the GUI
   public void bindToGUI(JLabel connStateLEDIcon, JLabel fanRelSpeedLabel, JLabel lightStateLabel,
-                        JLabel fanIcon, JLabel lightIcon, JSlider fanRelSpeedSlider)
+                        JLabel fanIcon, JLabel lightIcon, JSlider fanRelSpeedSlider,
+                        JButton lightStateButtonOFF, JButton lightStateButtonWARNING,
+                        JButton lightStateButtonALERT, JButton lightStateButtonEMERGENCY)
    {
     if(connStateLEDIcon == null || fanRelSpeedLabel == null || lightStateLabel == null ||
       fanIcon == null || lightIcon == null || fanRelSpeedSlider == null)
@@ -111,6 +117,10 @@ public class ControlActuatorManager extends BaseActuator
     this.fanIcon = fanIcon;
     this.lightIcon = lightIcon;
     this.fanRelSpeedSlider = fanRelSpeedSlider;
+    this.lightStateButtonOFF = lightStateButtonOFF;
+    this.lightStateButtonWARNING = lightStateButtonWARNING;
+    this.lightStateButtonALERT = lightStateButtonALERT;
+    this.lightStateButtonEMERGENCY = lightStateButtonEMERGENCY;
 
     // Set that the actuator is now bound to an actuator widget in the GUI
     GUIBound = true;
@@ -188,10 +198,23 @@ public class ControlActuatorManager extends BaseActuator
     // Log that the actuator appears to be offline
     Log.warn("actuator" + ID + " appears to be offline");
 
-    // If bound to a GUI widget, update the
-    // associated connection status LED icon
+    // If bound to a GUI sensor widget
     if(GUIBound)
-     { connStateLEDIcon.setIcon(ControlModule.connStateLEDOFFImg); }
+     {
+      // Update the connection state LED icon
+      connStateLEDIcon.setIcon(ControlModule.connStateLEDOFFImg);
+
+      // Deactivate the other actuator widget's components
+      fanRelSpeedLabel.setEnabled(false);
+      lightStateLabel.setEnabled(false);
+      fanIcon.setEnabled(false);
+      lightIcon.setEnabled(false);
+      fanRelSpeedSlider.setEnabled(false);
+      lightStateButtonOFF.setEnabled(false);
+      lightStateButtonWARNING.setEnabled(false);
+      lightStateButtonALERT.setEnabled(false);
+      lightStateButtonEMERGENCY.setEnabled(false);
+     }
    }
 
 
@@ -207,10 +230,23 @@ public class ControlActuatorManager extends BaseActuator
     // Log that the actuator is now online
     Log.info("actuator" + ID + " is now online");
 
-    // If bound to a GUI widget, update the
-    // associated connection status LED icon
+    // If bound to a GUI sensor widget
     if(GUIBound)
-     { connStateLEDIcon.setIcon(ControlModule.connStateLEDONImg); }
+     {
+      // Update the connection state LED icon
+      connStateLEDIcon.setIcon(ControlModule.connStateLEDONImg);
+
+      // Activate the other actuator widget's components
+      fanRelSpeedLabel.setEnabled(true);
+      lightStateLabel.setEnabled(true);
+      fanIcon.setEnabled(true);
+      lightIcon.setEnabled(true);
+      fanRelSpeedSlider.setEnabled(true);
+      lightStateButtonOFF.setEnabled(true);
+      lightStateButtonWARNING.setEnabled(true);
+      lightStateButtonALERT.setEnabled(true);
+      lightStateButtonEMERGENCY.setEnabled(true);
+     }
    }
 
 

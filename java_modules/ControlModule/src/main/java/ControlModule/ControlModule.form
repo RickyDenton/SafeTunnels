@@ -11,7 +11,7 @@
       <title-color color="-16777216"/>
     </border>
     <children>
-      <grid id="c1680" binding="systemPanel" layout-manager="GridLayoutManager" row-count="1" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="c1680" layout-manager="GridLayoutManager" row-count="1" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="5" right="0"/>
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
@@ -19,7 +19,7 @@
         <properties/>
         <border type="none"/>
         <children>
-          <component id="c0be0" class="javax.swing.JLabel" binding="stateLabel">
+          <component id="c0be0" class="javax.swing.JLabel">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -98,10 +98,12 @@
             <properties/>
             <border type="none"/>
             <children>
-              <grid id="b3a44" binding="actuatorsListPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="b3a44" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
-                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="2" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="2" indent="0" use-parent-layout="false">
+                    <preferred-size width="340" height="-1"/>
+                  </grid>
                 </constraints>
                 <properties>
                   <background color="-855310"/>
@@ -114,7 +116,7 @@
                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
-                      <background color="-4276546"/>
+                      <background color="-5592406"/>
                     </properties>
                     <border type="bevel-raised"/>
                     <children>
@@ -172,10 +174,10 @@
                                       <horizontalAlignment value="10"/>
                                       <horizontalTextPosition value="11"/>
                                       <labelFor value=""/>
-                                      <text value="Actuator-"/>
+                                      <text value="Actuator1"/>
                                     </properties>
                                   </component>
-                                  <component id="ff27a" class="javax.swing.JLabel">
+                                  <component id="ff27a" class="javax.swing.JLabel" binding="actuator1ConnStateLEDIcon">
                                     <constraints>
                                       <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                                     </constraints>
@@ -208,7 +210,7 @@
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="5eaaf" class="javax.swing.JLabel">
+                                      <component id="5eaaf" class="javax.swing.JLabel" binding="actuator1LightIcon">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
@@ -220,55 +222,63 @@
                                     </children>
                                   </grid>
                                   <grid id="a88d2" layout-manager="GridLayoutManager" row-count="2" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                    <margin top="0" left="0" bottom="0" right="7"/>
+                                    <margin top="0" left="0" bottom="0" right="10"/>
                                     <constraints>
-                                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="4" fill="2" indent="0" use-parent-layout="false">
                                         <maximum-size width="-1" height="170"/>
                                       </grid>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="31cc9" class="javax.swing.JButton" binding="ALERTButton" default-binding="true">
+                                      <component id="31cc9" class="javax.swing.JButton" binding="actuator1LightStateButtonALERT">
                                         <constraints>
                                           <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                            <preferred-size width="83" height="-1"/>
                                             <maximum-size width="150" height="25"/>
                                           </grid>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <foreground color="-3461632"/>
                                           <text value="ALERT"/>
                                         </properties>
                                       </component>
-                                      <component id="802f1" class="javax.swing.JButton" binding="EMERButton" default-binding="true">
+                                      <component id="802f1" class="javax.swing.JButton" binding="actuator1LightStateButtonEMERGENCY">
                                         <constraints>
                                           <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                            <preferred-size width="83" height="-1"/>
                                             <maximum-size width="150" height="25"/>
                                           </grid>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <foreground color="-968448"/>
                                           <text value="EMER."/>
                                         </properties>
                                       </component>
-                                      <component id="b84cd" class="javax.swing.JButton" binding="ONButton" default-binding="true">
+                                      <component id="b84cd" class="javax.swing.JButton" binding="actuator1LightStateButtonWARNING">
                                         <constraints>
                                           <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                            <preferred-size width="83" height="-1"/>
                                             <maximum-size width="150" height="25"/>
                                           </grid>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <foreground color="-889853"/>
                                           <text value=" ON "/>
                                         </properties>
                                       </component>
-                                      <component id="95017" class="javax.swing.JButton" binding="OFFButton" default-binding="true">
+                                      <component id="95017" class="javax.swing.JButton" binding="actuator1LightStateButtonOFF">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                            <preferred-size width="83" height="-1"/>
                                             <maximum-size width="150" height="25"/>
                                           </grid>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <foreground color="-13861532"/>
                                           <text value=" OFF "/>
                                         </properties>
@@ -278,16 +288,20 @@
                                   <grid id="24f0a" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                                     <margin top="0" left="0" bottom="0" right="1"/>
                                     <constraints>
-                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="2" indent="0" use-parent-layout="false"/>
+                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="2" indent="1" use-parent-layout="false"/>
                                     </constraints>
-                                    <properties/>
+                                    <properties>
+                                      <enabled value="true"/>
+                                    </properties>
                                     <border type="none"/>
                                     <children>
-                                      <component id="b61de" class="javax.swing.JLabel">
+                                      <component id="b61de" class="javax.swing.JLabel" binding="actuator1LightStateLabel">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
+                                          <font size="16"/>
                                           <text value="-------"/>
                                         </properties>
                                       </component>
@@ -311,7 +325,7 @@
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="f0395" class="javax.swing.JLabel">
+                                      <component id="f0395" class="javax.swing.JLabel" binding="actuator1FanIcon">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
@@ -323,36 +337,39 @@
                                     </children>
                                   </grid>
                                   <grid id="8a64" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                    <margin top="0" left="0" bottom="0" right="0"/>
+                                    <margin top="0" left="0" bottom="0" right="3"/>
                                     <constraints>
                                       <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="2edb3" class="javax.swing.JSlider" binding="slider1" default-binding="true">
+                                      <component id="2edb3" class="javax.swing.JSlider" binding="actuator1FanRelSpeedSlider">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="4" fill="0" indent="0" use-parent-layout="false">
                                             <maximum-size width="191" height="-1"/>
                                           </grid>
                                         </constraints>
-                                        <properties/>
+                                        <properties>
+                                          <enabled value="false"/>
+                                        </properties>
                                       </component>
                                     </children>
                                   </grid>
                                   <grid id="44206" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                                     <margin top="0" left="0" bottom="0" right="0"/>
                                     <constraints>
-                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="2" indent="1" use-parent-layout="false"/>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="eb17" class="javax.swing.JLabel">
+                                      <component id="eb17" class="javax.swing.JLabel" binding="actuator1FanRelSpeedValue">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <font size="16"/>
                                           <text value="--- %"/>
                                         </properties>
@@ -363,7 +380,7 @@
                               </grid>
                             </children>
                           </grid>
-                          <grid id="d7807" layout-manager="GridLayoutManager" row-count="3" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                          <grid id="d7807" binding="actuator2Panel" layout-manager="GridLayoutManager" row-count="3" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                             <margin top="0" left="0" bottom="0" right="0"/>
                             <constraints>
                               <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -391,10 +408,10 @@
                                       <horizontalAlignment value="10"/>
                                       <horizontalTextPosition value="11"/>
                                       <labelFor value=""/>
-                                      <text value="Actuator-"/>
+                                      <text value="Actuator2"/>
                                     </properties>
                                   </component>
-                                  <component id="cae95" class="javax.swing.JLabel">
+                                  <component id="cae95" class="javax.swing.JLabel" binding="actuator2ConnStateLEDIcon">
                                     <constraints>
                                       <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                                     </constraints>
@@ -427,7 +444,7 @@
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="f832c" class="javax.swing.JLabel">
+                                      <component id="f832c" class="javax.swing.JLabel" binding="actuator2LightIcon">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
@@ -439,55 +456,63 @@
                                     </children>
                                   </grid>
                                   <grid id="41d66" layout-manager="GridLayoutManager" row-count="2" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                    <margin top="0" left="0" bottom="0" right="7"/>
+                                    <margin top="0" left="0" bottom="0" right="10"/>
                                     <constraints>
-                                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="4" fill="2" indent="0" use-parent-layout="false">
                                         <maximum-size width="-1" height="170"/>
                                       </grid>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="31955" class="javax.swing.JButton" default-binding="true">
+                                      <component id="31955" class="javax.swing.JButton" binding="actuator2LightStateButtonALERT">
                                         <constraints>
                                           <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                            <preferred-size width="83" height="-1"/>
                                             <maximum-size width="150" height="25"/>
                                           </grid>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <foreground color="-3461632"/>
                                           <text value="ALERT"/>
                                         </properties>
                                       </component>
-                                      <component id="557d7" class="javax.swing.JButton" default-binding="true">
+                                      <component id="557d7" class="javax.swing.JButton" binding="actuator2LightStateButtonEMERGENCY">
                                         <constraints>
                                           <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                            <preferred-size width="83" height="-1"/>
                                             <maximum-size width="150" height="25"/>
                                           </grid>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <foreground color="-968448"/>
                                           <text value="EMER."/>
                                         </properties>
                                       </component>
-                                      <component id="370a5" class="javax.swing.JButton" default-binding="true">
+                                      <component id="370a5" class="javax.swing.JButton" binding="actuator2LightStateButtonWARNING">
                                         <constraints>
                                           <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                            <preferred-size width="83" height="-1"/>
                                             <maximum-size width="150" height="25"/>
                                           </grid>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <foreground color="-889853"/>
                                           <text value=" ON "/>
                                         </properties>
                                       </component>
-                                      <component id="84ffc" class="javax.swing.JButton" default-binding="true">
+                                      <component id="84ffc" class="javax.swing.JButton" binding="actuator2LightStateButtonOFF">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                            <preferred-size width="83" height="-1"/>
                                             <maximum-size width="150" height="25"/>
                                           </grid>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <foreground color="-13861532"/>
                                           <text value=" OFF "/>
                                         </properties>
@@ -497,16 +522,18 @@
                                   <grid id="47b03" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                                     <margin top="0" left="0" bottom="0" right="1"/>
                                     <constraints>
-                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="2" indent="0" use-parent-layout="false"/>
+                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="2" indent="1" use-parent-layout="false"/>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="e105d" class="javax.swing.JLabel">
+                                      <component id="e105d" class="javax.swing.JLabel" binding="actuator2LightStateLabel">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
+                                          <font size="16"/>
                                           <text value="-------"/>
                                         </properties>
                                       </component>
@@ -530,7 +557,7 @@
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="311b8" class="javax.swing.JLabel">
+                                      <component id="311b8" class="javax.swing.JLabel" binding="actuator2FanIcon">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
@@ -542,36 +569,39 @@
                                     </children>
                                   </grid>
                                   <grid id="72366" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                    <margin top="0" left="0" bottom="0" right="0"/>
+                                    <margin top="0" left="0" bottom="0" right="3"/>
                                     <constraints>
                                       <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="ffc1" class="javax.swing.JSlider" default-binding="true">
+                                      <component id="ffc1" class="javax.swing.JSlider" binding="actuator2FanRelSpeedSlider">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="4" fill="0" indent="0" use-parent-layout="false">
                                             <maximum-size width="191" height="-1"/>
                                           </grid>
                                         </constraints>
-                                        <properties/>
+                                        <properties>
+                                          <enabled value="false"/>
+                                        </properties>
                                       </component>
                                     </children>
                                   </grid>
                                   <grid id="9d3ab" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                                     <margin top="0" left="0" bottom="0" right="0"/>
                                     <constraints>
-                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="2" indent="1" use-parent-layout="false"/>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="4b10c" class="javax.swing.JLabel">
+                                      <component id="4b10c" class="javax.swing.JLabel" binding="actuator2FanRelSpeedValue">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <font size="16"/>
                                           <text value="--- %"/>
                                         </properties>
@@ -588,10 +618,12 @@
                   </scrollpane>
                 </children>
               </grid>
-              <grid id="6f641" binding="sensorsListPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="6f641" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
-                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="1" anchor="8" fill="2" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="2" indent="0" use-parent-layout="false">
+                    <preferred-size width="170" height="-1"/>
+                  </grid>
                 </constraints>
                 <properties>
                   <background color="-855310"/>
@@ -604,7 +636,7 @@
                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
-                      <background color="-4276546"/>
+                      <background color="-5592406"/>
                       <enabled value="true"/>
                     </properties>
                     <border type="bevel-raised"/>
@@ -640,7 +672,9 @@
                             <constraints>
                               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                             </constraints>
-                            <properties/>
+                            <properties>
+                              <enabled value="true"/>
+                            </properties>
                             <border type="bevel-raised"/>
                             <children>
                               <grid id="228e7" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -652,18 +686,19 @@
                                 <border type="none"/>
                                 <children>
                                   <grid id="c3db7" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                    <margin top="0" left="11" bottom="0" right="0"/>
+                                    <margin top="0" left="4" bottom="2" right="0"/>
                                     <constraints>
-                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="a1d1d" class="javax.swing.JLabel">
+                                      <component id="a1d1d" class="javax.swing.JLabel" binding="sensor1TempValue">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <font size="16"/>
                                           <text value="---- °C"/>
                                         </properties>
@@ -712,10 +747,10 @@
                                       <horizontalAlignment value="10"/>
                                       <horizontalTextPosition value="11"/>
                                       <labelFor value=""/>
-                                      <text value="Sensor-"/>
+                                      <text value="Sensor1"/>
                                     </properties>
                                   </component>
-                                  <component id="69cc2" class="javax.swing.JLabel">
+                                  <component id="69cc2" class="javax.swing.JLabel" binding="sensor1ConnStateLEDIcon">
                                     <constraints>
                                       <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                                     </constraints>
@@ -735,7 +770,7 @@
                               <grid id="b24c" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                                 <margin top="5" left="5" bottom="2" right="5"/>
                                 <constraints>
-                                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="1" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties/>
                                 <border type="none">
@@ -762,20 +797,21 @@
                                     </children>
                                   </grid>
                                   <grid id="89c4d" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                    <margin top="0" left="0" bottom="0" right="0"/>
+                                    <margin top="0" left="0" bottom="0" right="3"/>
                                     <constraints>
-                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="1" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="1" anchor="8" fill="2" indent="0" use-parent-layout="false"/>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="52d0f" class="javax.swing.JLabel">
+                                      <component id="52d0f" class="javax.swing.JLabel" binding="sensor1C02DensityValue">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <font size="16"/>
-                                          <text value="----- PPM"/>
+                                          <text value="------- PPM"/>
                                         </properties>
                                       </component>
                                     </children>
@@ -784,7 +820,7 @@
                               </grid>
                             </children>
                           </grid>
-                          <grid id="e8456" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                          <grid id="e8456" binding="sensor2Panel" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                             <margin top="0" left="0" bottom="0" right="0"/>
                             <constraints>
                               <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -801,18 +837,19 @@
                                 <border type="none"/>
                                 <children>
                                   <grid id="79511" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                    <margin top="0" left="11" bottom="0" right="0"/>
+                                    <margin top="0" left="4" bottom="2" right="0"/>
                                     <constraints>
-                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="e4736" class="javax.swing.JLabel">
+                                      <component id="e4736" class="javax.swing.JLabel" binding="sensor2TempValue">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <font size="16"/>
                                           <text value="---- °C"/>
                                         </properties>
@@ -861,10 +898,10 @@
                                       <horizontalAlignment value="10"/>
                                       <horizontalTextPosition value="11"/>
                                       <labelFor value=""/>
-                                      <text value="Sensor-"/>
+                                      <text value="Sensor2"/>
                                     </properties>
                                   </component>
-                                  <component id="f50db" class="javax.swing.JLabel">
+                                  <component id="f50db" class="javax.swing.JLabel" binding="sensor2ConnStateLEDIcon">
                                     <constraints>
                                       <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                                     </constraints>
@@ -884,7 +921,7 @@
                               <grid id="72fd" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                                 <margin top="5" left="5" bottom="2" right="5"/>
                                 <constraints>
-                                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="1" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties/>
                                 <border type="none">
@@ -911,20 +948,21 @@
                                     </children>
                                   </grid>
                                   <grid id="81325" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                    <margin top="0" left="0" bottom="0" right="0"/>
+                                    <margin top="0" left="0" bottom="0" right="3"/>
                                     <constraints>
-                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="1" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="1" anchor="8" fill="2" indent="0" use-parent-layout="false"/>
                                     </constraints>
                                     <properties/>
                                     <border type="none"/>
                                     <children>
-                                      <component id="6b3a6" class="javax.swing.JLabel">
+                                      <component id="6b3a6" class="javax.swing.JLabel" binding="sensor2C02DensityValue">
                                         <constraints>
                                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties>
+                                          <enabled value="false"/>
                                           <font size="16"/>
-                                          <text value="----- PPM"/>
+                                          <text value="------- PPM"/>
                                         </properties>
                                       </component>
                                     </children>
@@ -939,7 +977,7 @@
                   </scrollpane>
                 </children>
               </grid>
-              <grid id="39b34" binding="logPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="39b34" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
                   <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -947,17 +985,17 @@
                 <properties/>
                 <border type="bevel-lowered"/>
                 <children>
-                  <grid id="85cc" binding="logLabelPanel" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                    <margin top="0" left="0" bottom="0" right="0"/>
+                  <grid id="85cc" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                    <margin top="0" left="0" bottom="5" right="0"/>
                     <constraints>
                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="7" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
-                      <background color="-4276546"/>
+                      <background color="-5592406"/>
                     </properties>
                     <border type="bevel-raised"/>
                     <children>
-                      <component id="6b0a" class="javax.swing.JLabel" binding="LogLabel">
+                      <component id="6b0a" class="javax.swing.JLabel">
                         <constraints>
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
                         </constraints>
@@ -975,7 +1013,7 @@
                     <properties>
                       <horizontalScrollBarPolicy value="30"/>
                     </properties>
-                    <border type="bevel-raised"/>
+                    <border type="none"/>
                     <children>
                       <grid id="7028d" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                         <margin top="0" left="0" bottom="0" right="0"/>
@@ -983,7 +1021,7 @@
                         <properties>
                           <font size="14"/>
                         </properties>
-                        <border type="none"/>
+                        <border type="bevel-raised"/>
                         <children>
                           <component id="1d01d" class="ControlModule.GUILogging.ANSIColorPane" binding="ANSIColorPane1" default-binding="true">
                             <constraints>
@@ -991,6 +1029,8 @@
                             </constraints>
                             <properties>
                               <background color="-1"/>
+                              <enabled value="true"/>
+                              <font size="13"/>
                             </properties>
                           </component>
                         </children>

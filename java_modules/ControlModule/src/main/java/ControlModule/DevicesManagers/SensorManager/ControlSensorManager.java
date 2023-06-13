@@ -153,10 +153,16 @@ public class ControlSensorManager extends BaseSensor
     // Log that the sensor appears to be offline
     Log.warn("sensor" + ID + " appears to be offline");
 
-    // If bound to a GUI widget, update the
-    // associated connection status LED icon
+    // If bound to a GUI sensor widget
     if(GUIBound)
-     { connStateLED.setIcon(ControlModule.connStateLEDOFFImg); }
+     {
+      // Update the connection state LED icon
+      connStateLED.setIcon(ControlModule.connStateLEDOFFImg);
+
+      // Disable the C02 and temp labels
+      C02Label.setEnabled(false);
+      tempLabel.setEnabled(false);
+     }
    }
 
   @Override
@@ -168,10 +174,17 @@ public class ControlSensorManager extends BaseSensor
     // Log that the sensor is now online
     Log.info("sensor" + ID + " is now online");
 
-    // If bound to a GUI widget, update the
-    // associated connection status LED icon
+
+    // If bound to a GUI sensor widget
     if(GUIBound)
-     { connStateLED.setIcon(ControlModule.connStateLEDONImg); }
+     {
+      // Update the connection state LED icon
+      connStateLED.setIcon(ControlModule.connStateLEDONImg);
+
+      // Activate the C02 and temp labels
+      C02Label.setEnabled(true);
+      tempLabel.setEnabled(true);
+     }
    }
 
   @Override
