@@ -13,23 +13,23 @@
 enum coapReqAppErrCode
  {
   // No error
-  COAP_REQ_OK = 9,
+  COAP_REQ_OK = 0,
 
   // --------- Light Resource CoAP Requests Application Error Codes ---------
 
   // The "lightState" variable is missing from a light PUT request
-  ERR_LIGHT_PUT_NO_LIGHTSTATE = 10,
+  ERR_LIGHT_PUT_NO_LIGHTSTATE = 1,
 
   // An invalid "lightState" value was received in a light PUT request
-  ERR_LIGHT_PUT_LIGHTSTATE_INVALID = 11,
+  ERR_LIGHT_PUT_LIGHTSTATE_INVALID = 2,
 
   // ---------- Fan Resource CoAP Requests Application Error Codes ----------
 
   // The "fanRelSpeed" variable is missing from a fan PUT request
-  ERR_FAN_PUT_NO_FANRELSPEED = 12,
+  ERR_FAN_PUT_NO_FANRELSPEED = 3,
 
   // An invalid "fanRelSpeed" value was received in a fan PUT request
-  ERR_FAN_PUT_FANRELSPEED_INVALID = 13
+  ERR_FAN_PUT_FANRELSPEED_INVALID = 4
  };
 
 

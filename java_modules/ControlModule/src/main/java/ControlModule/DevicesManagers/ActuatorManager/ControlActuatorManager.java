@@ -214,6 +214,17 @@ public class ControlActuatorManager extends BaseActuator
   @Override
   public void setFanRelSpeed(int newFanRelSpeed)
    {
+    // If bound to a GUI widget, update its associated
+    // fan speed value and set the slider to match
+    if(GUIBound)
+     {
+      fanRelSpeedLabel.setText(newFanRelSpeed + " %");
+      fanRelSpeedSlider.setValue(newFanRelSpeed);
+
+      // TODO: Possibly Rotate the fan speed icon via a timer
+     }
+
+
     // If this is not a periodic fan relative speed
     // observing refresh, i.e. its value has changed
     if(newFanRelSpeed != this.fanRelSpeed)
@@ -228,16 +239,6 @@ public class ControlActuatorManager extends BaseActuator
       // Log the new actuator fan relative speed
       Log.dbg("New actuator" + ID + " fan relative speed: " + fanRelSpeed);
 
-      // If bound to a GUI widget, update its associated
-      // fan speed value and set the slider to match
-      if(GUIBound)
-       {
-        fanRelSpeedLabel.setText(this.fanRelSpeed + " %");
-        fanRelSpeedSlider.setValue(this.fanRelSpeed);
-
-        // TODO: Possibly Rotate the fan speed icon via a timer
-       }
-
       // Update the system's average fan relative speed
       controlModule.updateAvgFanRelSpeed();
      }
@@ -247,6 +248,39 @@ public class ControlActuatorManager extends BaseActuator
   @Override
   public void setLightState(LightState newLightState)
    {
+    // If bound to a GUI widget, update its
+    // associated label and light state icon
+    // TODO: Possibly use a single, blinking light via a timer instead
+    if(GUIBound)
+     {
+      switch(newLightState)
+       {
+        case LIGHT_OFF:
+         lightStateLabel.setText("OFF");
+         lightStateLabel.setForeground(NOMINAL.getColor());
+         lightIcon.setIcon(ControlModule.actuatorLightOFFImg);
+         break;
+
+        case LIGHT_ON:
+         lightStateLabel.setText("WARN");
+         lightStateLabel.setForeground(WARNING.getColor());
+         lightIcon.setIcon(ControlModule.actuatorLightWARNINGImg);
+         break;
+
+        case LIGHT_BLINK_ALERT:
+         lightStateLabel.setText("ALERT");
+         lightStateLabel.setForeground(ALERT.getColor());
+         lightIcon.setIcon(ControlModule.actuatorLightALERTImg);
+         break;
+
+        case LIGHT_BLINK_EMERGENCY:
+         lightStateLabel.setText("EMER.");
+         lightStateLabel.setForeground(EMERGENCY.getColor());
+         lightIcon.setIcon(ControlModule.actuatorLightEMERGENCYImg);
+         break;
+       }
+     }
+
     // If this is not a periodic light state
     // observing refresh, i.e. its value has changed
     if(newLightState != this.lightState)
@@ -259,39 +293,6 @@ public class ControlActuatorManager extends BaseActuator
 
       // Log the new actuator light state
       Log.dbg("New actuator" + ID + " light state: " + lightState);
-
-      // If bound to a GUI widget, update its
-      // associated label and light state icon
-      // TODO: Possibly use a single, blinking light via a timer instead
-      if(GUIBound)
-       {
-        switch(this.lightState)
-         {
-          case LIGHT_OFF:
-           lightStateLabel.setText("OFF");
-           lightStateLabel.setForeground(NOMINAL.getColor());
-           lightIcon.setIcon(ControlModule.actuatorLightOFFImg);
-           break;
-
-          case LIGHT_ON:
-           lightStateLabel.setText("WARN");
-           lightStateLabel.setForeground(WARNING.getColor());
-           lightIcon.setIcon(ControlModule.actuatorLightWARNINGImg);
-           break;
-
-          case LIGHT_BLINK_ALERT:
-           lightStateLabel.setText("ALERT");
-           lightStateLabel.setForeground(ALERT.getColor());
-           lightIcon.setIcon(ControlModule.actuatorLightALERTImg);
-           break;
-
-          case LIGHT_BLINK_EMERGENCY:
-           lightStateLabel.setText("EMER.");
-           lightStateLabel.setForeground(EMERGENCY.getColor());
-           lightIcon.setIcon(ControlModule.actuatorLightEMERGENCYImg);
-           break;
-         }
-       }
      }
    }
 
