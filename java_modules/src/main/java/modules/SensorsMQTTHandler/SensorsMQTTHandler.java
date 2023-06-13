@@ -308,12 +308,13 @@ public class SensorsMQTTHandler implements MqttCallback
 
       // Retrieve the sensor's ID and connection status
       sensorID = sensor.ID;
-      
+
       // Depending on the topic on which the message has been received
       switch(topic)
        {
         // A sensor error message has been received
         case TOPIC_SENSORS_ERRORS:
+
          // Attempt to extract the required "errCode" attribute from the MQTT error message
          sensorErrCode = getSensorErrCode(mqttMsgJSON,mqttMsgStr);
 
@@ -322,7 +323,7 @@ public class SensorsMQTTHandler implements MqttCallback
 
          // Attempt to extract the optional "errDscr" attribute from the MQTT error message
          sensorErrDscr = getSensorErrDscr(mqttMsgJSON,mqttMsgStr);
-         
+
          // If the sensor has disconnected,
          if(sensorErrCode == BaseSensorErrCode.ERR_SENSOR_MQTT_DISCONNECTED)
           {
@@ -343,10 +344,10 @@ public class SensorsMQTTHandler implements MqttCallback
          // on whether an additional description was provided
          else
           if(sensorErrDscr == null)
-           Log.code(sensorErrCode,sensorID,"(MQTT_CLI_STATE = '" + sensorMQTTCliState + "')");
+           { Log.code(sensorErrCode,sensorID,"(MQTT_CLI_STATE = '" + sensorMQTTCliState + "')"); }
           else
-           Log.code(sensorErrCode,sensorID,sensorErrDscr + " (MQTT_CLI_STATE = '" + sensorMQTTCliState + "')");
-         break;
+           { Log.code(sensorErrCode,sensorID,sensorErrDscr + " (MQTT_CLI_STATE = '" + sensorMQTTCliState + "')"); }
+          break;
 
         // A sensor CO2 density reading has been received
         case TOPIC_SENSORS_C02:

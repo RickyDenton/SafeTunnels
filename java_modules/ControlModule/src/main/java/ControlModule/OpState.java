@@ -11,9 +11,13 @@ package ControlModule;
 /* ================================== IMPORTS ================================== */
 
 /* --------------------- Java Standard Libraries Resources --------------------- */
+import devices.actuator.BaseActuator.LightState;
+
 import java.awt.*;
 import java.util.EnumMap;
 import java.util.Map;
+
+import static devices.actuator.BaseActuator.LightState.*;
 
 
 /* ============================== ENUM DEFINITION ============================== */
@@ -35,10 +39,9 @@ public enum OpState
   // One or more of the component's parameters are beyond their emergency thresholds
   EMERGENCY;
 
-  /**
-   * EnumMap mapping each operating state with its associated Color
-   */
-  private static final EnumMap<OpState,Color> operatingStatesColorMap = new EnumMap<>(Map.ofEntries
+  /* =================== Operating State <--> Colors Mapping =================== */
+
+  private static final EnumMap<OpState,Color> opStatesColorMap = new EnumMap<>(Map.ofEntries
    (
     Map.entry(NOMINAL,new Color(44,125,10)),
     Map.entry(WARNING,new Color(242,108,3)),
@@ -46,6 +49,25 @@ public enum OpState
     Map.entry(EMERGENCY,new Color(241,57,0))
    ));
 
+  /* ===== Operating State <--> Automatic Mode Fan Relative Speeds Mapping ===== */
+
+  private static final EnumMap<OpState,Integer> opStatesAutoFanRelSpeedMap = new EnumMap<>(Map.ofEntries
+    (
+      Map.entry(NOMINAL,0),
+      Map.entry(WARNING,30),
+      Map.entry(ALERT,60),
+      Map.entry(EMERGENCY,100)
+    ));
+
+  /* ========= Operating State <--> Automatic Mode LightState Mapping ========= */
+
+  private static final EnumMap<OpState,LightState> opStatesAutoLightStateMap = new EnumMap<>(Map.ofEntries
+    (
+      Map.entry(NOMINAL,LIGHT_OFF),
+      Map.entry(WARNING,LIGHT_ON),
+      Map.entry(ALERT,LIGHT_BLINK_ALERT),
+      Map.entry(EMERGENCY,LIGHT_BLINK_EMERGENCY)
+    ));
 
   /* ========================== Enumeration Methods  ========================== */
 
@@ -53,5 +75,17 @@ public enum OpState
    * @return The Color object associated with the operating state
    */
   public Color getColor()
-   { return operatingStatesColorMap.get(this); }
+   { return opStatesColorMap.get(this); }
+
+  /**
+   * @return The automatic mode fan relative speed associated with the operating state
+   */
+  public Integer getAutoFanRelSpeed()
+   { return opStatesAutoFanRelSpeedMap.get(this); }
+
+  /**
+   * @return The automatic mode light state associated with the operating state
+   */
+  public LightState getAutoLightState()
+   { return opStatesAutoLightStateMap.get(this); }
  }

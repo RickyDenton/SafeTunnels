@@ -1,9 +1,8 @@
-package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientLightHandler;
+package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.ObservingHandlers.light;
 
 import ControlModule.DevicesManagers.ActuatorManager.ControlActuatorManager;
 import devices.actuator.BaseActuator.LightState;
 import errors.ErrCodeExcp;
-import errors.ErrCodeInfo;
 import logging.Log;
 import org.eclipse.californium.core.CoapHandler;
 import org.eclipse.californium.core.CoapResponse;
@@ -11,13 +10,10 @@ import org.eclipse.californium.core.coap.ClientObserveRelation;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Map;
-
-import static ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientLightHandler.CoAPClientLightHandlerErrCode.*;
-import static errors.ErrCodeSeverity.ERROR;
+import static ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.ObservingHandlers.light.CoAPClientLightHandlerObsErrCode.*;
 
 
-public class CoAPClientLightHandler implements CoapHandler
+public class CoAPClientLightObsHandler implements CoapHandler
  {
   ControlActuatorManager controlActuatorManager;
   ClientObserveRelation coapClientLightObserveRel;
@@ -48,7 +44,7 @@ public class CoAPClientLightHandler implements CoapHandler
 
 
 
-  public CoAPClientLightHandler(ControlActuatorManager controlActuatorManager,ClientObserveRelation coapClientLightObserveRel)
+  public CoAPClientLightObsHandler(ControlActuatorManager controlActuatorManager,ClientObserveRelation coapClientLightObserveRel)
    {
     this.controlActuatorManager = controlActuatorManager;
     this.coapClientLightObserveRel = coapClientLightObserveRel;

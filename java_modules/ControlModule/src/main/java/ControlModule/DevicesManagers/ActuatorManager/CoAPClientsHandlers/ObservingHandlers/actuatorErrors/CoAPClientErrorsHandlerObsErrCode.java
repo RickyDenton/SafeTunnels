@@ -1,6 +1,6 @@
 /* SafeTunnels Control Module Actuator CoAP Client Errors Handler Errors Definitions */
 
-package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientErrorsHandler;
+package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.ObservingHandlers.actuatorErrors;
 
 /* ================================== IMPORTS ================================== */
 
@@ -15,7 +15,7 @@ import static errors.ErrCodeSeverity.ERROR;
 
 
 /* ============================== ENUM DEFINITION ============================== */
-public enum CoAPClientErrorsHandlerErrCode implements ModuleErrCode
+public enum CoAPClientErrorsHandlerObsErrCode implements ModuleErrCode
  {
   /* ====================== Enumeration Values Definition ====================== */
 
@@ -57,7 +57,7 @@ public enum CoAPClientErrorsHandlerErrCode implements ModuleErrCode
 
   /* ================= CoAPClientErrorsHandler ErrCodeInfo Map ================= */
 
-  private static final EnumMap<CoAPClientErrorsHandlerErrCode,ErrCodeInfo> CoAPClientErrorsHandlerErrCodeInfoMap = new EnumMap<>(Map.ofEntries
+  private static final EnumMap<CoAPClientErrorsHandlerObsErrCode,ErrCodeInfo> CoAPClientErrorsHandlerErrCodeInfoMap = new EnumMap<>(Map.ofEntries
    (
     /* ----------- CoAP Client Errors Responses General Error Codes ----------- */
     Map.entry(ERR_COAP_CLI_ERRORS_RESP_UNSUCCESSFUL,new ErrCodeInfo(ERROR,"An unsuccessful CoAP client error response was received")),

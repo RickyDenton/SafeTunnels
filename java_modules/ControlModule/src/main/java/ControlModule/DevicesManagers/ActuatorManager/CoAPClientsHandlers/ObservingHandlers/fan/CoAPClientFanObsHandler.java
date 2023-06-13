@@ -1,4 +1,4 @@
-package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientFanHandler;
+package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.ObservingHandlers.fan;
 
 import ControlModule.DevicesManagers.ActuatorManager.ControlActuatorManager;
 import errors.ErrCodeExcp;
@@ -9,10 +9,8 @@ import org.eclipse.californium.core.coap.ClientObserveRelation;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import static ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientFanHandler.CoAPClientFanHandlerErrCode.*;
 
-
-public class CoAPClientFanHandler implements CoapHandler
+public class CoAPClientFanObsHandler implements CoapHandler
  {
   ControlActuatorManager controlActuatorManager;
   ClientObserveRelation coapClientFanObserveRel;
@@ -21,19 +19,20 @@ public class CoAPClientFanHandler implements CoapHandler
    {
     // Ensure the CoAP response to contain the required "fanRelSpeed" attribute
     if(!coapResponseJSON.has("fanRelSpeed"))
-     throw new ErrCodeExcp(ERR_COAP_CLI_FAN_FANRELSPEED_MISSING,"(\"" + coapResponseStr + "\")");
+     throw new ErrCodeExcp(CoAPClientFanHandlerObsErrCode.ERR_COAP_CLI_FAN_FANRELSPEED_MISSING,"(\"" + coapResponseStr + "\")");
 
     // Attempt to interpret the "fanRelSpeed" attribute as an int
     try
      { return coapResponseJSON.getInt("fanRelSpeed"); }
     catch(JSONException jsonExcp)
-     { throw new ErrCodeExcp(ERR_COAP_CLI_FAN_FANRELSPEED_NOT_INT,"(\"" + coapResponseStr + "\")"); }
+     { throw new ErrCodeExcp(
+       CoAPClientFanHandlerObsErrCode.ERR_COAP_CLI_FAN_FANRELSPEED_NOT_INT,"(\"" + coapResponseStr + "\")"); }
    }
 
 
 
 
-  public CoAPClientFanHandler(ControlActuatorManager controlActuatorManager,ClientObserveRelation coapClientFanObserveRel)
+  public CoAPClientFanObsHandler(ControlActuatorManager controlActuatorManager,ClientObserveRelation coapClientFanObserveRel)
    {
     this.controlActuatorManager = controlActuatorManager;
     this.coapClientFanObserveRel = coapClientFanObserveRel;
@@ -54,7 +53,8 @@ public class CoAPClientFanHandler implements CoapHandler
     // Ensure that a successful response was received
     if(!coapResponse.isSuccess())
      {
-      Log.code(ERR_COAP_CLI_FAN_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode().toString() + ")");
+      Log.code(
+        CoAPClientFanHandlerObsErrCode.ERR_COAP_CLI_FAN_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode().toString() + ")");
       return;
      }
 
@@ -67,14 +67,14 @@ public class CoAPClientFanHandler implements CoapHandler
       try
        { coapResponseJSON = new JSONObject(coapResponseStr); }
       catch(JSONException jsonExcp)
-       { throw new ErrCodeExcp(ERR_COAP_CLI_FAN_RESP_NOT_JSON,"(\"" + coapResponseStr + "\")"); }
+       { throw new ErrCodeExcp(CoAPClientFanHandlerObsErrCode.ERR_COAP_CLI_FAN_RESP_NOT_JSON,"(\"" + coapResponseStr + "\")"); }
 
       // Attempt to extract the required "fanRelSpeed" attribute from the CoAP response
       fanRelSpeed = getActuatorFanRelSpeed(coapResponseJSON,coapResponseStr);
 
       // Ensure the received fan relative speed value to be valid
       if(fanRelSpeed < 0 || fanRelSpeed > 100)
-       throw new ErrCodeExcp(ERR_COAP_CLI_FAN_FANRELSPEED_INVALID,"(" + fanRelSpeed + ")");
+       throw new ErrCodeExcp(CoAPClientFanHandlerObsErrCode.ERR_COAP_CLI_FAN_FANRELSPEED_INVALID,"(" + fanRelSpeed + ")");
 
       // Set the new actuator fan relative speed
       controlActuatorManager.setFanRelSpeed(fanRelSpeed);

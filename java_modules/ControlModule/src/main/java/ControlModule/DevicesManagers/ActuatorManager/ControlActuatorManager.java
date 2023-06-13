@@ -2,6 +2,8 @@ package ControlModule.DevicesManagers.ActuatorManager;
 
 import ControlModule.ControlModule;
 import ControlModule.ControlMySQLConnector.ControlMySQLConnector;
+import ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.RequestsHandlers.fan.CoAPClientFanReqHandler;
+import ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.RequestsHandlers.light.CoAPClientLightReqHandler;
 import devices.actuator.BaseActuator;
 import errors.ErrCodeExcp;
 import logging.Log;
@@ -29,6 +31,7 @@ import static devices.actuator.BaseActuator.ActuatorQuantity.FANRELSPEED;
 import static devices.actuator.BaseActuator.ActuatorQuantity.LIGHTSTATE;
 import static devices.actuator.BaseActuator.LightState.LIGHT_OFF;
 import static devices.sensor.BaseSensor.SensorQuantity.C02;
+import static modules.SensorsMQTTHandler.SensorsMQTTHandlerErrCode.ERR_MQTT_AVGFANRELSPEED_VALUE_INVALID;
 import static modules.SensorsMQTTHandler.SensorsMQTTHandlerErrCode.ERR_MQTT_MSG_NOT_JSON;
 
 
@@ -298,4 +301,53 @@ public class ControlActuatorManager extends BaseActuator
 
   public short getFanRelSpeed()
    { return this.fanRelSpeed; }
+
+
+  public void sendFanRelSpeed(int sendFanRelSpeed)
+   {
+    // Ensure the fan relative speed to be sent to the actuator to be valid
+    if(sendFanRelSpeed < 0 || sendFanRelSpeed > 100)
+     {
+      Log.err("Attempting to send to actuator" + ID + " an invalid fan relative speed (" + sendFanRelSpeed + ")");
+      return;
+     }
+
+    // Ensure the actuator to be online
+    if(!connState)
+     {
+      Log.warn("Cannot send an updated fan relative speed (" + sendFanRelSpeed + ") to actuator" + ID + " because it is offline");
+      return;
+     }
+
+    // Ensure that the fan relative speed to be sent differs from its current one
+    if(sendFanRelSpeed == fanRelSpeed)
+     {
+      Log.warn("Attempting to send to actuator" + ID + " the same fan relative speed (" + sendFanRelSpeed + ")");
+      return;
+     }
+
+    // Send the fan relative speed using an asynchronous, confirmable PUT request
+    coapClientFan.put(new CoAPClientFanReqHandler(ID,sendFanRelSpeed), "fanRelSpeed=" + sendFanRelSpeed,0); // 0 = text/plain
+   }
+
+  public void sendLightState(LightState sendLightState)
+   {
+    // Ensure the actuator to be online
+    if(!connState)
+     {
+      Log.warn("Cannot send an updated light state (" + sendLightState.toString() + ") to actuator" + ID + " because it is offline");
+      return;
+     }
+
+    // Ensure that the light state to be sent differs from its current one
+    if(sendLightState == lightState)
+     {
+      Log.warn("Attempting to send to actuator" + ID + " the same light state (" + sendLightState + ")");
+      return;
+     }
+
+    // Send the light state using an asynchronous, confirmable PUT request
+    coapClientLight.put(new CoAPClientLightReqHandler(ID,sendLightState), "lightState=" + sendLightState.toString(),0); // 0 = text/plain
+   }
+
  }

@@ -1,6 +1,6 @@
 /* SafeTunnels Control Module Actuator CoAP Client Fan Handler Errors Definitions */
 
-package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientFanHandler;
+package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.ObservingHandlers.fan;
 
 /* ================================== IMPORTS ================================== */
 
@@ -15,7 +15,7 @@ import static errors.ErrCodeSeverity.ERROR;
 
 
 /* ============================== ENUM DEFINITION ============================== */
-public enum CoAPClientFanHandlerErrCode implements ModuleErrCode
+public enum CoAPClientFanHandlerObsErrCode implements ModuleErrCode
  {
   /* ====================== Enumeration Values Definition ====================== */
 
@@ -45,7 +45,7 @@ public enum CoAPClientFanHandlerErrCode implements ModuleErrCode
 
   /* =================== CoAPClientFanHandler ErrCodeInfo Map =================== */
 
-  private static final EnumMap<CoAPClientFanHandlerErrCode,ErrCodeInfo> CoAPClientFanHandlerErrCodeInfoMap = new EnumMap<>(Map.ofEntries
+  private static final EnumMap<CoAPClientFanHandlerObsErrCode,ErrCodeInfo> CoAPClientFanHandlerErrCodeInfoMap = new EnumMap<>(Map.ofEntries
    (
     /* ------------- CoAP Client Fan Responses General Error Codes ------------- */
     Map.entry(ERR_COAP_CLI_FAN_RESP_UNSUCCESSFUL,new ErrCodeInfo(ERROR,"An unsuccessful CoAP client fan relative speed response was received")),

@@ -1,6 +1,6 @@
 /* SafeTunnels Control Module Actuator CoAP Client Light Handler Errors Definitions */
 
-package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsObservingHandlers.CoAPClientLightHandler;
+package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.ObservingHandlers.light;
 
 /* ================================== IMPORTS ================================== */
 
@@ -15,7 +15,7 @@ import static errors.ErrCodeSeverity.ERROR;
 
 
 /* ============================== ENUM DEFINITION ============================== */
-public enum CoAPClientLightHandlerErrCode implements ModuleErrCode
+public enum CoAPClientLightHandlerObsErrCode implements ModuleErrCode
  {
   /* ====================== Enumeration Values Definition ====================== */
 
@@ -45,7 +45,7 @@ public enum CoAPClientLightHandlerErrCode implements ModuleErrCode
 
   /* ================== CoAPClientLightHandler ErrCodeInfo Map ================== */
 
-  private static final EnumMap<CoAPClientLightHandlerErrCode,ErrCodeInfo> CoAPClientLightHandlerErrCodeInfoMap = new EnumMap<>(Map.ofEntries
+  private static final EnumMap<CoAPClientLightHandlerObsErrCode,ErrCodeInfo> CoAPClientLightHandlerErrCodeInfoMap = new EnumMap<>(Map.ofEntries
    (
     /* ------------ CoAP Client Light Responses General Error Codes ------------ */
     Map.entry(ERR_COAP_CLI_LIGHT_RESP_UNSUCCESSFUL,new ErrCodeInfo(ERROR,"An unsuccessful CoAP client light state response was received")),

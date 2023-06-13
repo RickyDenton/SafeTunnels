@@ -2,6 +2,8 @@ package ControlModule;
 
 import javax.swing.*;
 import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,6 +13,7 @@ import ControlModule.DevicesManagers.ActuatorManager.ControlActuatorManager;
 import ControlModule.DevicesManagers.SensorManager.ControlSensorManager;
 import ControlModule.GUILogging.ANSIColorPane;
 import ControlModule.GUILogging.ANSIColorPaneOutputStream;
+import devices.actuator.BaseActuator.LightState;
 import errors.ErrCodeSeverity;
 import logging.Log;
 import modules.MySQLConnector.DevMACIDPair;
@@ -78,6 +81,7 @@ public class ControlModule extends JFrame
   private JButton actuator2LightStateButtonALERT;
   private JButton actuator2LightStateButtonEMERGENCY;
   private JPanel actuator2Panel;
+  private JLabel avgFanRelSpeedLabel;
 
   boolean autoMode;
   OpState systemOpState;
@@ -117,6 +121,9 @@ public class ControlModule extends JFrame
        {
         Log.info("Automatic Mode engaged");
         autoMode = true;
+
+        // Trigger the fan quantities automatic adjustmen
+        automaticModeFanControl();
        }
       else
        if(itemEvent.getStateChange() == ItemEvent.DESELECTED)
@@ -361,9 +368,115 @@ public class ControlModule extends JFrame
     actuator2LightIcon.setIcon(iconLogo);
     */
 
+    actuator1FanRelSpeedSlider.addMouseListener(new MouseAdapter()
+     {
+      @Override
+      public void mouseReleased(MouseEvent e)
+       { GUIFanRelSpeedSliderUpdate(1, actuator1FanRelSpeedSlider.getValue());}
+     });
 
+    actuator2FanRelSpeedSlider.addMouseListener(new MouseAdapter()
+     {
+      @Override
+      public void mouseReleased(MouseEvent e)
+       { GUIFanRelSpeedSliderUpdate(2, actuator2FanRelSpeedSlider.getValue());}
+     });
+
+    actuator1LightStateButtonOFF.addMouseListener(new MouseAdapter()
+     {
+      @Override
+      public void mouseReleased(MouseEvent e)
+       { GUILightStateButtonUpdate(1, LightState.LIGHT_OFF);   }
+     });
+
+    actuator1LightStateButtonWARNING.addMouseListener(new MouseAdapter()
+     {
+      @Override
+      public void mouseReleased(MouseEvent e)
+       { GUILightStateButtonUpdate(1, LightState.LIGHT_ON);   }
+     });
+
+    actuator1LightStateButtonALERT.addMouseListener(new MouseAdapter()
+     {
+      @Override
+      public void mouseReleased(MouseEvent e)
+       { GUILightStateButtonUpdate(1, LightState.LIGHT_BLINK_ALERT);   }
+     });
+
+    actuator1LightStateButtonEMERGENCY.addMouseListener(new MouseAdapter()
+     {
+      @Override
+      public void mouseReleased(MouseEvent e)
+       { GUILightStateButtonUpdate(1, LightState.LIGHT_BLINK_EMERGENCY);   }
+     });
+
+    actuator2LightStateButtonOFF.addMouseListener(new MouseAdapter()
+     {
+      @Override
+      public void mouseReleased(MouseEvent e)
+       { GUILightStateButtonUpdate(2, LightState.LIGHT_OFF);   }
+     });
+
+    actuator2LightStateButtonWARNING.addMouseListener(new MouseAdapter()
+     {
+      @Override
+      public void mouseReleased(MouseEvent e)
+       { GUILightStateButtonUpdate(2, LightState.LIGHT_ON);   }
+     });
+
+    actuator2LightStateButtonALERT.addMouseListener(new MouseAdapter()
+     {
+      @Override
+      public void mouseReleased(MouseEvent e)
+       { GUILightStateButtonUpdate(2, LightState.LIGHT_BLINK_ALERT);   }
+     });
+
+    actuator2LightStateButtonEMERGENCY.addMouseListener(new MouseAdapter()
+     {
+      @Override
+      public void mouseReleased(MouseEvent e)
+       { GUILightStateButtonUpdate(2, LightState.LIGHT_BLINK_EMERGENCY);   }
+     });
    }
 
+
+  private void GUIFanRelSpeedSliderUpdate(int actuatorID, int newFanSpeed)
+   {
+    try
+     { ctrlActuatorManagersList.get(actuatorID-1).sendFanRelSpeed(newFanSpeed); }
+    catch(IndexOutOfBoundsException indexOutOfBoundsException)
+     { Log.err("Attempting to update via slider " + actuatorID
+       + " the fan relative speed of non-existing actuator" + actuatorID);}
+   }
+
+  private void GUILightStateButtonUpdate(int actuatorID, LightState newLightState)
+    {
+     try
+      { ctrlActuatorManagersList.get(actuatorID-1).sendLightState(newLightState); }
+     catch(IndexOutOfBoundsException indexOutOfBoundsException)
+      { Log.err("Attempting to update via GUI button the light state to '" + newLightState.toString()
+        + "' of non-existing actuator" + actuatorID);}
+    }
+
+
+
+  private void automaticModeFanControl()
+   {
+    // Retrieve the automatic mode values associated
+    // with the current system operating state
+    int autoModeFanRelSpeed = systemOpState.getAutoFanRelSpeed();
+    LightState autoModeLightState = systemOpState.getAutoLightState();
+
+    // Attempt to send such values to all online actuators
+    for(ControlActuatorManager ctrlActuatorMgr : ctrlActuatorManagersList)
+     {
+      if(ctrlActuatorMgr.getConnState())
+       {
+        ctrlActuatorMgr.sendFanRelSpeed(autoModeFanRelSpeed);
+        ctrlActuatorMgr.sendLightState(autoModeLightState);
+       }
+     }
+   }
 
   // Called by a sensor upon updating their operating
   // state to possibly update the system's operating state
@@ -425,9 +538,7 @@ public class ControlModule extends JFrame
       // If automatic mode is enabled, also adjust the
       // actuators' fan relative speeds and light states
       if(autoMode)
-       {
-        // TODO!
-       }
+       { automaticModeFanControl(); }
      }
    }
 
@@ -457,6 +568,9 @@ public class ControlModule extends JFrame
      {
       // Update the system's average fan relative speed
       avgFanRelSpeed = newAvgFanRelSpeed;
+
+      // Update the system's average fan relative speed GUI label
+      avgFanRelSpeedLabel.setText(avgFanRelSpeed + " %");
 
       // Attempt to publish the new system average fan relative
       // speed on the sensor's MQTT 'TOPIC_AVG_FAN_REL_SPEED' topic
