@@ -4,35 +4,21 @@ import ControlModule.ControlModule;
 import ControlModule.ControlMySQLConnector.ControlMySQLConnector;
 import ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.RequestsHandlers.fan.CoAPClientFanReqHandler;
 import ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.RequestsHandlers.light.CoAPClientLightReqHandler;
+import ControlModule.DevicesManagers.ActuatorManager.GUIUpdateTasks.FanIconSpinTask;
+import ControlModule.DevicesManagers.ActuatorManager.GUIUpdateTasks.LightBlinkTask;
 import devices.actuator.BaseActuator;
-import errors.ErrCodeExcp;
 import logging.Log;
 
 import javax.swing.*;
 
 import java.util.Timer;
-import java.util.TimerTask;
-
-
-import ControlModule.OpState;
 
 import org.eclipse.californium.core.CoapClient;
-import org.eclipse.californium.core.CoapHandler;
-import org.eclipse.californium.core.CoapResponse;
-import org.eclipse.californium.core.coap.ClientObserveRelation;
-import org.eclipse.californium.core.coap.CoAP;
-import org.eclipse.californium.core.coap.OptionSet;
-import org.eclipse.californium.core.coap.Response;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import static ControlModule.OpState.*;
 import static devices.actuator.BaseActuator.ActuatorQuantity.FANRELSPEED;
 import static devices.actuator.BaseActuator.ActuatorQuantity.LIGHTSTATE;
 import static devices.actuator.BaseActuator.LightState.LIGHT_OFF;
-import static devices.sensor.BaseSensor.SensorQuantity.C02;
-import static modules.SensorsMQTTHandler.SensorsMQTTHandlerErrCode.ERR_MQTT_AVGFANRELSPEED_VALUE_INVALID;
-import static modules.SensorsMQTTHandler.SensorsMQTTHandlerErrCode.ERR_MQTT_MSG_NOT_JSON;
 
 
 public class ControlActuatorManager extends BaseActuator
@@ -40,10 +26,9 @@ public class ControlActuatorManager extends BaseActuator
   private final static int actuatorWatcherTimerInitDelay = 3 * 1000;  // milliseconds
 
   // MUST BE > COAP CLIENT TIMEOUTS
-  private final static int actuatorWatcherTimerPeriod = 10 * 1000;  // milliseconds
+  private final static int actuatorWatcherTimerPeriod = 10 * 1000;    // milliseconds
 
-  // TODO: Probably not required
-  // private final static int coapClientsReqTimeout = 10 * 1000;
+  private static final int fanIconSpinTimerBasePeriod = 120;          // milliseconds
 
   // Actuator quantities
   private short fanRelSpeed;
@@ -66,20 +51,9 @@ public class ControlActuatorManager extends BaseActuator
   final CoapClient coapClientLight;
   final CoapClient coapClientErrors;
 
-
-  /*
-
-  // CoAP Client Observing Establishment Timer
-  private final Timer coapClientFanObsTimer;
-  private final Timer coapClientLightObsTimer;
-  private final Timer coapClientErrorsObsTimer;
-
-  // The time in Unix epochs the CoAP actuator was last pinged
-  Long lastPingTime;
-
-  // Whether the actuator is online as a wrapper
-  Boolean connStateBoolean;
-  */
+  // GUI Update timers
+  Timer fanIconSpinTimer;
+  Timer lightBlinkTimer;
 
   // Whether the actuator is bound to an actuator widget in the GUI
   private boolean GUIBound;
@@ -184,6 +158,7 @@ public class ControlActuatorManager extends BaseActuator
     actuatorWatchdogTimer.scheduleAtFixedRate(new ActuatorWatchdogTimerTask(this,coapClientFan,
                                                                              coapClientLight,coapClientErrors),
                                                                              actuatorWatcherTimerInitDelay,actuatorWatcherTimerPeriod);
+
    }
 
 
@@ -258,11 +233,25 @@ public class ControlActuatorManager extends BaseActuator
     if(GUIBound)
      {
       fanRelSpeedLabel.setText(newFanRelSpeed + " %");
+      fanRelSpeedLabel.setForeground(fanRelSpeedToOpStateColor(newFanRelSpeed));
       fanRelSpeedSlider.setValue(newFanRelSpeed);
 
-      // TODO: Possibly Rotate the fan speed icon via a timer
-     }
+      // Stop the fanIconSpinTimer
+      if(fanIconSpinTimer != null)
+       fanIconSpinTimer.cancel();
 
+      // If the fan has stopped, restore its fixed icon
+      if(newFanRelSpeed == 0)
+       fanIcon.setIcon(ControlModule.actuatorFanIcons[0]);
+
+      // Otherwise initialize the fanIconSpinTimer with a fixed
+      // period inversely proportional to the fan relative speed
+      else
+       {
+        fanIconSpinTimer = new Timer();
+        fanIconSpinTimer.scheduleAtFixedRate(new FanIconSpinTask(fanIcon),0,fanIconSpinTimerBasePeriod-newFanRelSpeed);
+       }
+     }
 
     // If this is not a periodic fan relative speed
     // observing refresh, i.e. its value has changed
@@ -292,6 +281,11 @@ public class ControlActuatorManager extends BaseActuator
     // TODO: Possibly use a single, blinking light via a timer instead
     if(GUIBound)
      {
+      // Stop the LightBlinkTimer, if any
+      if(lightBlinkTimer!= null)
+       lightBlinkTimer.cancel();
+
+      // Depending on the new light state
       switch(newLightState)
        {
         case LIGHT_OFF:
@@ -309,13 +303,19 @@ public class ControlActuatorManager extends BaseActuator
         case LIGHT_BLINK_ALERT:
          lightStateLabel.setText("ALERT");
          lightStateLabel.setForeground(ALERT.getColor());
-         lightIcon.setIcon(ControlModule.actuatorLightALERTImg);
+
+         // Start the LED blinking timer
+         lightBlinkTimer = new Timer();
+         lightBlinkTimer.scheduleAtFixedRate(new LightBlinkTask(lightIcon,ControlModule.actuatorLightALERTImg),0,1000);
          break;
 
         case LIGHT_BLINK_EMERGENCY:
          lightStateLabel.setText("EMER.");
          lightStateLabel.setForeground(EMERGENCY.getColor());
-         lightIcon.setIcon(ControlModule.actuatorLightEMERGENCYImg);
+
+         // Start the LED blinking timer
+         lightBlinkTimer = new Timer();
+         lightBlinkTimer.scheduleAtFixedRate(new LightBlinkTask(lightIcon,ControlModule.actuatorLightEMERGENCYImg),0,300);
          break;
        }
      }

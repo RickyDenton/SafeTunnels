@@ -11,14 +11,19 @@ import logging.Log;
 import modules.MySQLConnector.DevMACIDPair;
 import modules.SensorsMQTTHandler.SensorsMQTTHandler;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import static ControlModule.OpState.fanRelSpeedToOpStateColor;
 import static devices.BaseDevice.DevType.actuator;
 import static devices.BaseDevice.DevType.sensor;
 import static java.lang.Math.max;
@@ -29,19 +34,63 @@ public class ControlModule extends JFrame
   /* ------------------------------ Updatable Icons ------------------------------ */
   // Connection LEDs icons
   public static final ImageIcon connStateLEDONImg = new ImageIcon(
-    "ControlModule/src/main/resources/ConnState_ONLINE_10.png");
+    "ControlModule/src/main/resources/icons/ConnState_ONLINE_10.png");
   public static final ImageIcon connStateLEDOFFImg = new ImageIcon(
-    "ControlModule/src/main/resources/ConnState_OFFLINE_10.png");
+    "ControlModule/src/main/resources/icons/ConnState_OFFLINE_10.png");
 
   // Actuator Light Icons
   public static final ImageIcon actuatorLightOFFImg = new ImageIcon(
-    "ControlModule/src/main/resources/LightBulb_OFF_Icon_30.png");
+    "ControlModule/src/main/resources/icons/LightBulb_OFF_Icon_30.png");
   public static final ImageIcon actuatorLightWARNINGImg = new ImageIcon(
-    "ControlModule/src/main/resources/LightBulb_WARNING_Icon_30.png");
+    "ControlModule/src/main/resources/icons/LightBulb_WARNING_Icon_30.png");
   public static final ImageIcon actuatorLightALERTImg = new ImageIcon(
-    "ControlModule/src/main/resources/LightBulb_ALERT_Icon_30.png");
+    "ControlModule/src/main/resources/icons/LightBulb_ALERT_Icon_30.png");
   public static final ImageIcon actuatorLightEMERGENCYImg = new ImageIcon(
-    "ControlModule/src/main/resources/LightBulb_EMERGENCY_Icon_30.png");
+    "ControlModule/src/main/resources/icons/LightBulb_EMERGENCY_Icon_30.png");
+
+  public static final ImageIcon[] actuatorFanIcons =
+   {
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_0.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_1.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_2.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_3.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_4.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_5.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_6.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_7.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_8.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_9.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_10.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_11.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_12.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_13.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_14.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_15.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_16.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_17.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_18.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_19.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_20.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_21.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_22.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_23.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_24.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_25.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_26.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_27.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_28.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_29.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_30.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_31.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_32.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_33.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_34.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_35.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_36.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_37.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_38.png"),
+    new ImageIcon("ControlModule/src/main/resources/icons/fanIcons/Fan_Icon_30_39.png"),
+   };
 
 
   // General GUI Elements
@@ -86,16 +135,6 @@ public class ControlModule extends JFrame
   private JButton actuator2LightStateButtonEMERGENCY;
   private JLabel actuator2FanIcon;
   private JLabel actuator2LightIcon;
-
-
-
-
-
-
-
-
-
-
 
   boolean autoMode;
   OpState systemOpState;
@@ -267,7 +306,6 @@ public class ControlModule extends JFrame
    {
     // TODO: BIG TRY: HARDWARE ACCELERATION
     System.setProperty("sun.java2d.opengl", "true");
-
 
     // Initialize the system's attributes
     autoMode = true;
@@ -499,6 +537,7 @@ public class ControlModule extends JFrame
 
       // Update the system's average fan relative speed GUI label
       avgFanRelSpeedLabel.setText(avgFanRelSpeed + " %");
+      avgFanRelSpeedLabel.setForeground(fanRelSpeedToOpStateColor(avgFanRelSpeed));
 
       // Attempt to publish the new system average fan relative
       // speed on the sensor's MQTT 'TOPIC_AVG_FAN_REL_SPEED' topic
@@ -513,6 +552,6 @@ public class ControlModule extends JFrame
    * Control Module application entry point
    */
   public static void main(String[] args)
-   {new ControlModule();}
+   { new ControlModule(); }
 
  }

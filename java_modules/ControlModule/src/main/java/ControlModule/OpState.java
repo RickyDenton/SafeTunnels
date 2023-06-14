@@ -43,10 +43,10 @@ public enum OpState
 
   private static final EnumMap<OpState,Color> opStatesColorMap = new EnumMap<>(Map.ofEntries
    (
-    Map.entry(NOMINAL,new Color(44,125,10)),
-    Map.entry(WARNING,new Color(242,108,3)),
-    Map.entry(ALERT,new Color(203,46,0)),
-    Map.entry(EMERGENCY,new Color(241,57,0))
+    Map.entry(NOMINAL,new Color(47,132,11)),
+    Map.entry(WARNING,new Color(214,171,0)),
+    Map.entry(ALERT,new Color(242,108,3)),
+    Map.entry(EMERGENCY,new Color(203,46,0))
    ));
 
   /* ===== Operating State <--> Automatic Mode Fan Relative Speeds Mapping ===== */
@@ -70,6 +70,18 @@ public enum OpState
     ));
 
   /* ========================== Enumeration Methods  ========================== */
+
+  public static Color fanRelSpeedToOpStateColor(int fanRelSpeed)
+   {
+    if(fanRelSpeed < 30)
+     return opStatesColorMap.get(NOMINAL);
+    if(fanRelSpeed < 55)
+     return opStatesColorMap.get(WARNING);
+    if(fanRelSpeed < 80)
+     return opStatesColorMap.get(ALERT);
+    else
+     return opStatesColorMap.get(EMERGENCY);
+   }
 
   /**
    * @return The Color object associated with the operating state
