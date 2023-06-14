@@ -31,6 +31,11 @@ class ActuatorWatchdogTimerTask extends TimerTask
   ClientObserveRelation coapClientLightObserveRel;
   ClientObserveRelation coapClientErrorsObserveRel;
 
+  // CoAP Client Observe Handlers
+  CoAPClientFanObsHandler    fanObsHandler;
+  CoAPClientLightObsHandler  lightObsHandler;
+  CoAPClientErrorsObsHandler errorsObsHandler;
+
   ActuatorWatchdogTimerTask(ControlActuatorManager ctrlActuatorManager, CoapClient coapClientFan, CoapClient coapClientLight, CoapClient coapClientErrors)
    {
     this.ctrlActuatorManager = ctrlActuatorManager;
@@ -41,6 +46,9 @@ class ActuatorWatchdogTimerTask extends TimerTask
     coapClientFanObserveRel = null;
     coapClientLightObserveRel = null;
     coapClientErrorsObserveRel = null;
+    fanObsHandler = new CoAPClientFanObsHandler(ctrlActuatorManager);
+    lightObsHandler = new CoAPClientLightObsHandler(ctrlActuatorManager);
+    errorsObsHandler = new CoAPClientErrorsObsHandler(ctrlActuatorManager);
    }
 
   @Override
@@ -78,13 +86,13 @@ class ActuatorWatchdogTimerTask extends TimerTask
        // resources if not already observing, specifying via the CoAP 'accept'
        // attribute that they expected responses to be in JSON format
        if(coapClientFanObserveRel == null || coapClientFanObserveRel.isCanceled())
-        coapClientFanObserveRel = coapClientFan.observe(new CoAPClientFanObsHandler(ctrlActuatorManager,coapClientFanObserveRel),COAP_ACCEPT_JSON);
+        coapClientFanObserveRel = coapClientFan.observe(fanObsHandler,COAP_ACCEPT_JSON);
 
        if(coapClientLightObserveRel == null || coapClientLightObserveRel.isCanceled())
-        coapClientLightObserveRel = coapClientLight.observe(new CoAPClientLightObsHandler(ctrlActuatorManager,coapClientLightObserveRel),COAP_ACCEPT_JSON);
+        coapClientLightObserveRel = coapClientLight.observe(lightObsHandler,COAP_ACCEPT_JSON);
 
        if(coapClientErrorsObserveRel == null || coapClientErrorsObserveRel.isCanceled())
-        coapClientErrorsObserveRel = coapClientErrors.observe(new CoAPClientErrorsObsHandler(ctrlActuatorManager,coapClientErrorsObserveRel),COAP_ACCEPT_JSON);
+        coapClientErrorsObserveRel = coapClientErrors.observe(errorsObsHandler,COAP_ACCEPT_JSON);
 
        // If all CoAP clients are now observing their associated resources, log it
        if((coapClientFanObserveRel!=null && !coapClientFanObserveRel.isCanceled()) && (coapClientLightObserveRel!=null && !coapClientLightObserveRel.isCanceled()) && (coapClientErrorsObserveRel!=null

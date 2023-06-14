@@ -6,7 +6,6 @@ import errors.ErrCodeExcp;
 import logging.Log;
 import org.eclipse.californium.core.CoapHandler;
 import org.eclipse.californium.core.CoapResponse;
-import org.eclipse.californium.core.coap.ClientObserveRelation;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,7 +15,7 @@ import static ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.
 public class CoAPClientLightObsHandler implements CoapHandler
  {
   ControlActuatorManager controlActuatorManager;
-  ClientObserveRelation coapClientLightObserveRel;
+  public boolean notifyTooManyObserversError;
 
 
   private LightState getActuatorLightState(JSONObject coapResponseJSON, String coapResponseStr) throws ErrCodeExcp
@@ -44,10 +43,10 @@ public class CoAPClientLightObsHandler implements CoapHandler
 
 
 
-  public CoAPClientLightObsHandler(ControlActuatorManager controlActuatorManager,ClientObserveRelation coapClientLightObserveRel)
+  public CoAPClientLightObsHandler(ControlActuatorManager controlActuatorManager)
    {
     this.controlActuatorManager = controlActuatorManager;
-    this.coapClientLightObserveRel = coapClientLightObserveRel;
+    this.notifyTooManyObserversError = true;
    }
 
 
@@ -65,7 +64,24 @@ public class CoAPClientLightObsHandler implements CoapHandler
     // Ensure that a successful response was received
     if(!coapResponse.isSuccess())
      {
-      Log.code(ERR_COAP_CLI_LIGHT_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode().toString() + ")");
+      // If the actuator rejected observing the resource because it has
+      // too many registered observers already (5.03, Too Many Observers)
+      if(coapResponse.getCode().value == 163)
+       {
+        // If it was globally the first time the error was received, log
+        // that the actuator's light state in the GUI may not be synchronized
+        if(notifyTooManyObserversError)
+         {
+          Log.warn("actuator" + controlActuatorManager.ID + " rejected observing the \"light\" "
+            + "resource because it has too many observers already, its light state value "
+            + "in the GUI may not be synchronized (restart the node to fix the problem)");
+          notifyTooManyObserversError = false;
+         }
+        // Otherwise, just silently ignore the error (the handler is automatically cancelled)
+       }
+      else
+       Log.err("The light resource observe handler on actuator" + controlActuatorManager.ID
+                + " received an unsuccessful response " + (coapResponse.getCode()));
       return;
      }
 
@@ -97,9 +113,5 @@ public class CoAPClientLightObsHandler implements CoapHandler
     // Log the error
     Log.err("An error occurred in observing the \"light\" resource on actuator"
             + controlActuatorManager.ID + ", attempting to re-establish the observing relationship");
-
-    // Proactively cancel the resource observing to attempt to recover
-    // from the error at the next actuatorWatchdogTimer execution
-    coapClientLightObserveRel.proactiveCancel();
    }
  }

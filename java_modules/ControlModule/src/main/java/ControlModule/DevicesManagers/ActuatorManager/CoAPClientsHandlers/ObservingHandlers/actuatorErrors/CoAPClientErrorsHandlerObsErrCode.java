@@ -19,16 +19,9 @@ public enum CoAPClientErrorsHandlerObsErrCode implements ModuleErrCode
  {
   /* ====================== Enumeration Values Definition ====================== */
 
-  /* ------------ CoAP Client Errors Responses General Error Codes ------------ */
-  
-  // An unsuccessful CoAP client error response was received
-  ERR_COAP_CLI_ERRORS_RESP_UNSUCCESSFUL,
-
   // A received CoAP client error response
   // could not be interpreted in JSON format
   ERR_COAP_CLI_ERRORS_RESP_NOT_JSON,
-
-  /* ------------- CoAP Client Errors Invalid Values Error Codes ------------- */
 
   // A received CoAP client error response
   // does not contain the "errCode" attribute
@@ -59,11 +52,7 @@ public enum CoAPClientErrorsHandlerObsErrCode implements ModuleErrCode
 
   private static final EnumMap<CoAPClientErrorsHandlerObsErrCode,ErrCodeInfo> CoAPClientErrorsHandlerErrCodeInfoMap = new EnumMap<>(Map.ofEntries
    (
-    /* ----------- CoAP Client Errors Responses General Error Codes ----------- */
-    Map.entry(ERR_COAP_CLI_ERRORS_RESP_UNSUCCESSFUL,new ErrCodeInfo(ERROR,"An unsuccessful CoAP client error response was received")),
     Map.entry(ERR_COAP_CLI_ERRORS_RESP_NOT_JSON,new ErrCodeInfo(ERROR,"A received CoAP client error response could not be interpreted in JSON format")),
-
-    /* ------------ CoAP Client Errors Invalid Values Error Codes ------------ */
     Map.entry(ERR_COAP_CLI_ERRORS_ERRCODE_MISSING,new ErrCodeInfo(ERROR,"A received CoAP client error response does not contain the \"errCode\" attribute")),
     Map.entry(ERR_COAP_CLI_ERRORS_ERRCODE_NOT_INT,new ErrCodeInfo(ERROR,"The \"errCode\" attribute in a received CoAP client error response could not be interpreted as an integer")),
     Map.entry(ERR_COAP_CLI_ERRORS_ERRCODE_UNKNOWN,new ErrCodeInfo(ERROR,"The \"errCode\" attribute in a received CoAP client error response could not be mapped to a valid actuator error code")),

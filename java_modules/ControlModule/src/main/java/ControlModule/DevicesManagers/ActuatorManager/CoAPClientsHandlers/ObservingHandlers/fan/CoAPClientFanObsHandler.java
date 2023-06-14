@@ -5,7 +5,6 @@ import errors.ErrCodeExcp;
 import logging.Log;
 import org.eclipse.californium.core.CoapHandler;
 import org.eclipse.californium.core.CoapResponse;
-import org.eclipse.californium.core.coap.ClientObserveRelation;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -13,7 +12,7 @@ import org.json.JSONObject;
 public class CoAPClientFanObsHandler implements CoapHandler
  {
   ControlActuatorManager controlActuatorManager;
-  ClientObserveRelation coapClientFanObserveRel;
+  public boolean notifyTooManyObserversError;
 
   private int getActuatorFanRelSpeed(JSONObject coapResponseJSON, String coapResponseStr) throws  ErrCodeExcp
    {
@@ -30,12 +29,10 @@ public class CoAPClientFanObsHandler implements CoapHandler
    }
 
 
-
-
-  public CoAPClientFanObsHandler(ControlActuatorManager controlActuatorManager,ClientObserveRelation coapClientFanObserveRel)
+  public CoAPClientFanObsHandler(ControlActuatorManager controlActuatorManager)
    {
     this.controlActuatorManager = controlActuatorManager;
-    this.coapClientFanObserveRel = coapClientFanObserveRel;
+    this.notifyTooManyObserversError = true;
    }
 
 
@@ -53,8 +50,24 @@ public class CoAPClientFanObsHandler implements CoapHandler
     // Ensure that a successful response was received
     if(!coapResponse.isSuccess())
      {
-      Log.code(
-        CoAPClientFanHandlerObsErrCode.ERR_COAP_CLI_FAN_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode().toString() + ")");
+      // If the actuator rejected observing the resource because it has
+      // too many registered observers already (5.03, Too Many Observers)
+      if(coapResponse.getCode().value == 163)
+       {
+        // If it was globally the first time the error was received, log that
+        // the actuator's fan relative speed in the GUI may not be synchronized
+        if(notifyTooManyObserversError)
+         {
+          Log.warn("actuator" + controlActuatorManager.ID + " rejected observing the \"fan\" "
+                    + "resource because it has too many observers already, its fan relative speed value "
+                    + "in the GUI may not be synchronized (restart the node to fix the problem)");
+          notifyTooManyObserversError = false;
+         }
+        // Otherwise, just silently ignore the error (the handler is automatically cancelled)
+       }
+      else
+       Log.err("The fan resource observe handler on actuator" + controlActuatorManager.ID +
+                " received an unsuccessful response " + (coapResponse.getCode()));
       return;
      }
 
@@ -90,9 +103,5 @@ public class CoAPClientFanObsHandler implements CoapHandler
     // Log the error
     Log.err("An error occurred in observing the \"fan\" resource on actuator"
       + controlActuatorManager.ID + ", attempting to re-establish the observing relationship");
-
-    // Proactively cancel the resource observing to attempt to recover
-    // from the error at the next actuatorWatcherTimer execution
-    coapClientFanObserveRel.proactiveCancel();
    }
  }

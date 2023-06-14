@@ -83,7 +83,7 @@
       <grid id="76457" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="5" right="0"/>
         <constraints>
-          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <background color="-855310"/>
@@ -101,7 +101,8 @@
               <grid id="b3a44" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
-                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="8" fill="2" indent="0" use-parent-layout="false">
+                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="8" fill="2" indent="0" use-parent-layout="false">
+                    <minimum-size width="340" height="-1"/>
                     <preferred-size width="340" height="-1"/>
                   </grid>
                 </constraints>
@@ -141,7 +142,7 @@
                     <border type="none"/>
                     <children>
                       <grid id="e2743" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                        <margin top="5" left="0" bottom="0" right="0"/>
+                        <margin top="0" left="0" bottom="0" right="0"/>
                         <constraints/>
                         <properties/>
                         <border type="none"/>
@@ -155,7 +156,7 @@
                             <border type="bevel-raised"/>
                             <children>
                               <grid id="4508c" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                <margin top="2" left="5" bottom="2" right="5"/>
+                                <margin top="0" left="5" bottom="2" right="5"/>
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -389,7 +390,7 @@
                             <border type="bevel-raised"/>
                             <children>
                               <grid id="2f1da" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                <margin top="2" left="5" bottom="2" right="5"/>
+                                <margin top="0" left="5" bottom="2" right="5"/>
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="1" hsize-policy="1" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -622,6 +623,7 @@
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="8" fill="2" indent="0" use-parent-layout="false">
+                    <minimum-size width="170" height="-1"/>
                     <preferred-size width="170" height="-1"/>
                   </grid>
                 </constraints>
@@ -662,7 +664,7 @@
                     <border type="none"/>
                     <children>
                       <grid id="b12ea" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                        <margin top="5" left="0" bottom="0" right="0"/>
+                        <margin top="0" left="0" bottom="0" right="0"/>
                         <constraints/>
                         <properties/>
                         <border type="none"/>
@@ -728,7 +730,7 @@
                                 </children>
                               </grid>
                               <grid id="603a2" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                <margin top="2" left="5" bottom="2" right="0"/>
+                                <margin top="0" left="5" bottom="2" right="0"/>
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -879,7 +881,7 @@
                                 </children>
                               </grid>
                               <grid id="85783" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                                <margin top="2" left="5" bottom="2" right="0"/>
+                                <margin top="0" left="5" bottom="2" right="0"/>
                                 <constraints>
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                                 </constraints>
@@ -980,7 +982,10 @@
               <grid id="39b34" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
-                  <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="1" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="715" height="-1"/>
+                    <maximum-size width="715" height="-1"/>
+                  </grid>
                 </constraints>
                 <properties/>
                 <border type="bevel-lowered"/>
@@ -988,7 +993,7 @@
                   <grid id="85cc" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                     <margin top="0" left="0" bottom="0" right="0"/>
                     <constraints>
-                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="7" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <background color="-5592406"/>
@@ -1008,24 +1013,28 @@
                   </grid>
                   <scrollpane id="c6c40">
                     <constraints>
-                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
-                      <horizontalScrollBarPolicy value="30"/>
+                      <background color="-1"/>
+                      <horizontalScrollBarPolicy value="31"/>
                     </properties>
                     <border type="none"/>
                     <children>
                       <grid id="7028d" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                        <margin top="5" left="0" bottom="0" right="0"/>
+                        <margin top="3" left="0" bottom="3" right="0"/>
                         <constraints/>
                         <properties>
+                          <background color="-1"/>
                           <font size="14"/>
                         </properties>
                         <border type="bevel-raised"/>
                         <children>
                           <component id="1d01d" class="ControlModule.GUILogging.ANSIColorPane" binding="ANSIColorPane1" default-binding="true">
                             <constraints>
-                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="1" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="0" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                <preferred-size width="668" height="-1"/>
+                              </grid>
                             </constraints>
                             <properties>
                               <background color="-1"/>

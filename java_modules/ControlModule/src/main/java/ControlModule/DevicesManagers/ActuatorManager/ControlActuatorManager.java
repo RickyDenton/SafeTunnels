@@ -8,17 +8,15 @@ import ControlModule.DevicesManagers.ActuatorManager.GUIUpdateTasks.FanIconSpinT
 import ControlModule.DevicesManagers.ActuatorManager.GUIUpdateTasks.LightBlinkTask;
 import devices.actuator.BaseActuator;
 import logging.Log;
+import org.eclipse.californium.core.CoapClient;
 
 import javax.swing.*;
-
 import java.util.Timer;
-
-import org.eclipse.californium.core.CoapClient;
 
 import static ControlModule.OpState.*;
 import static devices.actuator.BaseActuator.ActuatorQuantity.FANRELSPEED;
 import static devices.actuator.BaseActuator.ActuatorQuantity.LIGHTSTATE;
-import static devices.actuator.BaseActuator.LightState.LIGHT_OFF;
+import static devices.actuator.BaseActuator.LightState.LIGHT_STATE_INVALID;
 
 
 public class ControlActuatorManager extends BaseActuator
@@ -27,8 +25,7 @@ public class ControlActuatorManager extends BaseActuator
 
   // MUST BE > COAP CLIENT TIMEOUTS
   private final static int actuatorWatcherTimerPeriod = 10 * 1000;    // milliseconds
-
-  private static final int fanIconSpinTimerBasePeriod = 120;          // milliseconds
+  private static final int fanIconSpinTimerBasePeriod = 130;          // milliseconds
 
   // Actuator quantities
   private short fanRelSpeed;
@@ -39,12 +36,6 @@ public class ControlActuatorManager extends BaseActuator
 
   // Control Module MySQL Connector
   private final ControlMySQLConnector controlMySQLConnector;
-
-  // The actuator's IPv6 address (e.g. fd00::0202:0002:0002:0002)
-  private final String actuatorIPv6Addr;
-
-  // The actuator's CoAP endpoint (e.g. coap://[fd00::0202:0002:0002:0002]/)
-  private final String actuatorCoAPEndpoint;
 
   // Actuator Resources CoAP Clients
   final CoapClient coapClientFan;
@@ -109,7 +100,7 @@ public class ControlActuatorManager extends BaseActuator
     this.controlMySQLConnector = controlMySQLConnector;
     this.controlModule = controlModule;
     fanRelSpeed = -1;
-    lightState = LIGHT_OFF;
+    lightState = LIGHT_STATE_INVALID;
     GUIBound = false;
     this.connStateLEDIcon = null;
     this.fanRelSpeedLabel = null;
@@ -136,11 +127,11 @@ public class ControlActuatorManager extends BaseActuator
     for(int i = 4; i < IID.length(); i+=5)
      IID.insert(i, ":");
 
-    // Set the actuator's global IPv6 address
-    actuatorIPv6Addr = "fd00::" + IID;
+    // Set the actuator's global IPv6 address (e.g. fd00::0202:0002:0002:0002)
+    String actuatorIPv6Addr = "fd00::" + IID;
 
-    // Set the actuator's CoAP endpoint
-    actuatorCoAPEndpoint = "coap://[" + actuatorIPv6Addr + "]/";
+    // Set the actuator's CoAP endpoint (e.g. coap://[fd00::0202:0002:0002:0002]/)
+    String actuatorCoAPEndpoint = "coap://[" + actuatorIPv6Addr + "]/";
 
     /*/ --- Actuator Global IPv6 Address and CoAP Endpoint Initialization --- /*/
 
@@ -178,6 +169,13 @@ public class ControlActuatorManager extends BaseActuator
      {
       // Update the connection state LED icon
       connStateLEDIcon.setIcon(ControlModule.connStateLEDOFFImg);
+
+      // Stop the fan spinning and the LED blinking, if any
+      if(fanIconSpinTimer != null)
+       fanIconSpinTimer.cancel();
+
+      if(lightBlinkTimer != null)
+       lightBlinkTimer.cancel();
 
       // Deactivate the other actuator widget's components
       fanRelSpeedLabel.setEnabled(false);
@@ -228,31 +226,6 @@ public class ControlActuatorManager extends BaseActuator
   @Override
   public void setFanRelSpeed(int newFanRelSpeed)
    {
-    // If bound to a GUI widget, update its associated
-    // fan speed value and set the slider to match
-    if(GUIBound)
-     {
-      fanRelSpeedLabel.setText(newFanRelSpeed + " %");
-      fanRelSpeedLabel.setForeground(fanRelSpeedToOpStateColor(newFanRelSpeed));
-      fanRelSpeedSlider.setValue(newFanRelSpeed);
-
-      // Stop the fanIconSpinTimer
-      if(fanIconSpinTimer != null)
-       fanIconSpinTimer.cancel();
-
-      // If the fan has stopped, restore its fixed icon
-      if(newFanRelSpeed == 0)
-       fanIcon.setIcon(ControlModule.actuatorFanIcons[0]);
-
-      // Otherwise initialize the fanIconSpinTimer with a fixed
-      // period inversely proportional to the fan relative speed
-      else
-       {
-        fanIconSpinTimer = new Timer();
-        fanIconSpinTimer.scheduleAtFixedRate(new FanIconSpinTask(fanIcon),0,fanIconSpinTimerBasePeriod-newFanRelSpeed);
-       }
-     }
-
     // If this is not a periodic fan relative speed
     // observing refresh, i.e. its value has changed
     if(newFanRelSpeed != this.fanRelSpeed)
@@ -267,6 +240,31 @@ public class ControlActuatorManager extends BaseActuator
       // Log the new actuator fan relative speed
       Log.dbg("New actuator" + ID + " fan relative speed: " + fanRelSpeed);
 
+      // If bound to a GUI widget, update its associated
+      // fan speed value and set the slider to match
+      if(GUIBound)
+       {
+        fanRelSpeedLabel.setText(newFanRelSpeed + " %");
+        fanRelSpeedLabel.setForeground(fanRelSpeedToOpStateColor(newFanRelSpeed));
+        fanRelSpeedSlider.setValue(newFanRelSpeed);
+
+        // Stop the fanIconSpinTimer
+        if(fanIconSpinTimer != null)
+         fanIconSpinTimer.cancel();
+
+        // If the fan has stopped, restore its fixed icon
+        if(newFanRelSpeed == 0)
+         fanIcon.setIcon(ControlModule.actuatorFanIcons[0]);
+
+         // Otherwise initialize the fanIconSpinTimer with a fixed
+         // period inversely proportional to the fan relative speed
+        else
+         {
+          fanIconSpinTimer = new Timer();
+          fanIconSpinTimer.scheduleAtFixedRate(new FanIconSpinTask(fanIcon),0,fanIconSpinTimerBasePeriod-newFanRelSpeed);
+         }
+       }
+
       // Update the system's average fan relative speed
       controlModule.updateAvgFanRelSpeed();
      }
@@ -276,56 +274,55 @@ public class ControlActuatorManager extends BaseActuator
   @Override
   public void setLightState(LightState newLightState)
    {
-    // If bound to a GUI widget, update its
-    // associated label and light state icon
-    // TODO: Possibly use a single, blinking light via a timer instead
-    if(GUIBound)
-     {
-      // Stop the LightBlinkTimer, if any
-      if(lightBlinkTimer!= null)
-       lightBlinkTimer.cancel();
-
-      // Depending on the new light state
-      switch(newLightState)
-       {
-        case LIGHT_OFF:
-         lightStateLabel.setText("OFF");
-         lightStateLabel.setForeground(NOMINAL.getColor());
-         lightIcon.setIcon(ControlModule.actuatorLightOFFImg);
-         break;
-
-        case LIGHT_ON:
-         lightStateLabel.setText("WARN");
-         lightStateLabel.setForeground(WARNING.getColor());
-         lightIcon.setIcon(ControlModule.actuatorLightWARNINGImg);
-         break;
-
-        case LIGHT_BLINK_ALERT:
-         lightStateLabel.setText("ALERT");
-         lightStateLabel.setForeground(ALERT.getColor());
-
-         // Start the LED blinking timer
-         lightBlinkTimer = new Timer();
-         lightBlinkTimer.scheduleAtFixedRate(new LightBlinkTask(lightIcon,ControlModule.actuatorLightALERTImg),0,1000);
-         break;
-
-        case LIGHT_BLINK_EMERGENCY:
-         lightStateLabel.setText("EMER.");
-         lightStateLabel.setForeground(EMERGENCY.getColor());
-
-         // Start the LED blinking timer
-         lightBlinkTimer = new Timer();
-         lightBlinkTimer.scheduleAtFixedRate(new LightBlinkTask(lightIcon,ControlModule.actuatorLightEMERGENCYImg),0,300);
-         break;
-       }
-     }
-
     // If this is not a periodic light state
     // observing refresh, i.e. its value has changed
     if(newLightState != this.lightState)
      {
       // Update the actuator's light state value
       this.lightState = newLightState;
+
+      // If bound to a GUI widget, update its
+      // associated label and light state icon
+      if(GUIBound)
+       {
+        // Stop the LightBlinkTimer, if any
+        if(lightBlinkTimer!= null)
+         lightBlinkTimer.cancel();
+
+        // Depending on the new light state
+        switch(newLightState)
+         {
+          case LIGHT_OFF:
+           lightStateLabel.setText("OFF");
+           lightStateLabel.setForeground(NOMINAL.getColor());
+           lightIcon.setIcon(ControlModule.actuatorLightOFFImg);
+           break;
+
+          case LIGHT_ON:
+           lightStateLabel.setText("WARN");
+           lightStateLabel.setForeground(WARNING.getColor());
+           lightIcon.setIcon(ControlModule.actuatorLightWARNINGImg);
+           break;
+
+          case LIGHT_BLINK_ALERT:
+           lightStateLabel.setText("ALERT");
+           lightStateLabel.setForeground(ALERT.getColor());
+
+           // Start the LED blinking timer
+           lightBlinkTimer = new Timer();
+           lightBlinkTimer.scheduleAtFixedRate(new LightBlinkTask(lightIcon,ControlModule.actuatorLightALERTImg),0,1000);
+           break;
+
+          case LIGHT_BLINK_EMERGENCY:
+           lightStateLabel.setText("EMER.");
+           lightStateLabel.setForeground(EMERGENCY.getColor());
+
+           // Start the LED blinking timer
+           lightBlinkTimer = new Timer();
+           lightBlinkTimer.scheduleAtFixedRate(new LightBlinkTask(lightIcon,ControlModule.actuatorLightEMERGENCYImg),0,300);
+           break;
+         }
+       }
 
       // Attempt to push the updated actuator light state into the database
       controlMySQLConnector.pushActuatorQuantityValue(ID,LIGHTSTATE,lightState.ordinal());
@@ -363,7 +360,7 @@ public class ControlActuatorManager extends BaseActuator
      }
 
     // Send the fan relative speed using an asynchronous, confirmable PUT request
-    coapClientFan.put(new CoAPClientFanReqHandler(ID,sendFanRelSpeed), "fanRelSpeed=" + sendFanRelSpeed,0); // 0 = text/plain
+    coapClientFan.put(new CoAPClientFanReqHandler(this,sendFanRelSpeed), "fanRelSpeed=" + sendFanRelSpeed,0); // 0 = text/plain
    }
 
   public void sendLightState(LightState sendLightState)
@@ -383,7 +380,7 @@ public class ControlActuatorManager extends BaseActuator
      }
 
     // Send the light state using an asynchronous, confirmable PUT request
-    coapClientLight.put(new CoAPClientLightReqHandler(ID,sendLightState), "lightState=" + sendLightState.toString(),0); // 0 = text/plain
+    coapClientLight.put(new CoAPClientLightReqHandler(this,sendLightState), "lightState=" + sendLightState.toString(),0); // 0 = text/plain
    }
 
  }

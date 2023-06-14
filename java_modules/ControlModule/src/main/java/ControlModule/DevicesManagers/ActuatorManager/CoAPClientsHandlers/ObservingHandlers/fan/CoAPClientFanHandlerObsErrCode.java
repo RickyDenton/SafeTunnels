@@ -19,16 +19,9 @@ public enum CoAPClientFanHandlerObsErrCode implements ModuleErrCode
  {
   /* ====================== Enumeration Values Definition ====================== */
 
-  /* -------------- CoAP Client Fan Responses General Error Codes -------------- */
-
-  // An unsuccessful CoAP client fan relative speed response was received
-  ERR_COAP_CLI_FAN_RESP_UNSUCCESSFUL,
-
   // A received CoAP client fan relative speed response
   // could not be interpreted in JSON format
   ERR_COAP_CLI_FAN_RESP_NOT_JSON,
-
-  /* --------------- CoAP Client Fan Invalid Values Error Codes --------------- */
 
   // A received CoAP client fan relative speed response
   // does not contain the "fanRelSpeed" attribute
@@ -47,11 +40,7 @@ public enum CoAPClientFanHandlerObsErrCode implements ModuleErrCode
 
   private static final EnumMap<CoAPClientFanHandlerObsErrCode,ErrCodeInfo> CoAPClientFanHandlerErrCodeInfoMap = new EnumMap<>(Map.ofEntries
    (
-    /* ------------- CoAP Client Fan Responses General Error Codes ------------- */
-    Map.entry(ERR_COAP_CLI_FAN_RESP_UNSUCCESSFUL,new ErrCodeInfo(ERROR,"An unsuccessful CoAP client fan relative speed response was received")),
     Map.entry(ERR_COAP_CLI_FAN_RESP_NOT_JSON,new ErrCodeInfo(ERROR,"A received CoAP client fan relative speed response could not be interpreted in JSON format")),
-
-    /* -------------- CoAP Client Fan Invalid Values Error Codes -------------- */
     Map.entry(ERR_COAP_CLI_FAN_FANRELSPEED_MISSING,new ErrCodeInfo(ERROR,"A received CoAP client fan relative speed response does not contain the \"fanRelSpeed\" attribute")),
     Map.entry(ERR_COAP_CLI_FAN_FANRELSPEED_NOT_INT,new ErrCodeInfo(ERROR,"The \"fanRelSpeed\" attribute in a received CoAP client fan relative speed response could not be interpreted as an integer")),
     Map.entry(ERR_COAP_CLI_FAN_FANRELSPEED_INVALID,new ErrCodeInfo(ERROR,"Received an invalid \"fanRelSpeed\" value in a CoAP client fan relative speed response"))

@@ -6,7 +6,6 @@ import errors.ErrCodeExcp;
 import logging.Log;
 import org.eclipse.californium.core.CoapHandler;
 import org.eclipse.californium.core.CoapResponse;
-import org.eclipse.californium.core.coap.ClientObserveRelation;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,7 +15,7 @@ import static ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.
 public class CoAPClientErrorsObsHandler implements CoapHandler
  {
   ControlActuatorManager controlActuatorManager;
-  ClientObserveRelation coapClientErrorsObserveRel;
+  public boolean notifyTooManyObserversError;
 
   private BaseActuatorErrCode getActuatorErrCode(JSONObject coapResponseJSON, String coapResponseStr) throws  ErrCodeExcp
    {
@@ -79,10 +78,10 @@ public class CoAPClientErrorsObsHandler implements CoapHandler
 
 
 
-  public CoAPClientErrorsObsHandler(ControlActuatorManager controlActuatorManager,ClientObserveRelation coapClientErrorsObserveRel)
+  public CoAPClientErrorsObsHandler(ControlActuatorManager controlActuatorManager)
    {
     this.controlActuatorManager = controlActuatorManager;
-    this.coapClientErrorsObserveRel = coapClientErrorsObserveRel;
+    this.notifyTooManyObserversError = true;
    }
 
 
@@ -105,7 +104,24 @@ public class CoAPClientErrorsObsHandler implements CoapHandler
     // Ensure that a successful response was received
     if(!coapResponse.isSuccess())
      {
-      Log.code(ERR_COAP_CLI_ERRORS_RESP_UNSUCCESSFUL,"(response = " + coapResponse.getCode().toString() + ")");
+      // If the actuator rejected observing the resource because it has
+      // too many registered observers already (5.03, Too Many Observers)
+      if(coapResponse.getCode().value == 163)
+       {
+        // If it is the first of such errors received, log
+        // that the actuator errors will not be reported
+        if(notifyTooManyObserversError)
+         {
+          Log.warn("actuator" + controlActuatorManager.ID + " rejected observing "
+            + "the \"errors\" resource because it has too many observers already, its "
+            + "errors will NOT be reported (restart the node to fix the problem)");
+          notifyTooManyObserversError = false;
+         }
+        // Otherwise, just silently ignore the error (the handler is automatically cancelled)
+       }
+      else
+       Log.err("The errors resource observe handler on actuator" + controlActuatorManager.ID
+                + " received an unsuccessful response " + (coapResponse.getCode()));
       return;
      }
 
@@ -151,9 +167,5 @@ public class CoAPClientErrorsObsHandler implements CoapHandler
     // Log the error
     Log.err("An error occurred in observing the \"errors\" resource on actuator"
       + controlActuatorManager.ID + ", attempting to re-establish the observing relationship");
-
-    // Proactively cancel the resource observing to attempt to recover
-    // from the error at the next actuatorWatchdogTimer execution
-    coapClientErrorsObserveRel.proactiveCancel();
    }
  }
