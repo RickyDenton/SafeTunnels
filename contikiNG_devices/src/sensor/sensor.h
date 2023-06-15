@@ -130,15 +130,45 @@
  #define TEMP_SAMPLING_PERIOD (10 * CLOCK_SECOND)
 #endif
 
+// Initial Sampling delay from when the sensor is connected with the MQTT broker
+#define INIT_SAMPLING_DELAY (5 * CLOCK_SECOND)
+
 // ---------- Sampled Quantities Thresholds and Evolution Parameters ----------
 
-/* ------- TODO! ------- */
+// Utility macro extracting byte of index 'i' from a variable
+#define GETBYTE(var,index) ((char*)(&(var)))[index]
+
+// Utility macros bounding two unsigned integers sum and
+// subtraction between a maximum and minimum value respectively
+#define UINT_BOUND_SUM(a,b,max) (((a) > ((max) - (b))) ? (max) : ((a) + (b)))
+#define UINT_BOUND_SUB(a,b,min) (((a) < ((min) + (b))) ? (min) : ((a) - (b)))
+
+// Utility macro bounding a value between its minimum and maximum value
+#define BOUND(value,min,max) MIN(MAX(value,min),max)
 
 // Sampled quantities minimum and maximum values
-//#define C02_VALUE_MIN 10
-#define C02_VALUE_MAX 200
-//#define TEMP_VALUE_MIN 10
-#define TEMP_VALUE_MAX 50
+#define C02_VALUE_MIN 295
+#define C02_VALUE_MAX 12370
+#define TEMP_VALUE_MIN 7
+#define TEMP_VALUE_MAX 51
+
+// Sampled quantities base maximum
+// changes at every update
+#define C02_BASE_MAX_CHANGE  250
+#define TEMP_BASE_MAX_CHANGE 1
+
+// The minimum and maximum quantities'
+// road equilibrium points
+#define ROAD_EQ_POINT_MAX 100
+#define ROAD_EQ_POINT_MIN 60
+
+// How much a quantity's road equilibrium
+// point may vary in an update
+#define ROAD_EQ_POINT_MAX_CHANGE 2
+
+// The percentage of the average fan relative speed
+// affecting a quantity's cumulative equilibrium point
+#define AVG_FAN_REL_SPEED_EQ_PERC 0.6
 
 
 /* ============================== TYPE DEFINITIONS ============================== */

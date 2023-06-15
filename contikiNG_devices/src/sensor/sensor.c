@@ -5,7 +5,7 @@
 /* ------------------------------ Standard Headers ------------------------------ */
 #include <string.h>
 #include <strings.h>
-#include <limits.h>
+#include <tgmath.h>
 
 /* ----------------------------- Contiki-NG Headers ----------------------------- */
 #include "contiki.h"
@@ -78,9 +78,17 @@ static struct mqtt_connection mqttConn;
 
 /* ------------------------- Sampling Global Variables ------------------------- */
 
-// Current quantities values (USHRT_MAX -> not sampled yet)
-unsigned short C02Density = USHRT_MAX;   // In parts per million (ppm)
-unsigned short temp = USHRT_MAX;         // In celsius degrees (°C)
+// Quantities' values
+unsigned short C02;   // In parts per million (ppm)
+unsigned short temp;  // In celsius degrees (°C)
+
+// Quantities' roads equilibrium points [0,100]
+unsigned char C02RoadEqPoint;
+unsigned char tempRoadEqPoint;
+
+// Whether the quantities and their road
+// equilibrium points have been initialized yet
+bool quantitiesInitialized = false;
 
 // Quantities sampling timers
 static struct ctimer C02SamplingTimer;
@@ -97,9 +105,9 @@ static bool simulateMaxTemp = false;
 unsigned long C02LastMQTTUpdateTime = 0;
 unsigned long tempLastMQTTUpdateTime = 0;
 
-// The system's average relative fan speed value to be used for
-// correlated sampling purposes (UCHAR_MAX -> not received yet)
-unsigned char avgFanRelSpeed = UCHAR_MAX;
+// The system's average relative fan speed value
+// to be used for correlated sampling purposes
+unsigned char avgFanRelSpeed = 0;
 
 
 /* =========================== FUNCTIONS DEFINITIONS =========================== */
@@ -411,6 +419,11 @@ static void MQTTEngineCallback(__attribute__((unused)) struct mqtt_connection* m
      LOG_WARN("DISCONNECTED from the MQTT broker @%s (reason = %u), attempting"
               " to reconnect...\n", MQTTBrokerIPv6Addr, *((mqtt_event_t *)data));
 
+     // As the sampled quantities can no longer be published to the
+     // broker, stop the sensor's sampling for energy savings purposes
+     ctimer_stop(&C02SamplingTimer);
+     ctimer_stop(&tempSamplingTimer);
+
      // Update the MQTT client state depending on whether it is still online
      if(!isNodeOnline())
       MQTTCliState = MQTT_CLI_STATE_ENGINE_OK;
@@ -469,8 +482,7 @@ static void MQTTEngineCallback(__attribute__((unused)) struct mqtt_connection* m
 
      // Compute the minimum between the size of a received MQTT message
      // and the size of the client MQTT message contents buffer -1
-     minRecvBufSize = sizeof(secMQTTMsgContentsBuf) - 1 > recvMsg->payload_length ?
-                      recvMsg->payload_length : sizeof(secMQTTMsgContentsBuf) - 1;
+     minRecvBufSize = MIN(sizeof(secMQTTMsgContentsBuf) - 1,recvMsg->payload_length);
 
      // Copy the received MQTT message topic and
      // contents into the local MQTT message buffers
@@ -609,20 +621,197 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue,
 
 
 /**
+ * @brief Generates a new value for a quantity's road equilibrium point
+ * @param quantityRoadEqPoint A pointer to the quantity's
+ *                            road equilibrium point
+ */
+void genNewQuantityRoadEqPoint(unsigned char* quantityRoadEqPoint)
+ {
+  // Generate a random unsigned int to be used for
+  // updating the quantity's road equilibrium point
+  unsigned int quantityRoadEqPointRand = random_rand();
+
+  // The random value first byte MSB determines whether the quantity's road
+  // equilibrium point should be updated (1) or not (0), and if it should:
+  if(GETBYTE(quantityRoadEqPointRand, 0) & (1 << 7))
+   {
+    // Determine the sign of the quantity's road equilibrium point
+    // change, i.e. whether it should decrement or increment, as the
+    // second bit of the first random byte (0 decrement, 1 increment)
+    bool quantityRoadEqPointGenSign = GETBYTE(quantityRoadEqPointRand, 0) & (1 << 6);
+
+    // Determine the magnitude of the quantity's road equilibrium point change
+    // as the second random byte modulo (ROAD_EQ_POINT_MAX_CHANGE + 1)
+    unsigned char quantityRoadEqPointGenModulo = GETBYTE(quantityRoadEqPointRand, 1)
+                                                 % (ROAD_EQ_POINT_MAX_CHANGE + 1);
+
+    // Change the quantity's road equilibrium point
+    // bounding it within its minimum and maximum values
+    if(quantityRoadEqPointGenSign)
+     *quantityRoadEqPoint = UINT_BOUND_SUM(*quantityRoadEqPoint,
+                                           quantityRoadEqPointGenModulo, ROAD_EQ_POINT_MAX);
+    else
+     *quantityRoadEqPoint = UINT_BOUND_SUB(*quantityRoadEqPoint,
+                                           quantityRoadEqPointGenModulo, ROAD_EQ_POINT_MIN);
+   }
+ }
+
+
+
+/**
+ * @brief Generates a new value for a sensor's quantity (C02 or temperature)
+ * @param quantityCurrValue      The quantity's current value
+ * @param quantityRoadEqPoint    The quantity's road equilibrium point
+ * @param quantityCurrPoint      The quantity's current point
+ * @param quantityBaseMaxChange  The quantity's base maximum change
+ * @param quantityMinValue       The quantity's minimum value
+ * @param quantityMaxValue       The quantity's maximum value
+ * @return                       The new quantity value
+ */
+unsigned int genNewQuantityValue(unsigned int quantityCurrValue,  unsigned char* quantityRoadEqPoint,
+                                 unsigned char quantityCurrPoint, unsigned int quantityBaseMaxChange,
+                                 unsigned int quantityMinValue,   unsigned int quantityMaxValue)
+ {
+  // Initialize the probabilities for the quantity to increment,
+  // decrement and stay the same to their default values
+  unsigned char probQuantitySame = 40;
+  unsigned char probQuantityDecrement = 30;
+  unsigned char probQuantityIncrement = 30;
+
+  /*
+   *  A boolean used to bias the modulo of the quantity's
+   *  increment or decrement depending on the difference
+   *  between its current and operating state equilibrium point
+   *    - quantityCurrPoint < quantityOpEnvEqPoint -> false (favor decrement)
+   *    - quantityCurrPoint > quantityOpEnvEqPoint -> true (favor increment)
+   */
+  bool quantityGenBias;
+
+  // Initialize the maximum amount the quantity can change to its base value
+  unsigned int quantityMaxChange = quantityBaseMaxChange;
+
+  // The amount the quantity has changed
+  // from its current value, if any
+  unsigned int quantityAmountChange;
+
+  // The (absolute) difference between the quantity
+  // operating environment equilibrium and current point
+  unsigned char diffFromEqPoint;
+
+  // Randomly update the quantity's road equilibrium point
+  genNewQuantityRoadEqPoint(quantityRoadEqPoint);
+
+  // Compute the average fan relative speed contribution
+  // to the quantity operating environment equilibrium point
+  unsigned char fanRelSpeedEqContrib = (unsigned char)(avgFanRelSpeed * AVG_FAN_REL_SPEED_EQ_PERC);
+
+  // Compute the quantity operating environment equilibrium point (road + fan)
+  unsigned char quantityOpEnvEqPoint = UINT_BOUND_SUB(*quantityRoadEqPoint, fanRelSpeedEqContrib, 0);
+
+  // If the quantity current is greater than
+  // its operating environment equilibrium point
+  if(quantityCurrPoint > quantityOpEnvEqPoint)
+   {
+    // Bias the quantity new value generation towards the decrement
+    quantityGenBias = false;
+
+    // Compute the (absolute) difference between the quantity
+    // operating environment equilibrium and current point
+    diffFromEqPoint = quantityCurrPoint - quantityOpEnvEqPoint;
+
+    // Alter the probabilities for the quantity to increment,
+    // decrement and stay the same biasing them towards decrement
+    probQuantitySame = UINT_BOUND_SUB(probQuantitySame, diffFromEqPoint, 5);
+    probQuantityDecrement = UINT_BOUND_SUM(probQuantityDecrement, 2 * diffFromEqPoint, 95);
+    probQuantityIncrement = UINT_BOUND_SUB(probQuantityIncrement, diffFromEqPoint, 0);
+   }
+
+  // If the quantity current is smaller than
+  // its operating environment equilibrium point
+  if(quantityCurrPoint < quantityOpEnvEqPoint)
+   {
+    // Bias the quantity new value generation towards the increment
+    quantityGenBias = true;
+
+    // Compute the (absolute) difference between the quantity
+    // operating environment equilibrium and current point
+    diffFromEqPoint = quantityOpEnvEqPoint - quantityCurrPoint;
+
+    // Alter the probabilities for the quantity to increment,
+    // decrement and stay the same biasing them towards increment
+    probQuantitySame = UINT_BOUND_SUB(probQuantitySame, diffFromEqPoint, 5);
+    probQuantityDecrement = UINT_BOUND_SUB(probQuantityDecrement, diffFromEqPoint, 0);
+    probQuantityIncrement = UINT_BOUND_SUM(probQuantityIncrement, 2 * diffFromEqPoint, 95);
+   }
+
+  // Generate a random unsigned int to
+  // be used for updating the quantity
+  unsigned int quantityUpdateRand = random_rand();
+
+  // The first byte of the random unsigned int is interpreted as a random number
+  // between [0,100] determining, according to the previously computed probabilities,
+  // whether the quantity should increment, decrement or stay the same
+  unsigned char quantityChangeType = GETBYTE(quantityUpdateRand, 0) % 101;
+
+  // If the quantity should stay the same, simply return its plain value
+  if(quantityChangeType <= probQuantitySame)
+   return quantityCurrValue;
+
+  // Otherwise, if the value should decrement
+  if(quantityChangeType <= probQuantitySame + probQuantityIncrement)
+   {
+    // If the quantity generation is biased towards decrement, increase the maximum
+    // amount the quantity can change by a constant depending on the difference
+    // between the quantity operating environment equilibrium and current point
+    if(!quantityGenBias)
+     quantityMaxChange = round(quantityMaxChange * (1 + diffFromEqPoint / 100 * 4));
+
+    // Compute the amount the quantity decreases as the second
+    // random byte module the quantity maximum change + 1
+    quantityAmountChange = GETBYTE(quantityUpdateRand, 1) % (quantityMaxChange + 1);
+
+    // Return the updated quantity bounded
+    // between its minimum and maximum values
+    return BOUND(quantityCurrValue - quantityAmountChange,
+                 quantityMinValue, quantityMaxValue);
+   }
+
+  // Otherwise, if the quantity should increment
+  else
+   {
+    // If the quantity generation is biased towards increment, increase the maximum
+    // amount the quantity can change by a constant depending on the difference
+    // between the quantity operating environment equilibrium and current point
+    if(quantityGenBias)
+     quantityMaxChange = round(quantityMaxChange * (1 + diffFromEqPoint / 100 * 4));
+
+    // Compute the amount the quantity increments as the second
+    // random byte module the quantity maximum change + 1
+    quantityAmountChange = GETBYTE(quantityUpdateRand, 1) % (quantityMaxChange + 1);
+
+    // Return the updated quantity bounded
+    // between its minimum and maximum values
+    return BOUND(quantityCurrValue + quantityAmountChange,
+                 quantityMinValue, quantityMaxValue);
+   }
+ }
+
+
+/**
  * @brief Periodic C02 density sampling function
  *        (C02SamplingTimer callback function)
  */
 static void C02Sampling(__attribute__((unused)) void* ptr)
  {
   // Stores the updated sampled C02 density value
-  unsigned int newC02Density;
+  unsigned int newC02;
 
   // If the CO2 density must be simulated to its maximum
   // "unsafe" value (by having pressed the sensor's button)
   if(simulateMaxC02)
    {
     // Set the updated sampled C02 to its maximum, "unsafe" value
-    newC02Density = C02_VALUE_MAX;
+    newC02 = C02_VALUE_MAX;
 
     // Reset the variable used for simulating
     // the CO2 to its maximum "unsafe" value
@@ -632,29 +821,30 @@ static void C02Sampling(__attribute__((unused)) void* ptr)
   // Otherwise, if the CO2 density should be sampled normally
   else
    {
-    /* --- TODO: Correlate the generated C02 with the "avgFanRelSpeed" value, if available --- */
+    // Compute the C02 current point, or percentage
+    // with respect to its maximum value
+    unsigned char C02CurrPoint = C02 * 100 / C02_VALUE_MAX;
 
-    newC02Density = random_rand() % 12000;
-
-    // LOG_DBG("New sampled C02 density: %u\n",newC02Density);
-
-    /* --------------------------------------------------------------------------------------- */
+    // Randomly generate a new value for the C02
+    newC02 = genNewQuantityValue(C02,&C02RoadEqPoint,C02CurrPoint,
+                                 C02_BASE_MAX_CHANGE,C02_VALUE_MIN,C02_VALUE_MAX);
    }
 
   // Check and attempt to publish the updated C02 value on the MQTT
   // broker and, if successful, update its last publication time
- if(publishMQTTSensorUpdate("C02", newC02Density, newC02Density != C02Density,
+ if(publishMQTTSensorUpdate("C02", newC02, newC02 != C02,
                             clock_seconds() - C02LastMQTTUpdateTime))
    C02LastMQTTUpdateTime = clock_seconds();
 
   // Set the C02 density to its updated value
-  C02Density = newC02Density;
+  C02 = newC02;
 
-  // Restart the C02 sampling timer depending on the sampling mode used for the two quantities
+  // Restart the C02 sampling timer depending on
+  // the sampling mode used for the two quantities
 #ifdef QUANTITIES_SHARED_SAMPLING_PERIOD
   ctimer_set(&C02SamplingTimer, QUANTITIES_SHARED_SAMPLING_PERIOD, C02Sampling, NULL);
 #else
-  ctimer_reset(&C02SamplingTimer);
+  ctimer_set(&C02SamplingTimer, C02_SAMPLING_PERIOD, C02Sampling, NULL);
 #endif
  }
 
@@ -684,13 +874,13 @@ static void tempSampling(__attribute__((unused)) void* ptr)
   // Otherwise, if the temperature should be sampled normally
   else
    {
-    /* --- TODO: Correlate the generated C02 with the "avgFanRelSpeed" value, if available --- */
+    // Compute the temperature current point, or
+    // percentage with respect to its maximum value
+    unsigned char tempCurrPoint = temp * 100 / TEMP_VALUE_MAX;
 
-    newTemp = random_rand() % 60;
-
-    // LOG_DBG("New sampled temperature: %u\n",newTemp);
-
-    /* --------------------------------------------------------------------------------------- */
+    // Randomly generate a new value for the C02
+    newTemp = genNewQuantityValue(temp,&tempRoadEqPoint,tempCurrPoint,
+                                  TEMP_BASE_MAX_CHANGE,TEMP_VALUE_MIN,TEMP_VALUE_MAX);
    }
 
   // Check and attempt to publish the updated temperature on the MQTT
@@ -706,9 +896,10 @@ static void tempSampling(__attribute__((unused)) void* ptr)
 #ifdef QUANTITIES_SHARED_SAMPLING_PERIOD
   ctimer_set(&tempSamplingTimer, QUANTITIES_SHARED_SAMPLING_PERIOD, tempSampling, NULL);
 #else
-  ctimer_reset(&tempSamplingTimer);
+  ctimer_set(&tempSamplingTimer, TEMP_SAMPLING_PERIOD, tempSampling, NULL);
 #endif
  }
+
 
 /* ---------------------------- Sensor Process Body ---------------------------- */
 
@@ -848,12 +1039,62 @@ void sensor_MQTT_CLI_STATE_NET_OK_Callback()
 
 
 /**
- * @brief MQTT_CLI_STATE_BROKER_CONNECTED callback function, executed when
- *        the MQTT engine has established a connection with the MQTT broker
- *        and attempting to subscribe on the TOPIC_AVG_FAN_REL_SPEED topic
+ * @brief MQTT_CLI_STATE_BROKER_CONNECTED callback function,
+ *        executed when the MQTT engine has established a
+ *        connection with the MQTT broker, after which the node:
+ *          1) If necessary, initializes the quantities'
+ *             values and equilibrium points
+ *          2) Starts the C02 density and temperature sampling
+ *          3) Attempts to subscribe on the TOPIC_AVG_FAN_REL_SPEED topic
  */
 void sensor_MQTT_CLI_STATE_BROKER_CONNECTED_Callback()
  {
+  // Two random unsigned integers used for initializing the
+  // quantities' values and equilibrium points, if necessary
+  unsigned int randC02Init;
+  unsigned int randTempInit;
+
+  // If the sensor's quantities' values and road
+  // equilibrium points have not yet been initialized
+  if(!quantitiesInitialized)
+   {
+    // Generate two random unsigned integers for initializing the
+    // sensor's quantities values and road equilibrium points
+    randC02Init = random_rand();
+    randTempInit = random_rand();
+
+    // The C02 random value is used for generating its value, while
+    // its second significant byte for its road's equilibrium point
+    C02 = (randC02Init % (C02_VALUE_MAX - C02_VALUE_MIN + 1)) + C02_VALUE_MIN;
+    C02RoadEqPoint = (GETBYTE(randC02Init,1) % (ROAD_EQ_POINT_MAX -
+                                                ROAD_EQ_POINT_MIN + 1)) + ROAD_EQ_POINT_MIN;
+
+    // The temperature most significant random byte is used for generating
+    // its value, while its second significant its road's equilibrium point
+    temp = (GETBYTE(randTempInit,0) % (TEMP_VALUE_MAX - TEMP_VALUE_MIN + 1)) + TEMP_VALUE_MIN;
+    tempRoadEqPoint = (GETBYTE(randTempInit,1) % (ROAD_EQ_POINT_MAX -
+                       ROAD_EQ_POINT_MIN + 1)) +  ROAD_EQ_POINT_MIN;
+
+    // Set that the quantities' values and road
+    // equilibrium points have been initialized
+    quantitiesInitialized = true;
+   }
+
+
+  /*
+   * Start after an initial delay the sensor's physical quantities sampling
+   * timers depending on the sampling mode used (see 'SENSOR SAMPLING MODES'
+   * note in "sensor.h", line 101 for more details), uniformly distributing
+   * their sampling instants within the  shared sampling period if applicable
+   */
+#ifdef QUANTITIES_SHARED_SAMPLING_PERIOD
+  ctimer_set(&C02SamplingTimer, INIT_SAMPLING_DELAY, C02Sampling, NULL);
+  ctimer_set(&tempSamplingTimer, INIT_SAMPLING_DELAY + (QUANTITIES_SHARED_SAMPLING_PERIOD >> 1), tempSampling, NULL);
+#else
+  ctimer_set(&C02SamplingTimer, C02_SAMPLING_PERIOD, C02Sampling, NULL);
+  ctimer_set(&tempSamplingTimer, TEMP_SAMPLING_PERIOD, tempSampling, NULL);
+#endif
+
   // Attempt to submit a subscription on the
   // TOPIC_AVG_FAN_REL_SPEED topic on the MQTT broker
   snprintf(secMQTTMsgTopicBuf, sizeof(secMQTTMsgTopicBuf), TOPIC_AVG_FAN_REL_SPEED);
@@ -960,22 +1201,6 @@ PROCESS_THREAD(safetunnels_sensor_process, ev, data)
 
  // Log that the sensor node has started and its MAC
  LOG_INFO("SafeTunnels sensor node started, MAC = %s\n", nodeMACAddr);
-
- /*
-  * As they do not depend on its connection status, start
-  * the sensor's physical quantities sampling timers depending
-  * on the sampling mode used (see 'SENSOR SAMPLING MODES'
-  * note in "sensor.h", line 101 for more details),
-  * uniformly distributing their sampling instants
-  * within the  shared sampling period if applicable
-  */
-#ifdef QUANTITIES_SHARED_SAMPLING_PERIOD
- ctimer_set(&C02SamplingTimer, 0, C02Sampling, NULL);
- ctimer_set(&tempSamplingTimer, QUANTITIES_SHARED_SAMPLING_PERIOD >> 1, tempSampling, NULL);
-#else
- ctimer_set(&C02SamplingTimer, C02_SAMPLING_PERIOD, C02Sampling, NULL);
- ctimer_set(&tempSamplingTimer, TEMP_SAMPLING_PERIOD, tempSampling, NULL);
-#endif
 
  // Initialize the sensor main loop timer, whose expiration will
  // trigger the initial MQTT_CLI_STATE_INIT callback function
