@@ -135,16 +135,13 @@
 
 // ---------- Sampled Quantities Thresholds and Evolution Parameters ----------
 
-// Utility macro extracting byte of index 'i' from a variable
-#define GETBYTE(var,index) ((char*)(&(var)))[index]
+// Utility macro extracting an unsigned byte of index 'i' from a variable
+#define GETUBYTE(var,index) ((unsigned char*)(&(var)))[index]
 
 // Utility macros bounding two unsigned integers sum and
 // subtraction between a maximum and minimum value respectively
 #define UINT_BOUND_SUM(a,b,max) (((a) > ((max) - (b))) ? (max) : ((a) + (b)))
 #define UINT_BOUND_SUB(a,b,min) (((a) < ((min) + (b))) ? (min) : ((a) - (b)))
-
-// Utility macro bounding a value between its minimum and maximum value
-#define BOUND(value,min,max) MIN(MAX(value,min),max)
 
 // Sampled quantities minimum and maximum values
 #define C02_VALUE_MIN 295
@@ -164,11 +161,18 @@
 
 // How much a quantity's road equilibrium
 // point may vary in an update
-#define ROAD_EQ_POINT_MAX_CHANGE 2
+#define ROAD_EQ_POINT_MAX_CHANGE 4
 
 // The percentage of the average fan relative speed
 // affecting a quantity's cumulative equilibrium point
-#define AVG_FAN_REL_SPEED_EQ_PERC 0.6
+#define AVG_FAN_REL_SPEED_EQ_PERC 0.7
+
+// The base probabilities for a quantity to increment,
+// decrement and stay the same in equilibrium condition
+// (exaggerated for simulation purposes, must add to 100)
+#define PROB_QUANTITY_SAME      40
+#define PROB_QUANTITY_DECREMENT 30
+#define PROB_QUANTITY_INCREMENT 30
 
 
 /* ============================== TYPE DEFINITIONS ============================== */

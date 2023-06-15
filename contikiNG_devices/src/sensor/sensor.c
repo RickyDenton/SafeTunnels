@@ -5,7 +5,6 @@
 /* ------------------------------ Standard Headers ------------------------------ */
 #include <string.h>
 #include <strings.h>
-#include <tgmath.h>
 
 /* ----------------------------- Contiki-NG Headers ----------------------------- */
 #include "contiki.h"
@@ -627,23 +626,23 @@ bool publishMQTTSensorUpdate(char* quantity, unsigned int quantityValue,
  */
 void genNewQuantityRoadEqPoint(unsigned char* quantityRoadEqPoint)
  {
-  // Generate a random unsigned int to be used for
+  // Generate a random unsigned short to be used for
   // updating the quantity's road equilibrium point
-  unsigned int quantityRoadEqPointRand = random_rand();
+  unsigned short quantityRoadEqPointRand = random_rand();
 
   // The random value first byte MSB determines whether the quantity's road
   // equilibrium point should be updated (1) or not (0), and if it should:
-  if(GETBYTE(quantityRoadEqPointRand, 0) & (1 << 7))
+  if(GETUBYTE(quantityRoadEqPointRand, 0) & (1 << 7))
    {
     // Determine the sign of the quantity's road equilibrium point
     // change, i.e. whether it should decrement or increment, as the
     // second bit of the first random byte (0 decrement, 1 increment)
-    bool quantityRoadEqPointGenSign = GETBYTE(quantityRoadEqPointRand, 0) & (1 << 6);
+    bool quantityRoadEqPointGenSign = GETUBYTE(quantityRoadEqPointRand, 0) & (1 << 6);
 
-    // Determine the magnitude of the quantity's road equilibrium point change
-    // as the second random byte modulo (ROAD_EQ_POINT_MAX_CHANGE + 1)
-    unsigned char quantityRoadEqPointGenModulo = GETBYTE(quantityRoadEqPointRand, 1)
-                                                 % (ROAD_EQ_POINT_MAX_CHANGE + 1);
+    // Determine the magnitude of the quantity's road equilibrium point change as the
+    // second random byte modulo ROAD_EQ_POINT_MAX_CHANGE (+ 1, as it cannot be 0)
+    unsigned char quantityRoadEqPointGenModulo = (GETUBYTE(quantityRoadEqPointRand, 1)
+                                                 % ROAD_EQ_POINT_MAX_CHANGE) + 1;
 
     // Change the quantity's road equilibrium point
     // bounding it within its minimum and maximum values
@@ -673,10 +672,10 @@ unsigned int genNewQuantityValue(unsigned int quantityCurrValue,  unsigned char*
                                  unsigned int quantityMinValue,   unsigned int quantityMaxValue)
  {
   // Initialize the probabilities for the quantity to increment,
-  // decrement and stay the same to their default values
-  unsigned char probQuantitySame = 40;
-  unsigned char probQuantityDecrement = 30;
-  unsigned char probQuantityIncrement = 30;
+  // decrement and stay the same to their base values
+  unsigned char probQuantitySame = PROB_QUANTITY_SAME;
+  unsigned char probQuantityDecrement = PROB_QUANTITY_DECREMENT;
+  unsigned char probQuantityIncrement = PROB_QUANTITY_INCREMENT;
 
   /*
    *  A boolean used to bias the modulo of the quantity's
@@ -744,36 +743,30 @@ unsigned int genNewQuantityValue(unsigned int quantityCurrValue,  unsigned char*
     probQuantityIncrement = UINT_BOUND_SUM(probQuantityIncrement, 2 * diffFromEqPoint, 95);
    }
 
-  // Generate a random unsigned int to
-  // be used for updating the quantity
-  unsigned int quantityUpdateRand = random_rand();
-
-  // The first byte of the random unsigned int is interpreted as a random number
-  // between [0,100] determining, according to the previously computed probabilities,
-  // whether the quantity should increment, decrement or stay the same
-  unsigned char quantityChangeType = GETBYTE(quantityUpdateRand, 0) % 101;
+  // A random number modulo 100+1 is computed to determine
+  // whether the quantity should increment, decrement or stay the
+  // same according to the previously computed probabilities
+  unsigned char quantityChangeType = random_rand() % 101;
 
   // If the quantity should stay the same, simply return its plain value
   if(quantityChangeType <= probQuantitySame)
    return quantityCurrValue;
 
   // Otherwise, if the value should decrement
-  if(quantityChangeType <= probQuantitySame + probQuantityIncrement)
+  if(quantityChangeType <= probQuantitySame + probQuantityDecrement)
    {
     // If the quantity generation is biased towards decrement, increase the maximum
     // amount the quantity can change by a constant depending on the difference
     // between the quantity operating environment equilibrium and current point
     if(!quantityGenBias)
-     quantityMaxChange = round(quantityMaxChange * (1 + diffFromEqPoint / 100 * 4));
+     quantityMaxChange = (unsigned int)((double)quantityMaxChange * (1 + (double)diffFromEqPoint / 100 * 4));
 
-    // Compute the amount the quantity decreases as the second
-    // random byte module the quantity maximum change + 1
-    quantityAmountChange = GETBYTE(quantityUpdateRand, 1) % (quantityMaxChange + 1);
+    // Randomly generate the amount the quantity decreases
+    // modulo quantityMaxChange (+ 1, as it cannot be 0)
+    quantityAmountChange = (random_rand() % quantityMaxChange) + 1;
 
-    // Return the updated quantity bounded
-    // between its minimum and maximum values
-    return BOUND(quantityCurrValue - quantityAmountChange,
-                 quantityMinValue, quantityMaxValue);
+    // Return the updated quantity bounded within its minimum value
+    return UINT_BOUND_SUB(quantityCurrValue,quantityAmountChange,quantityMinValue);
    }
 
   // Otherwise, if the quantity should increment
@@ -783,16 +776,14 @@ unsigned int genNewQuantityValue(unsigned int quantityCurrValue,  unsigned char*
     // amount the quantity can change by a constant depending on the difference
     // between the quantity operating environment equilibrium and current point
     if(quantityGenBias)
-     quantityMaxChange = round(quantityMaxChange * (1 + diffFromEqPoint / 100 * 4));
+     quantityMaxChange = (unsigned int)((double)quantityMaxChange * (1 + (double)diffFromEqPoint / 100 * 4));
 
-    // Compute the amount the quantity increments as the second
-    // random byte module the quantity maximum change + 1
-    quantityAmountChange = GETBYTE(quantityUpdateRand, 1) % (quantityMaxChange + 1);
+    // Randomly generate the amount the quantity increases
+    // modulo quantityMaxChange (+ 1, as it cannot be 0)
+    quantityAmountChange = (random_rand() % quantityMaxChange) + 1;
 
-    // Return the updated quantity bounded
-    // between its minimum and maximum values
-    return BOUND(quantityCurrValue + quantityAmountChange,
-                 quantityMinValue, quantityMaxValue);
+    // Return the updated quantity bounded within its maximum value
+    return UINT_BOUND_SUM(quantityCurrValue,quantityAmountChange,quantityMaxValue);
    }
  }
 
@@ -1049,37 +1040,24 @@ void sensor_MQTT_CLI_STATE_NET_OK_Callback()
  */
 void sensor_MQTT_CLI_STATE_BROKER_CONNECTED_Callback()
  {
-  // Two random unsigned integers used for initializing the
-  // quantities' values and equilibrium points, if necessary
-  unsigned int randC02Init;
-  unsigned int randTempInit;
-
   // If the sensor's quantities' values and road
   // equilibrium points have not yet been initialized
   if(!quantitiesInitialized)
    {
-    // Generate two random unsigned integers for initializing the
-    // sensor's quantities values and road equilibrium points
-    randC02Init = random_rand();
-    randTempInit = random_rand();
+    // Randomly generate the C02 value and road equilibrium point
+    C02 = (random_rand() % (C02_VALUE_MAX - C02_VALUE_MIN + 1)) + C02_VALUE_MIN;
+    C02RoadEqPoint = (random_rand() % (ROAD_EQ_POINT_MAX -
+                                       ROAD_EQ_POINT_MIN + 1) ) + ROAD_EQ_POINT_MIN;
 
-    // The C02 random value is used for generating its value, while
-    // its second significant byte for its road's equilibrium point
-    C02 = (randC02Init % (C02_VALUE_MAX - C02_VALUE_MIN + 1)) + C02_VALUE_MIN;
-    C02RoadEqPoint = (GETBYTE(randC02Init,1) % (ROAD_EQ_POINT_MAX -
-                                                ROAD_EQ_POINT_MIN + 1)) + ROAD_EQ_POINT_MIN;
-
-    // The temperature most significant random byte is used for generating
-    // its value, while its second significant its road's equilibrium point
-    temp = (GETBYTE(randTempInit,0) % (TEMP_VALUE_MAX - TEMP_VALUE_MIN + 1)) + TEMP_VALUE_MIN;
-    tempRoadEqPoint = (GETBYTE(randTempInit,1) % (ROAD_EQ_POINT_MAX -
-                       ROAD_EQ_POINT_MIN + 1)) +  ROAD_EQ_POINT_MIN;
+    // Randomly generate the temperature value and road equilibrium point
+    temp = (random_rand() % (TEMP_VALUE_MAX - TEMP_VALUE_MIN + 1)) + TEMP_VALUE_MIN;
+    tempRoadEqPoint = (random_rand() % (ROAD_EQ_POINT_MAX -
+                                        ROAD_EQ_POINT_MIN + 1)) +  ROAD_EQ_POINT_MIN;
 
     // Set that the quantities' values and road
     // equilibrium points have been initialized
     quantitiesInitialized = true;
    }
-
 
   /*
    * Start after an initial delay the sensor's physical quantities sampling
