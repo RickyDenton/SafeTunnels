@@ -92,7 +92,10 @@ void simulateNewFanRelSpeed()
   // Adjust the FAN_LED blinking period
   // to the generated fan relative speed
   if(newFanRelSpeed == 0)
-   ctimer_stop(&fanLEDBlinkTimer);
+   {
+    ctimer_stop(&fanLEDBlinkTimer);
+    leds_single_off(FAN_LED);
+   }
   else
    ctimer_set(&fanLEDBlinkTimer,
               FAN_LED_BLINK_PERIOD_MAX - (unsigned char)newFanRelSpeed * FAN_LED_BLINK_PERIOD_UNIT,
@@ -184,7 +187,10 @@ static void fan_PUT_handler(coap_message_t* request, coap_message_t* response,
        {
         // Adjust the FAN_LED blinking period to the new fan relative speed
         if(newFanRelSpeed == 0)
-         ctimer_stop(&fanLEDBlinkTimer);
+         {
+          ctimer_stop(&fanLEDBlinkTimer);
+          leds_single_off(FAN_LED);
+         }
         else
          ctimer_set(&fanLEDBlinkTimer, FAN_LED_BLINK_PERIOD_MAX - (unsigned char)newFanRelSpeed * FAN_LED_BLINK_PERIOD_UNIT, fanLEDBlink, NULL);
 

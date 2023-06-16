@@ -11,6 +11,7 @@ import java.util.ArrayList;
 /* --------------------------- SafeTunnels Resources --------------------------- */
 import logging.Log;
 import errors.ErrCodeSeverity;
+import modules.InputArgsParser.InputArgsParser;
 import modules.MySQLConnector.DevMACIDPair;
 import static devices.BaseDevice.DevType.sensor;
 import CloudModule.CloudMySQLConnector.CloudMySQLConnector;
@@ -71,5 +72,12 @@ final class CloudModule
    * Cloud Module application entry point
    */
   public static void main(String[] args)
-   { new CloudModule(); }
+   {
+    // Parse the possible command-line input arguments
+    InputArgsParser.parseCMDInputArgs("CloudModule",args);
+
+    // If the command-line input arguments
+    // are valid, start the Cloud Module
+    new CloudModule();
+   }
  }

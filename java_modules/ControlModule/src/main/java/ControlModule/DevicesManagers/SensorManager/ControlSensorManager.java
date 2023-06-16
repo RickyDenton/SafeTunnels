@@ -43,14 +43,15 @@ public class ControlSensorManager extends BaseSensor
   private JLabel connStateLED;
   private JLabel C02Label;
   private JLabel tempLabel;
-
+  private JLabel C02Icon;
+  private JLabel tempIcon;
 
 
 
   // Binds this sensor to a sensor widget in the GUI
-  public void bindToGUI(JLabel connStateLED, JLabel C02Label, JLabel tempLabel)
+  public void bindToGUI(JLabel connStateLED, JLabel C02Label, JLabel tempLabel, JLabel C02Icon, JLabel tempIcon)
    {
-    if(connStateLED == null || C02Label == null || tempLabel == null)
+    if(connStateLED == null || C02Label == null || tempLabel == null || C02Icon == null || tempIcon == null)
      {
       Log.err("Attempting to bind sensor" + ID + "to null elements in the GUI");
       return;
@@ -60,6 +61,8 @@ public class ControlSensorManager extends BaseSensor
     this.connStateLED = connStateLED;
     this.C02Label = C02Label;
     this.tempLabel = tempLabel;
+    this.C02Icon = C02Icon;
+    this.tempIcon = tempIcon;
 
     // Set that the sensor is now bound to a sensor widget in the GUI
     GUIBound = true;
@@ -159,9 +162,11 @@ public class ControlSensorManager extends BaseSensor
       // Update the connection state LED icon
       connStateLED.setIcon(ControlModule.connStateLEDOFFImg);
 
-      // Disable the C02 and temp labels
+      // Deactivate the sensor widget icons
       C02Label.setEnabled(false);
       tempLabel.setEnabled(false);
+      C02Icon.setEnabled(false);
+      tempIcon.setEnabled(false);
      }
    }
 
@@ -181,9 +186,11 @@ public class ControlSensorManager extends BaseSensor
       // Update the connection state LED icon
       connStateLED.setIcon(ControlModule.connStateLEDONImg);
 
-      // Activate the C02 and temp labels
+      // Activate the sensor widget icons
       C02Label.setEnabled(true);
       tempLabel.setEnabled(true);
+      C02Icon.setEnabled(true);
+      tempIcon.setEnabled(true);
      }
    }
 

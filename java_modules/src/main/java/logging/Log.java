@@ -18,7 +18,7 @@ public abstract class Log
   /* ========================== CONFIGURATION PARAMETERS ========================== */
 
   // The minimum LOG_LEVEL to be logged
-  public static final ErrCodeSeverity LOG_LEVEL = ErrCodeSeverity.DEBUG;
+  public static ErrCodeSeverity LOG_LEVEL = ErrCodeSeverity.DEBUG;
 
   // Whether FATAL errors should terminate the applications
   public static final boolean EXIT_IF_FATAL = true;

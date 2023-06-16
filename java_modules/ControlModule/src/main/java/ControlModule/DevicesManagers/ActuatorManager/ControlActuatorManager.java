@@ -12,6 +12,7 @@ import org.eclipse.californium.core.CoapClient;
 
 import javax.swing.*;
 import java.util.Timer;
+import java.util.TimerTask;
 
 import static ControlModule.OpState.*;
 import static devices.actuator.BaseActuator.ActuatorQuantity.FANRELSPEED;
@@ -24,8 +25,9 @@ public class ControlActuatorManager extends BaseActuator
   private final static int actuatorWatcherTimerInitDelay = 3 * 1000;  // milliseconds
 
   // MUST BE > COAP CLIENT TIMEOUTS
-  private final static int actuatorWatcherTimerPeriod = 10 * 1000;    // milliseconds
+  private static final int actuatorWatcherTimerPeriod = 10 * 1000;    // milliseconds
   private static final int fanIconSpinTimerBasePeriod = 130;          // milliseconds
+  private static final int autoAdjustOnConnTimerDelay = 200;          // milliseconds
 
   // Actuator quantities
   private short fanRelSpeed;
@@ -68,8 +70,9 @@ public class ControlActuatorManager extends BaseActuator
                         JButton lightStateButtonOFF, JButton lightStateButtonWARNING,
                         JButton lightStateButtonALERT, JButton lightStateButtonEMERGENCY)
    {
-    if(connStateLEDIcon == null || fanRelSpeedLabel == null || lightStateLabel == null ||
-      fanIcon == null || lightIcon == null || fanRelSpeedSlider == null)
+    if(connStateLEDIcon == null || fanRelSpeedLabel == null || lightStateLabel == null || fanIcon == null ||
+       lightIcon == null || fanRelSpeedSlider == null || lightStateButtonOFF == null ||
+       lightStateButtonWARNING == null || lightStateButtonALERT == null || lightStateButtonEMERGENCY == null)
      {
       Log.err("Attempting to bind actuator" + ID + "to null elements in the GUI");
       return;
@@ -118,9 +121,9 @@ public class ControlActuatorManager extends BaseActuator
     // Mimic the Contiki-NG uip algorithm for generating 64-bit
     // interface IDs from the nodes' MAC addresses by XOR-ing
     // the first MAC address byte with the constant '0x02'
-    byte secByte = (byte)Integer.parseInt(IID.substring(0,2));
+    byte secByte = (byte)Integer.parseInt(IID.substring(0,2),16);
     secByte = (byte)(secByte ^ 0x02);
-    IID.replace(0,2,String.format("%02d", (int)secByte));
+    IID.replace(0,2,String.format("%02x", secByte));
 
     // Build the actuator's IPv6 interface ID by
     // adding a colon every 4 hexadecimal characters
@@ -220,6 +223,22 @@ public class ControlActuatorManager extends BaseActuator
       lightStateButtonALERT.setEnabled(true);
       lightStateButtonEMERGENCY.setEnabled(true);
      }
+
+    // Start a timer which, after a short delay, checks whether
+    // the automatic fan adjustment is enabled and, if it is,
+    // sends the commands to adjust the fan's quantities
+    Timer autoAdjustOnConnTimer = new Timer();
+    autoAdjustOnConnTimer.schedule(new TimerTask()
+     {
+      public void run()
+       {
+        if(controlModule.autoMode && connState)
+         {
+          sendFanRelSpeed(controlModule.systemOpState.getAutoFanRelSpeed());
+          sendLightState(controlModule.systemOpState.getAutoLightState());
+         }
+       }
+     },autoAdjustOnConnTimerDelay);
    }
 
 

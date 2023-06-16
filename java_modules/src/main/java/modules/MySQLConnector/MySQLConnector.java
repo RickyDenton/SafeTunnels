@@ -17,7 +17,10 @@ public abstract class MySQLConnector
 
   /* ------------------------------- Connection Parameters ------------------------------- */
   protected final static String ST_DB_HOST = "jdbc:mysql://localhost:3306/";
-  protected final static String ST_DB_NAME = "SafeTunnelsCoojaDB";
+
+  public static String ST_DB_NAME = "SafeTunnelsPhyDB";
+  // public static String ST_DB_NAME = = "SafeTunnelsCoojaDB";
+
   protected final static String ST_DB_ENDPOINT = ST_DB_HOST + ST_DB_NAME;
   protected final static String ST_DB_USER = "root";
   protected final static String ST_DB_PWD = "iot2023";

@@ -41,8 +41,67 @@ void simulateNewFanRelSpeed();
 // the actuator obtains external connectivity
 static struct etimer connCheckTimer;
 
+// Timer used to briefly blink the LIGHT_LED/Power LED at power on
+static struct ctimer powerONLightLEDTimer;
+
+// Timer used to briefly blink the FAN_LED/Conn
+// LED when the actuator has external connectivity
+static struct ctimer connFanLEDTimer;
+
 
 /* =========================== FUNCTIONS DEFINITIONS =========================== */
+
+/**
+ * @brief Blinks the actuator's LIGHT_LED (green) at power
+ *        on (powerONLightLEDTimer callback function)
+ */
+void blinkPowerOnLightLED(__attribute__((unused)) void* ptr)
+ {
+  // The remaining times the LIGHT_LED/Power LED must be toggled
+  static unsigned char powerOnLightLEDToggleTimes = LEDS_NOTIFY_TOGGLE_TIMES;
+
+  // Toggle the LIGHT_LED/Power LED
+  leds_single_toggle(LIGHT_LED);
+
+  // If the LIGHT_LED/Power LED must be further toggled, reset the powerONLightLEDTimer
+  if(powerOnLightLEDToggleTimes-- > 0)
+   ctimer_reset(&powerONLightLEDTimer);
+
+  // Otherwise, if the LIGHT_LED/Power LED has finished blinking,
+  // turn it off and restore the toggle times to their original value
+  else
+   {
+    leds_single_off(LIGHT_LED);
+    powerOnLightLEDToggleTimes = LEDS_NOTIFY_TOGGLE_TIMES;
+   }
+ }
+
+
+/**
+ * @brief Blinks the actuator's FAN_LED (yellow/blue) when the actuator
+ *        has external connectivity (connFanLEDTimer callback function)
+ */
+void blinkConnFanLED(__attribute__((unused)) void* ptr)
+ {
+  // The remaining times the FAN_LED/Conn LED must be toggled
+  static unsigned char connFanLEDToggleTimes = LEDS_NOTIFY_TOGGLE_TIMES;
+
+  // Toggle the FAN_LED/Conn LED
+  leds_single_toggle(FAN_LED);
+
+  // If the FAN_LED/Conn LED must be further toggled, reset the connFanLEDTimer
+  if(connFanLEDToggleTimes-- > 0)
+   ctimer_reset(&connFanLEDTimer);
+
+  // Otherwise, if the FAN_LED/Conn LED has finished blinking,
+  // turn it off and restore the toggle times to their original value
+  else
+   {
+    leds_single_off(FAN_LED);
+    connFanLEDToggleTimes = LEDS_NOTIFY_TOGGLE_TIMES;
+   }
+ }
+
 
 /**
  * @brief Checks and logs whether the actuator
@@ -66,10 +125,17 @@ void checkLogActuatorOnline()
     etimer_reset(&connCheckTimer);
    }
 
-  // Otherwise, if the actuator is now online, log the event
-  // without reinitializing the connectivity check timer
+  // Otherwise, if the actuator is now online,
   else
-   LOG_INFO("The actuator is now online and ready to serve CoAP requests\n");
+   {
+    // Briefly blink the FAN_LED/Conn LED
+    ctimer_set(&connFanLEDTimer, LEDS_NOTIFY_BLINK_TOGGLE_PERIOD, blinkConnFanLED, NULL);
+
+    // Log that the actuator is now online
+    LOG_INFO("The actuator is now online and ready to serve CoAP requests\n");
+
+    /* The Connectivity check timer is NOT reinitialized here */
+   }
  }
 
 
@@ -85,6 +151,9 @@ PROCESS_THREAD(safetunnels_actuator_process, ev, data)
 
   // Retrieve the node's MAC address
   getNodeMACAddr();
+
+  // Briefly blink the LIGHT_LED/Power LED at power on
+  ctimer_set(&powerONLightLEDTimer, LEDS_NOTIFY_BLINK_TOGGLE_PERIOD, blinkPowerOnLightLED, NULL);
 
   // Log that the actuator node has started and its MAC
   LOG_INFO("SafeTunnels actuator node started, MAC = %s\n", nodeMACAddr);

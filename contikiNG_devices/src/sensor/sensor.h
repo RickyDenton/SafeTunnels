@@ -7,6 +7,10 @@
 
 /* ---------------------- General Application Parameters ---------------------- */
 
+// Whether the application is deployed on physical
+// sensors or on Cooja motes (comment in the latter case)
+#define DEPLOY_PHY
+
 // Contiki-NG logging parameters
 #define LOG_MODULE "sensor"
 #define LOG_LEVEL  LOG_LEVEL_DBG
@@ -29,7 +33,11 @@
  *  - OFF -> Device OFF
  *  - ON  -> Device ON
  */
-#define POWER_LED LEDS_GREEN
+#ifdef DEPLOY_PHY
+ #define POWER_LED LEDS_YELLOW  // This is the second green LED in nRF52840 dongles
+#else
+ #define POWER_LED LEDS_GREEN   // This is green in Cooja motes
+#endif
 
 /*
  * MQTT communication LED
@@ -38,7 +46,12 @@
  *  - ON       -> The MQTT client IS subscribed to a topic on the MQTT broker
  *  - BLINKING -> The MQTT client has published a message to the broker
  */
-#define MQTT_COMM_LED LEDS_YELLOW
+#ifdef DEPLOY_PHY
+ #define MQTT_COMM_LED LEDS_LED4  // This is the first blue LED in nRF52840 dongles
+#else
+ #define MQTT_COMM_LED LEDS_YELLOW  // This is yellow in Cooja motes
+#endif
+
 
 // The period and how many times the MQTT_COMM_LED is
 // toggled upon publishing a MQTT message so as to blink it

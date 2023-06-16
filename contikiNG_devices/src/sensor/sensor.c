@@ -695,7 +695,7 @@ unsigned int genNewQuantityValue(unsigned int quantityCurrValue,  unsigned char*
 
   // The (absolute) difference between the quantity
   // operating environment equilibrium and current point
-  unsigned char diffFromEqPoint;
+  unsigned char diffFromEqPoint = 0;
 
   // Randomly update the quantity's road equilibrium point
   genNewQuantityRoadEqPoint(quantityRoadEqPoint);

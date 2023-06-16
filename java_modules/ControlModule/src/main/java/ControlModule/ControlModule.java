@@ -8,17 +8,14 @@ import ControlModule.GUILogging.ANSIColorPaneOutputStream;
 import devices.actuator.BaseActuator.LightState;
 import errors.ErrCodeSeverity;
 import logging.Log;
+import modules.InputArgsParser.InputArgsParser;
 import modules.MySQLConnector.DevMACIDPair;
 import modules.SensorsMQTTHandler.SensorsMQTTHandler;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -106,11 +103,15 @@ public class ControlModule extends JFrame
   private JLabel sensor1ConnStateLEDIcon;
   private JLabel sensor1C02DensityValue;
   private JLabel sensor1TempValue;
+  private JLabel sensor1C02Icon;
+  private JLabel sensor1TempIcon;
 
   // Sensor2 Widget
   private JLabel sensor2ConnStateLEDIcon;
   private JLabel sensor2C02DensityValue;
   private JLabel sensor2TempValue;
+  private JLabel sensor2C02Icon;
+  private JLabel sensor2TempIcon;
 
   // Actuator1 Widget
   private JLabel actuator1ConnStateLEDIcon;
@@ -136,8 +137,9 @@ public class ControlModule extends JFrame
   private JLabel actuator2FanIcon;
   private JLabel actuator2LightIcon;
 
-  boolean autoMode;
-  OpState systemOpState;
+
+  public boolean autoMode;
+  public OpState systemOpState;
 
   // The system's average fan relative speed (also known by sensors)
   private int avgFanRelSpeed;
@@ -238,9 +240,9 @@ public class ControlModule extends JFrame
     Collections.sort(ctrlSensorManagersList);
 
     // Bind the sensors with sensorID 1 and 2 to the GUI
-    ctrlSensorManagersList.get(0).bindToGUI(sensor1ConnStateLEDIcon,sensor1C02DensityValue,sensor1TempValue);
+    ctrlSensorManagersList.get(0).bindToGUI(sensor1ConnStateLEDIcon,sensor1C02DensityValue,sensor1TempValue,sensor1C02Icon,sensor1TempIcon);
     if(ctrlSensorManagersList.size()>1)
-     ctrlSensorManagersList.get(1).bindToGUI(sensor2ConnStateLEDIcon,sensor2C02DensityValue,sensor2TempValue);
+     ctrlSensorManagersList.get(1).bindToGUI(sensor2ConnStateLEDIcon,sensor2C02DensityValue,sensor2TempValue,sensor2C02Icon,sensor2TempIcon);
    }
 
 
@@ -552,6 +554,12 @@ public class ControlModule extends JFrame
    * Control Module application entry point
    */
   public static void main(String[] args)
-   { new ControlModule(); }
+   {
+    // Parse the possible command-line input arguments
+    InputArgsParser.parseCMDInputArgs("ControlModule",args);
 
+    // If the command-line input arguments
+    // are valid, start the Control Module
+    new ControlModule();
+   }
  }

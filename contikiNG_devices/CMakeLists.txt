@@ -36,4 +36,4 @@ add_executable(SafeTunnels
         src/border-router/border-router.c
         src/border-router/project-conf.h
         src/sensor/project-conf.h
-        src/sensor/sensor.c src/sensor/sensor.h src/common/devUtilities.c src/common/devUtilities.h src/actuator/actuator.c src/actuator/actuator.h src/actuator/actuator.h src/actuator/actuator.c src/actuator/actuator.c src/actuator/project-conf.h src/actuator/resources/light.c src/actuator/resources/fan.c src/actuator/resources/actuatorErrors.c src/actuator/resources/actuatorErrors.h)
+        src/sensor/sensor.c src/sensor/sensor.h src/common/devUtilities.c src/common/devUtilities.h src/actuator/actuator.c src/actuator/actuator.h src/actuator/actuator.h src/actuator/actuator.c src/actuator/actuator.c src/actuator/project-conf.h src/actuator/resources/light.c src/actuator/resources/fan.c src/actuator/resources/actuatorErrors.c src/actuator/resources/actuatorErrors.h src/utils/getPhyMACAndIP/getPhyMACAndIP.c)
