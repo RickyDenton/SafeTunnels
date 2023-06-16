@@ -11,6 +11,7 @@ package ControlModule;
 /* ================================== IMPORTS ================================== */
 
 /* --------------------- Java Standard Libraries Resources --------------------- */
+
 import devices.actuator.BaseActuator.LightState;
 
 import java.awt.*;
@@ -61,7 +62,7 @@ public enum OpState
 
   /* ========= Operating State <--> Automatic Mode LightState Mapping ========= */
 
-  private static final EnumMap<OpState,LightState> opStatesAutoLightStateMap = new EnumMap<>(Map.ofEntries
+  private static final EnumMap<OpState, LightState> opStatesAutoLightStateMap = new EnumMap<>(Map.ofEntries
     (
       Map.entry(NOMINAL,LIGHT_OFF),
       Map.entry(WARNING,LIGHT_ON),

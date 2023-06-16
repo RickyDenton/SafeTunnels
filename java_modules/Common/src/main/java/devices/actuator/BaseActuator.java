@@ -7,8 +7,6 @@ package devices.actuator;
 /* --------------------------- SafeTunnels Packages --------------------------- */
 import devices.BaseDevice;
 
-import javax.swing.*;
-
 import static devices.BaseDevice.DevType.actuator;
 
 

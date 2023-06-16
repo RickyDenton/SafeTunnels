@@ -203,7 +203,7 @@ public abstract class Log
     Log.fatal("This is a fatal message");
     Log.dbg("This should not be printed with EXIT_IF_FATAL == true");
 
-    Log.code(ERR_LIGHT_PUT_NO_LIGHTSTATE,1);
+    code(ERR_LIGHT_PUT_NO_LIGHTSTATE,1);
     Log.code(ERR_SENSOR_MQTT_RECV_NOT_SUB_TOPIC,2,"(<additional description>)");
 
     try

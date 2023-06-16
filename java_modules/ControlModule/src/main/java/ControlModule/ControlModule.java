@@ -306,9 +306,6 @@ public class ControlModule extends JFrame
 
   private ControlModule()
    {
-    // TODO: BIG TRY: HARDWARE ACCELERATION
-    System.setProperty("sun.java2d.opengl", "true");
-
     // Initialize the system's attributes
     autoMode = true;
     systemOpState = OpState.NOMINAL;

@@ -41,7 +41,8 @@ public abstract class InputArgsParser
          {
           // Override the MySQLConnector database name with the provided value
           MySQLConnector.ST_DB_NAME = args[i + 1];
-          Log.info("Target database set to \"" + args[i + 1] + "\"");
+          MySQLConnector.ST_DB_ENDPOINT = MySQLConnector.ST_DB_HOST + MySQLConnector.ST_DB_NAME;
+          Log.info("Target database set to \"" + MySQLConnector.ST_DB_NAME + "\"");
 
           // Move one (and so two) values ahead the input argument index
           i++;

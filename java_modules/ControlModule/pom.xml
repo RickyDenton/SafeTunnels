@@ -26,9 +26,27 @@
         </dependency>
         <dependency>
             <groupId>iot.RiccardoBertini</groupId>
-            <artifactId>java_modules</artifactId>
+            <artifactId>Common</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <outputDirectory>JAR</outputDirectory>
+                    <archive>
+                        <manifest>
+                            <mainClass>ControlModule.ControlModule</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

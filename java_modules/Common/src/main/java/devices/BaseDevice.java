@@ -1,7 +1,5 @@
 package devices;
 
-import modules.MySQLConnector.DevMACIDPair;
-
 
 public abstract class BaseDevice implements Comparable<BaseDevice>
  {
