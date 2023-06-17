@@ -555,6 +555,9 @@ public class ControlModule extends JFrame
     // Parse the possible command-line input arguments
     InputArgsParser.parseCMDInputArgs("ControlModule",args);
 
+    // Attempt to exploit hardware acceleration, if possible
+    System.setProperty("sun.java2d.opengl", "true");
+
     // If the command-line input arguments
     // are valid, start the Control Module
     new ControlModule();

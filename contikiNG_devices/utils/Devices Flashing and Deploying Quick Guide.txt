@@ -1,0 +1,45 @@
+Device Flashing (nordic nrf52840)
+===============
+
+1) Physically disconnect every device.
+
+2) Plug in the device to be flashed and wait for it to be recognized by Windows.
+
+3) Connect the device to the VM via the "devices" drop-down menu (nordic nrf52840 ...).
+
+4) Start the docker in a terminal (in my case, docker start -ai fda9be9d29b8).
+
+5) Navigate to the directory containing the firmware to be flashed (e.g. "actuator" or "sensor").
+
+6) Run the following command:
+
+   make TARGET=nrf52840 BOARD=dongle [C_SOURCE_FILE_NAME].dfu-upload PORT=/dev/ttyACM0     (e.g. actuator.dfu-upload or sensor.dfu-upload)
+
+   The flashing process will begin, but, because of Windows shenanigans in recognizing a new device, it will be disconnected from the VM, causing it to be stuck in flash mode (blinking red light).
+
+7) Reconnect the device to the VM via the "devices" drop-down menu (nordic nrf52840 ...).
+
+8) Re-run the command at point 6), which now will successfully flash the device (after which it must be reconnected again to the VM as 7), if needed)
+
+
+
+System Deployment (nordic nrf52840)
+=================
+
+1) Physically disconnect every device.
+
+2) Plug in the border-router device and wait for it to be recognized by Windows.
+
+3) Connect the border-router to the VM via the "devices" drop-down menu (nordic nrf52840 ...).
+
+4) Start the docker in a terminal (in my case, docker start -ai fda9be9d29b8).
+
+5) Navigate to the directory containing the border-router firmware to be flashed (in my case, /home/osboxes/contiki-ng/SafeTunnels/contikiNG_devices/src/border-router)
+
+6) Run the command
+
+   make TARGET=nrf52840 BOARD=dongle PORT=/dev/ttyACM0 connect-router
+
+   Which will ask for the superuser's password and, if successful, will print the border router's global prefix and unicast IPv6 address (in my case, fd00::f6ce:36b3:3f0b:0956)
+
+7) Connect the other devices to a nearby USB port, they do not need to be connected to the VM.
