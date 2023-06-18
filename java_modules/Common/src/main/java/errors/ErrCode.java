@@ -1,4 +1,5 @@
 /* SafeTunnels Error Code Interface */
+
 package errors;
 
 /* =========================== INTERFACE DEFINITION =========================== */

@@ -1,28 +1,28 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>iot.RiccardoBertini</groupId>
-        <artifactId>java_modules</artifactId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
+ <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>Common</artifactId>
-    <packaging>jar</packaging>
+ <!-- SafeTunnels Common Library Module -->
 
-    <name>Common</name>
-    <url>http://maven.apache.org</url>
+ <!-- Parent Module Coordinates -->
+ <parent>
+  <groupId>iot.RiccardoBertini</groupId>
+  <artifactId>java_modules</artifactId>
+  <version>1.0-SNAPSHOT</version>
+ </parent>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+ <!-- Module ArtifactID -->
+ <artifactId>Common</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+ <!-- Module Packaging -->
+ <packaging>jar</packaging>
+
+ <!-- Module Name -->
+ <name>Common</name>
+ <url>http://maven.apache.org</url>
+
+ <!-- Module Properties -->
+ <properties>
+  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+ </properties>
 </project>

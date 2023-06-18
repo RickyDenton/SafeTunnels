@@ -1,0 +1,18 @@
+Start the Container
+===================
+docker start -ai fda9be9d29b8
+
+
+Clear Mosquitto "Last Will" Messages Cache
+==========================================
+sudo systemctl stop mosquitto.service
+sudo rm /var/lib/mosquitto/mosquitto.db
+sudo systemctl start mosquitto.service
+
+
+Maven Package Without Building
+==============================
+ - To be executed in the parent module directory (.../java_modules)
+ - Required because Maven does not compile the Intellij Control Module's GUI form, causing a runtime NullPointerException
+
+mvn package -Dmaven.main.skip

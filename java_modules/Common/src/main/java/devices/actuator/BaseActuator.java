@@ -4,20 +4,15 @@ package devices.actuator;
 
 /* ================================== IMPORTS ================================== */
 
-/* --------------------------- SafeTunnels Packages --------------------------- */
+/* --------------------------- SafeTunnels Resources --------------------------- */
 import devices.BaseDevice;
-
 import static devices.BaseDevice.DevType.actuator;
 
 
 /* ============================== CLASS DEFINITION ============================== */
 public abstract class BaseActuator extends BaseDevice
  {
-  /* ------------------- Actuators Resources Relative Paths ------------------- */
-  protected static final String actuatorFanRelSpeedResRelPath = "fan";
-  protected static final String actuatorLightStateResRelPath = "light";
-  protected static final String actuatorErrorsResRelPath = "actuatorErrors";
-
+  /* ============================ ENUMS DEFINITIONS ============================ */
 
   /* --------------------------- Actuators Quantities --------------------------- */
   public enum ActuatorQuantity
@@ -28,7 +23,6 @@ public abstract class BaseActuator extends BaseDevice
     // Temperature (°C)
     LIGHTSTATE { @Override public String toString() { return "light state"; } },
    }
-
 
   /* -------------------------- Actuator Light States -------------------------- */
   public enum LightState
@@ -46,8 +40,19 @@ public abstract class BaseActuator extends BaseDevice
     LIGHT_BLINK_EMERGENCY,
 
     // Invalid light state used for validating a received new light state
-    LIGHT_STATE_INVALID
+    LIGHT_STATE_INVALID;
+
+    // LightState Values Lookup Array
+    public static final LightState[] values = LightState.values();
    }
+
+
+  /* ================================ ATTRIBUTES ================================ */
+
+  // Actuators Resources Relative Paths
+  protected static final String actuatorFanRelSpeedResRelPath = "fan";
+  protected static final String actuatorLightStateResRelPath = "light";
+  protected static final String actuatorErrorsResRelPath = "actuatorErrors";
 
 
   /* ============================= PUBLIC METHODS ============================= */
@@ -67,7 +72,17 @@ public abstract class BaseActuator extends BaseDevice
   public DevType getDevType()
    { return actuator; }
 
+
+  /**
+   * Sets the actuator's fan relative speed
+   * @param newFanRelSpeed The fan relative speed to be set [0-100]
+   */
   public abstract void setFanRelSpeed(int newFanRelSpeed);
 
+
+  /**
+   * Sets the actuator's light state
+   * @param newLightState The light state to be set
+   */
   public abstract void setLightState(LightState newLightState);
  }

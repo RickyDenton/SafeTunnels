@@ -4,15 +4,14 @@ package devices.actuator;
 
 /* ================================== IMPORTS ================================== */
 
-/* -------------------------- Java Standard Libraries -------------------------- */
-
-import devices.BaseDevice.DevType;
-import devices.DevErrCode;
-import errors.ErrCodeInfo;
-
+/* --------------------- Java Standard Libraries Resources --------------------- */
 import java.util.EnumMap;
 import java.util.Map;
 
+/* --------------------------- SafeTunnels Resources --------------------------- */
+import devices.BaseDevice.DevType;
+import devices.DevErrCode;
+import errors.ErrCodeInfo;
 import static devices.BaseDevice.DevType.actuator;
 import static errors.ErrCodeSeverity.WARNING;
 
@@ -43,6 +42,7 @@ public enum BaseActuatorErrCode implements DevErrCode
 
 
   /* ================== BaseSensorErrCode Values Lookup Array ================== */
+
   public static final BaseActuatorErrCode[] values = BaseActuatorErrCode.values();
 
 

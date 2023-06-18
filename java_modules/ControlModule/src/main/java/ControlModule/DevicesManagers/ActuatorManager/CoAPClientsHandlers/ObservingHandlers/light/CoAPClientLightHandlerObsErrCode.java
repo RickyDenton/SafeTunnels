@@ -1,4 +1,4 @@
-/* SafeTunnels Control Module Actuator CoAP Client Light Handler Errors Definitions */
+/* "Light" CoAP Client Observe Handler Errors Definitions */
 
 package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.ObservingHandlers.light;
 
@@ -19,6 +19,8 @@ public enum CoAPClientLightHandlerObsErrCode implements ModuleErrCode
  {
   /* ====================== Enumeration Values Definition ====================== */
 
+  /* ------------------- Received CoAP Response Parsing Errors ----------------- */
+
   // A received CoAP client light state response
   // could not be interpreted in JSON format
   ERR_COAP_CLI_LIGHT_RESP_NOT_JSON,
@@ -36,10 +38,11 @@ public enum CoAPClientLightHandlerObsErrCode implements ModuleErrCode
   ERR_COAP_CLI_LIGHT_LIGHTSTATE_UNKNOWN;
 
 
-  /* ================== CoAPClientLightHandler ErrCodeInfo Map ================== */
+  /* ================ CoAPClientLightObsHandler ErrCodeInfo Map ================ */
 
   private static final EnumMap<CoAPClientLightHandlerObsErrCode,ErrCodeInfo> CoAPClientLightHandlerErrCodeInfoMap = new EnumMap<>(Map.ofEntries
    (
+    /* ------------------- Received CoAP Response Parsing Errors ----------------- */
     Map.entry(ERR_COAP_CLI_LIGHT_RESP_NOT_JSON,new ErrCodeInfo(ERROR,"A received CoAP client light state response could not be interpreted in JSON format")),
     Map.entry(ERR_COAP_CLI_LIGHT_LIGHTSTATE_MISSING,new ErrCodeInfo(ERROR,"A received CoAP client light state response does not contain the \"lightState\" attribute")),
     Map.entry(ERR_COAP_CLI_LIGHT_LIGHTSTATE_NOT_INT,new ErrCodeInfo(ERROR,"The \"lightState\" attribute in a received CoAP client light state response could not be interpreted as an integer")),
@@ -59,5 +62,5 @@ public enum CoAPClientLightHandlerObsErrCode implements ModuleErrCode
    * @return The ModuleErrCode's name
    */
   public String getModuleName()
-   { return "CoAPClientLightHandler"; }
+   { return "CoAPClientLightObsHandler"; }
  }

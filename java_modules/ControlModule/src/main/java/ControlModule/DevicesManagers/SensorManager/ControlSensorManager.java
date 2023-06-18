@@ -1,17 +1,25 @@
+/* A sensor managed by the Control Module */
+
 package ControlModule.DevicesManagers.SensorManager;
 
+/* ================================== IMPORTS ================================== */
+
+/* --------------------- Java Standard Libraries Resources --------------------- */
+import javax.swing.*;
+import static java.lang.Math.max;
+
+/* --------------------------- SafeTunnels Resources --------------------------- */
+import logging.Log;
 import ControlModule.ControlModule;
 import ControlModule.OpState;
 import devices.sensor.BaseSensor;
-import logging.Log;
-
-import javax.swing.*;
-
-import static java.lang.Math.max;
 
 
-public class ControlSensorManager extends BaseSensor
+/* ============================== CLASS DEFINITION ============================== */
+public final class ControlSensorManager extends BaseSensor
  {
+  /* ============== SENSOR QUANTITIES OPERATING STATES THRESHOLDS ============== */
+
   // C02 Thresholds
   private static final int C02ThresholdWARNING = 2000;
   private static final int C02ThresholdALERT = 5000;
@@ -21,6 +29,10 @@ public class ControlSensorManager extends BaseSensor
   private static final int tempThresholdWARNING = 35;
   private static final int tempThresholdALERT = 40;
   private static final int tempThresholdEMERGENCY = 45;
+
+  /* ============================ PRIVATE ATTRIBUTES ============================ */
+
+  /* -------------- Sensor Quantities Operating States Thresholds -------------- */
 
   // Sensor quantities
   private int C02;
@@ -33,63 +45,29 @@ public class ControlSensorManager extends BaseSensor
   // Sensor overall operating state
   private OpState sensorOpState;
 
-  // Controller Module reference
+  // Control Module reference
   private final ControlModule controlModule;
+
+  /* ----------------------- GUI Sensor Widget Management ----------------------- */
 
   // Whether the sensor is bound to a sensor widget in the GUI
   private boolean GUIBound;
 
   // The GUI's JLabels associated with the sensor, if any
-  private JLabel connStateLED;
-  private JLabel C02Label;
-  private JLabel tempLabel;
-  private JLabel C02Icon;
-  private JLabel tempIcon;
+  private JLabel connStateLED;   // Connection state LED
+  private JLabel C02Label;       // C02 value
+  private JLabel tempLabel;      // Temperature value
+  private JLabel C02Icon;        // C02 icon
+  private JLabel tempIcon;       // Temperature icon
 
 
+  /* ============================== PRIVATE METHODS ============================== */
 
-  // Binds this sensor to a sensor widget in the GUI
-  public void bindToGUI(JLabel connStateLED, JLabel C02Label, JLabel tempLabel, JLabel C02Icon, JLabel tempIcon)
-   {
-    if(connStateLED == null || C02Label == null || tempLabel == null || C02Icon == null || tempIcon == null)
-     {
-      Log.err("Attempting to bind sensor" + ID + "to null elements in the GUI");
-      return;
-     }
-
-    // Assign the GUI's JLabels associated with the sensor
-    this.connStateLED = connStateLED;
-    this.C02Label = C02Label;
-    this.tempLabel = tempLabel;
-    this.C02Icon = C02Icon;
-    this.tempIcon = tempIcon;
-
-    // Set that the sensor is now bound to a sensor widget in the GUI
-    GUIBound = true;
-   }
-
-
-  public ControlSensorManager(String MAC, short ID, ControlModule controlModule)
-   {
-    // Call the parent's constructor, initializing the sensor's connState to false
-    super(MAC,ID);
-
-    // Initialize the other ControlSensorManager's attributes
-    this.controlModule = controlModule;
-    temp = -1;
-    C02 = -1;
-    GUIBound = false;
-    connStateLED = null;
-    C02Label = null;
-    tempLabel = null;
-    C02OpState = OpState.NOMINAL;
-    tempOpState = OpState.NOMINAL;
-    sensorOpState = OpState.NOMINAL;
-   }
-
-
-
-  // Possibly update the sensor's and the system's operating states
+  /**
+   *  Updates the sensor's operating state based on its C02 and
+   *  temperature values and, if it has changed, notifies the
+   *  Control Module to possibly update the overall system's state
+   */
   private void updateSensorOperatingState()
    {
     // Save the current sensor operating state
@@ -99,14 +77,17 @@ public class ControlSensorManager extends BaseSensor
     // between its C02 and temperature operating states
     sensorOpState = OpState.values()[max(C02OpState.ordinal(),tempOpState.ordinal())];
 
-    // If the sensor operating state has changed,
-    // possibly update the system's operating state
+    // If the sensor operating state has changed, notify the control
+    // module to possibly update the overall system's operating state
     if(sensorOpState != oldOpState)
      controlModule.updateSystemOpState(sensorOpState);
    }
 
 
-  // Possibly updates the C02 and the sensor's operating states
+  /**
+   * Depending on its current value, updates the sensor's C02 and possibly
+   * in cascade the sensor and the overall system's operating state
+   */
   private void updateC02OperatingState()
    {
     if(C02 < C02ThresholdWARNING)
@@ -120,11 +101,15 @@ public class ControlSensorManager extends BaseSensor
       else
        C02OpState = OpState.EMERGENCY;
 
-    // Possibly update the sensor's operating state
+    // Possibly update in cascade the sensor
+    // and the system's overall operating state
     updateSensorOperatingState();
    }
 
-  // Possibly updates the temperature and the sensor's operating states
+  /**
+   * Depending on its current value, updates the sensor's temperature and
+   * possibly in cascade the sensor and the overall system's operating state
+   */
   private void updateTempOperatingState()
    {
     if(temp < tempThresholdWARNING)
@@ -138,15 +123,90 @@ public class ControlSensorManager extends BaseSensor
       else
        tempOpState = OpState.EMERGENCY;
 
-    // Possibly update the sensor's operating state
+    // Possibly update in cascade the sensor
+    // and the system's overall operating state
     updateSensorOperatingState();
    }
 
+
+  /* ============================= PUBLIC METHODS ============================= */
+
+  /**
+   * ControlSensorManager constructor, initializing its attributes
+   * @param MAC The sensor's (unique) MAC address
+   * @param ID  The sensor's unique ID in the SafeTunnels database
+   * @param controlModule A reference to the Control Module object
+   */
+  public ControlSensorManager(String MAC, short ID, ControlModule controlModule)
+   {
+    // Call the parent constructor, initializing
+    // the sensor's MAC, ID and connState to false
+    super(MAC,ID);
+
+    // Initialize the other ControlSensorManager
+    // attributes to their default values
+    this.controlModule = controlModule;
+    temp = -1;
+    C02 = -1;
+    GUIBound = false;
+    connStateLED = null;
+    C02Label = null;
+    tempLabel = null;
+    C02OpState = OpState.NOMINAL;
+    tempOpState = OpState.NOMINAL;
+    sensorOpState = OpState.NOMINAL;
+   }
+
+
+  /**
+   * @return The sensor's current operating state
+   */
   public OpState getSensorOperatingState()
    { return sensorOpState; }
 
 
+  /**
+   * Binds the sensor to a sensor widget in the Control Module's GUI
+   * @param connStateLED The sensor widget's connection state LEd
+   * @param C02Label     The sensor widget's C02 value
+   * @param tempLabel    The sensor widget's temperature value
+   * @param C02Icon      The sensor widget's C02 icon
+   * @param tempIcon     The sensor widget's temperature icon
+   */
+  public void bindToGUI(JLabel connStateLED, JLabel C02Label,
+                        JLabel tempLabel, JLabel C02Icon, JLabel tempIcon)
+   {
 
+    // Ensure all the passed sensor widget GUI components to
+    // be non-null, logging an error and returning otherwise
+    if(connStateLED == null || C02Label == null ||
+      tempLabel == null || C02Icon == null || tempIcon == null)
+     {
+      Log.err("Attempting to bind sensor" + ID
+              + "to null elements in the GUI");
+      return;
+     }
+
+    // Initialize the sensor widget's
+    // components to the provided values
+    this.connStateLED = connStateLED;
+    this.C02Label = C02Label;
+    this.tempLabel = tempLabel;
+    this.C02Icon = C02Icon;
+    this.tempIcon = tempIcon;
+
+    // Set that the sensor is now
+    // bound to a GUI sensor widget
+    GUIBound = true;
+   }
+
+
+  /* ----------------------------- Setters Methods ----------------------------- */
+
+  /**
+   * Marks the sensor as offline and disables
+   * its associated GUI sensor widget, if any
+   */
   @Override
   public void setConnStateOffline()
    {
@@ -156,13 +216,13 @@ public class ControlSensorManager extends BaseSensor
     // Log that the sensor appears to be offline
     Log.warn("sensor" + ID + " appears to be offline");
 
-    // If bound to a GUI sensor widget
+    // If the sensor is bound to a GUI sensor widget
     if(GUIBound)
      {
       // Update the connection state LED icon
       connStateLED.setIcon(ControlModule.connStateLEDOFFImg);
 
-      // Deactivate the sensor widget icons
+      // Disable the sensor widget labels and icons
       C02Label.setEnabled(false);
       tempLabel.setEnabled(false);
       C02Icon.setEnabled(false);
@@ -170,6 +230,11 @@ public class ControlSensorManager extends BaseSensor
      }
    }
 
+
+  /**
+   * Marks the sensor as online and enables
+   * its associated GUI sensor widget, if any
+   */
   @Override
   public void setConnStateOnline()
    {
@@ -179,14 +244,13 @@ public class ControlSensorManager extends BaseSensor
     // Log that the sensor is now online
     Log.info("sensor" + ID + " is now online");
 
-
-    // If bound to a GUI sensor widget
+    // If the sensor is bound to a GUI sensor widget
     if(GUIBound)
      {
       // Update the connection state LED icon
       connStateLED.setIcon(ControlModule.connStateLEDONImg);
 
-      // Activate the sensor widget icons
+      // Activate the sensor widget labels and icons
       C02Label.setEnabled(true);
       tempLabel.setEnabled(true);
       C02Icon.setEnabled(true);
@@ -194,6 +258,12 @@ public class ControlSensorManager extends BaseSensor
      }
    }
 
+
+  /**
+   * Sets a new C02 value for the sensor, also updating
+   * it in its associated GUI sensor widget, if any
+   * @param newC02 The sensor's new C02 value
+   */
   @Override
   public void setC02(int newC02)
    {
@@ -210,10 +280,12 @@ public class ControlSensorManager extends BaseSensor
       // Update the sensor's C02 value
       this.C02 = newC02;
 
-      // Possibly update the C02 and the sensor's overall operating states
+      // Possibly update the C02 and in cascade the
+      // sensor and the system's overall operating states
       updateC02OperatingState();
 
-      // If bound to a GUI widget, update its C02 value
+      // If the sensor is bound to a GUI widget, update its C02
+      // value, setting its color as of its current operating state
       if(GUIBound)
        {
         C02Label.setText(this.C02 + " ppm");
@@ -222,6 +294,12 @@ public class ControlSensorManager extends BaseSensor
      }
    }
 
+
+  /**
+   * Sets a new temperature value for the sensor, also
+   * updating it in its associated GUI sensor widget, if any
+   * @param newTemp The sensor's new temperature value
+   */
   @Override
   public void setTemp(int newTemp)
    {
@@ -238,10 +316,12 @@ public class ControlSensorManager extends BaseSensor
       // Update the sensor's temperature value
       temp = newTemp;
 
-      // Possibly update the temperature and the sensor's overall operating states
+      // Possibly update the temperature and in cascade the
+      // sensor and the system's overall operating states
       updateTempOperatingState();
 
-      // If bound to a GUI widget, update its temperature value
+      // If the sensor is bound to a GUI widget, update its temperature
+      // value, setting its color as of its current operating state
       if(GUIBound)
        {
         tempLabel.setText(temp + " °C");
@@ -249,5 +329,4 @@ public class ControlSensorManager extends BaseSensor
        }
      }
    }
-
  }

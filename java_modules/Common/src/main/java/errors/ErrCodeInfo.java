@@ -1,4 +1,7 @@
-/* SafeTunnels Error Info Class, used for specifying an ErrCode's severity level and human-readable description */
+/*
+ * SafeTunnels Error Info Class, used for specifying an
+ * ErrCode's severity level and human-readable description
+ */
 
 package errors;
 
@@ -12,6 +15,7 @@ public class ErrCodeInfo
 
   // The associated ErrCode's human-readable description
   final public String humanDscr;
+
 
   /* ============================= PUBLIC METHODS ============================= */
 

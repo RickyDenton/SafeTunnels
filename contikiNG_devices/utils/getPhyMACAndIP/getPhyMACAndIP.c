@@ -70,8 +70,6 @@ static struct mqtt_connection conn;
 char broker_address[CONFIG_IP_ADDR_STR_LEN];
 
 
-
-
 /* =========================== FUNCTIONS DEFINITIONS =========================== */
 
 /**

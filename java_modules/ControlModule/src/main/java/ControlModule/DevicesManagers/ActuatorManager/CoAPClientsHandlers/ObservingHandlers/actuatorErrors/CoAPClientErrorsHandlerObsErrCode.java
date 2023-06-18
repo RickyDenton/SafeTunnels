@@ -1,4 +1,4 @@
-/* SafeTunnels Control Module Actuator CoAP Client Errors Handler Errors Definitions */
+/* "Errors" CoAP Client Observe Handler Errors Definitions */
 
 package ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.ObservingHandlers.actuatorErrors;
 
@@ -18,6 +18,8 @@ import static errors.ErrCodeSeverity.ERROR;
 public enum CoAPClientErrorsHandlerObsErrCode implements ModuleErrCode
  {
   /* ====================== Enumeration Values Definition ====================== */
+
+  /* ---------------- Received CoAP Error Response Parsing Errors -------------- */
 
   // A received CoAP client error response
   // could not be interpreted in JSON format
@@ -48,10 +50,11 @@ public enum CoAPClientErrorsHandlerObsErrCode implements ModuleErrCode
   ERR_COAP_CLI_ERRORS_ERRDSCR_NOT_NONNULL_STRING;
 
 
-  /* ================= CoAPClientErrorsHandler ErrCodeInfo Map ================= */
+  /* ================ CoAPClientErrorsObsHandler ErrCodeInfo Map ================ */
 
   private static final EnumMap<CoAPClientErrorsHandlerObsErrCode,ErrCodeInfo> CoAPClientErrorsHandlerErrCodeInfoMap = new EnumMap<>(Map.ofEntries
    (
+     /* -------------- Received CoAP Error Response Parsing Errors ------------ */
     Map.entry(ERR_COAP_CLI_ERRORS_RESP_NOT_JSON,new ErrCodeInfo(ERROR,"A received CoAP client error response could not be interpreted in JSON format")),
     Map.entry(ERR_COAP_CLI_ERRORS_ERRCODE_MISSING,new ErrCodeInfo(ERROR,"A received CoAP client error response does not contain the \"errCode\" attribute")),
     Map.entry(ERR_COAP_CLI_ERRORS_ERRCODE_NOT_INT,new ErrCodeInfo(ERROR,"The \"errCode\" attribute in a received CoAP client error response could not be interpreted as an integer")),
@@ -74,5 +77,5 @@ public enum CoAPClientErrorsHandlerObsErrCode implements ModuleErrCode
    * @return The ModuleErrCode's name
    */
   public String getModuleName()
-   { return "CoAPClientErrorsHandler"; }
+   { return "CoAPClientErrorsObsHandler"; }
  }

@@ -11,13 +11,12 @@ package ControlModule;
 /* ================================== IMPORTS ================================== */
 
 /* --------------------- Java Standard Libraries Resources --------------------- */
-
-import devices.actuator.BaseActuator.LightState;
-
 import java.awt.*;
 import java.util.EnumMap;
 import java.util.Map;
 
+/* --------------------------- SafeTunnels Resources --------------------------- */
+import devices.actuator.BaseActuator.LightState;
 import static devices.actuator.BaseActuator.LightState.*;
 
 
@@ -40,7 +39,7 @@ public enum OpState
   // One or more of the component's parameters are beyond their emergency thresholds
   EMERGENCY;
 
-  /* =================== Operating State <--> Colors Mapping =================== */
+  /* =================== Operating State <--> Colors Mappings =================== */
 
   private static final EnumMap<OpState,Color> opStatesColorMap = new EnumMap<>(Map.ofEntries
    (
@@ -50,7 +49,15 @@ public enum OpState
     Map.entry(EMERGENCY,new Color(203,46,0))
    ));
 
-  /* ===== Operating State <--> Automatic Mode Fan Relative Speeds Mapping ===== */
+
+  /* ============== Fan Relative Speed Operating States Thresholds ============== */
+
+  private static final int FANRELSPEED_THRESHOLD_WARNING = 30;
+  private static final int FANRELSPEED_THRESHOLD_ALERT = 55;
+  private static final int FANRELSPEED_THRESHOLD_EMERGENCY = 80;
+
+
+  /* ===== Operating State <--> Automatic Mode Fan Relative Speeds Mappings ===== */
 
   private static final EnumMap<OpState,Integer> opStatesAutoFanRelSpeedMap = new EnumMap<>(Map.ofEntries
     (
@@ -60,7 +67,7 @@ public enum OpState
       Map.entry(EMERGENCY,100)
     ));
 
-  /* ========= Operating State <--> Automatic Mode LightState Mapping ========= */
+  /* ========= Operating State <--> Automatic Mode LightState Mappings ========= */
 
   private static final EnumMap<OpState, LightState> opStatesAutoLightStateMap = new EnumMap<>(Map.ofEntries
     (
@@ -70,15 +77,20 @@ public enum OpState
       Map.entry(EMERGENCY,LIGHT_BLINK_EMERGENCY)
     ));
 
+
   /* ========================== Enumeration Methods  ========================== */
 
+  /**
+   * @param fanRelSpeed A fan relative speed value
+   * @return The operating state color associated with such fan relative speed
+   */
   public static Color fanRelSpeedToOpStateColor(int fanRelSpeed)
    {
-    if(fanRelSpeed < 30)
+    if(fanRelSpeed < FANRELSPEED_THRESHOLD_WARNING)
      return opStatesColorMap.get(NOMINAL);
-    if(fanRelSpeed < 55)
+    if(fanRelSpeed < FANRELSPEED_THRESHOLD_ALERT)
      return opStatesColorMap.get(WARNING);
-    if(fanRelSpeed < 80)
+    if(fanRelSpeed < FANRELSPEED_THRESHOLD_EMERGENCY)
      return opStatesColorMap.get(ALERT);
     else
      return opStatesColorMap.get(EMERGENCY);
@@ -91,13 +103,15 @@ public enum OpState
    { return opStatesColorMap.get(this); }
 
   /**
-   * @return The automatic mode fan relative speed associated with the operating state
+   * @return The automatic mode fan relative speed
+   *         associated with the operating state
    */
   public Integer getAutoFanRelSpeed()
    { return opStatesAutoFanRelSpeedMap.get(this); }
 
   /**
-   * @return The automatic mode light state associated with the operating state
+   * @return The automatic mode light state
+   *         associated with the operating state
    */
   public LightState getAutoLightState()
    { return opStatesAutoLightStateMap.get(this); }

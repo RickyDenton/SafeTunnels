@@ -1,4 +1,4 @@
-/* A JTextPane used for printing formatted logging into the GUI Log window */
+/* A JTextPane used for printing formatted text in the Control Module GUI Log window */
 
 package ControlModule.GUILogging;
 
@@ -12,7 +12,7 @@ import java.awt.Color;
 /* ============================== CLASS DEFINITION ============================== */
 public class ANSIColorPane extends JTextPane
  {
-  /* -------------------------- GUI Log Window Colors -------------------------- */
+  /* ========================== GUI LOG WINDOW COLORS ========================== */
   static final Color GUI_COLOR_DBG = new Color(148,148,148);
   static final Color GUI_COLOR_INFO = new Color(51,133,254);
   static final Color GUI_COLOR_WARNING = new Color(242,108,3);
@@ -42,19 +42,19 @@ public class ANSIColorPane extends JTextPane
     replaceSelection(newStr);
    }
 
+
   /* ============================= PUBLIC METHODS ============================= */
 
   /**
    * Constructor, disabling the JTextPane editing functionalities
    * (which are temporarily reactivated by the
-   * ANSIColorPaneOutputStream write() method when needed)
+   *  ANSIColorPaneOutputStream write() method whenever needed)
    */
   public ANSIColorPane()
    { setEditable(false); }
 
 
   /**
-   *
    * @param ANSIColorID An ANSI color identifier
    * @return The "Color" object associated with the ANSI color identifier
    */
@@ -76,6 +76,7 @@ public class ANSIColorPane extends JTextPane
        return cReset;
      }
    }
+
 
   /**
    * Appends an ANSI-formatted colored string to the GUI "Log" window

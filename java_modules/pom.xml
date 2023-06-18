@@ -1,141 +1,144 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+ <modelVersion>4.0.0</modelVersion>
 
-  <groupId>iot.RiccardoBertini</groupId>
-  <artifactId>java_modules</artifactId>
-  <version>1.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
+ <!-- SafeTunnels Parent Module -->
 
-  <name>java_modules</name>
-  <url>https://maven.apache.org</url>
-    <modules>
-        <module>CloudModule</module>
-        <module>ControlModule</module>
-        <module>Common</module>
-    </modules>
+ <!-- Module Coordinates -->
+ <groupId>iot.RiccardoBertini</groupId>
+ <artifactId>java_modules</artifactId>
+ <version>1.0-SNAPSHOT</version>
 
-    <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+ <!-- Module Packaging -->
+ <packaging>pom</packaging>   <!-- Must be "pom" for the parent module -->
 
-    <!--
-  <repositories>
-    <repository>
-      <id>Eclipse Paho Repo</id>
-      <url>https://repo.eclipse.org/content/repositories/paho-releases/</url>
-    </repository>
-  </repositories>
-    -->
+ <!-- Module Name -->
+ <name>java_modules</name>
+ <url>https://maven.apache.org</url>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <outputDirectory>JAR</outputDirectory>
-                </configuration>
-            </plugin>
+ <!-- SafeTunnels Children Modules -->
+ <modules>
+  <module>Common</module>
+  <module>CloudModule</module>
+  <module>ControlModule</module>
+ </modules>
 
-            <!--
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-            </plugin>
-            -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.1</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.eclipse.paho</groupId>
-            <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
-            <version>1.2.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20230227</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.californium</groupId>
-            <artifactId>californium-core</artifactId>
-            <version>3.8.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>8.0.33</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-nop</artifactId>
-            <version>1.7.36</version>
-        </dependency>
-
-        <!-- This works, but prints a lot of meaningless errors
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
-            <version>1.7.36</version>
-        </dependency>
-        -->
-
-    </dependencies>
+ <!-- Module Properties -->
+ <properties>
+  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  <maven.compiler.source>11</maven.compiler.source>
+  <maven.compiler.target>11</maven.compiler.target>
+ </properties>
 
 
+ <!-- Module Build Configuration -->
+ <build>
+
+  <!-- Plugins -->
+  <plugins>
+
+   <!-- Maven Compiler Plugin -->
+
+   <!--
+     NOTE: The project MUST NOT be compiled with the Maven
+           plugin because it does not compile the Intellij's
+           idea "ControlModule.form" main GUI panel,
+           causing a NullPointerException at runtime
+
+   <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.8.0</version>
+    <configuration>
+     <source>11</source>
+     <target>11</target>
+     </configuration>
+   </plugin>
+   -->
+
+   <!-- Maven JAR builder plugin -->
+   <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-jar-plugin</artifactId>
+    <version>3.3.0</version>
+
+    <!-- Set the (child modules') JAR output directory -->
+    <configuration>
+     <outputDirectory>JAR</outputDirectory>
+    </configuration>
+   </plugin>
+
+   <!-- Maven "Fat JAR" builder plugin
+        (to include every dependency in every JAR) -->
+   <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <version>3.4.1</version>
+    <executions>
+     <execution>
+      <phase>package</phase>
+      <goals>
+       <goal>shade</goal>
+      </goals>
+      <configuration>
+
+       <!-- Exclude signed packages from the fat JAR -->
+       <filters>
+        <filter>
+         <artifact>*:*</artifact>
+         <excludes>
+          <exclude>META-INF/*.SF</exclude>
+          <exclude>META-INF/*.DSA</exclude>
+          <exclude>META-INF/*.RSA</exclude>
+         </excludes>
+        </filter>
+       </filters>
+       <!-- -->
+
+      </configuration>
+     </execution>
+    </executions>
+   </plugin>
+  </plugins>
+ </build>
 
 
+ <!-- Modules Dependencies -->
+ <dependencies>
+
+  <!-- A simple JSON parser -->
+  <dependency>
+   <groupId>org.json</groupId>
+   <artifactId>json</artifactId>
+   <version>20230227</version>
+  </dependency>
+
+  <!-- MySQL Connector -->
+  <dependency>
+   <groupId>com.mysql</groupId>
+   <artifactId>mysql-connector-j</artifactId>
+   <version>8.0.33</version>
+  </dependency>
+
+  <!-- PAHO MQTT Client -->
+  <dependency>
+   <groupId>org.eclipse.paho</groupId>
+   <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+   <version>1.2.1</version>
+  </dependency>
+
+  <!-- Californium CoAP Implementation -->
+  <dependency>
+   <groupId>org.eclipse.californium</groupId>
+   <artifactId>californium-core</artifactId>
+   <version>3.8.0</version>
+  </dependency>
+
+  <!-- 'NOP' SLF4J logger (to suppress Californium warnings -->
+  <dependency>
+   <groupId>org.slf4j</groupId>
+   <artifactId>slf4j-nop</artifactId>
+   <version>1.7.36</version>
+  </dependency>
+ </dependencies>
 </project>

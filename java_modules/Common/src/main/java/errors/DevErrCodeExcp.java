@@ -24,6 +24,7 @@ public class DevErrCodeExcp extends ErrCodeExcp
     this.devID = devID;
    }
 
+
   /**
    * ErrCode + addDscr DevErrCode Exception constructor
    * @param errCode The ErrCode that has occurred

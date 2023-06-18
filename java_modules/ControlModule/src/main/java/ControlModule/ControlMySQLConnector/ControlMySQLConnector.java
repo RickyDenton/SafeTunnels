@@ -71,9 +71,10 @@ final public class ControlMySQLConnector extends MySQLConnector
     // Convert the boolean "connState" into a (short) bit (0 -> offline, 1 -> online)
     short connStatusBit = connState?(short)1:(short)0;
 
+    // Attempt to push the updated actuator connection
+    // state into the database, logging the error otherwise
     try
      {
-      // Attempt to push the updated actuator connection state into the database
       pushDevState(ST_DB_ACTUATORS_TABLE_CONNSTATE,ST_DB_ACTUATORS_COLUMN_ID,
         ST_DB_COMMON_COLUMN_CONNSTATE,actuatorID,String.valueOf(connStatusBit));
      }
@@ -96,24 +97,23 @@ final public class ControlMySQLConnector extends MySQLConnector
     String actuatorQuantityTableName = getActuatorQuantityTableName(actuatorQuantity);
     String actuatorQuantityColumnName = getActuatorQuantityColumnName(actuatorQuantity);
 
+    // Attempt to push the updated actuator quantity value
+    // into the database, logging the error otherwise
     try
      {
-      // Attempt to push the updated actuator quantity value into the database
       pushDevState(actuatorQuantityTableName,ST_DB_ACTUATORS_COLUMN_ID,
                    actuatorQuantityColumnName,actuatorID,String.valueOf(quantityValue));
      }
     catch(SQLException sqlExcp)
      {
       /*
-       * Error code 1062 is associated with failing to insert a new record because a
-       * record with such primary key (the timestamp) already exists in the destination
-       * table, which may occur for actuators in auto mode and so can be ignored
+       * The SQL error code 1062 is associated with failing to insert a record because another
+       * such primary key (in this case, {actuatorID,timestamp}) already exists in the destination
+       * table, which may occur for actuators quickly varying their state,and so can be ignored
        */
-      if(sqlExcp.getErrorCode() == 1062)
-       return;
-      else
+      if(sqlExcp.getErrorCode() != 1062)
        Log.code(ERR_CONTROL_PUSH_QUANTITY_FAILED,"(actuatorID = " + actuatorID + ", quantity = "
-        + actuatorQuantity + ", value = " + quantityValue + ", reason = " + sqlExcp.getMessage() + ",tostr =  " + sqlExcp.toString() + ",errCode =  " + sqlExcp.getErrorCode() + ")");
+        + actuatorQuantity + ", value = " + quantityValue + ", reason = " + sqlExcp.getMessage() + ")");
      }
    }
  }

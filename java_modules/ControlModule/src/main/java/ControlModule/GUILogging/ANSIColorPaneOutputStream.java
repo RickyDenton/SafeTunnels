@@ -4,7 +4,7 @@ package ControlModule.GUILogging;
 
 /* ================================== IMPORTS ================================== */
 
-/* -------------------------- Java Standard Libraries -------------------------- */
+/* --------------------- Java Standard Libraries Resources --------------------- */
 import javax.swing.*;
 import java.io.OutputStream;
 
@@ -12,8 +12,11 @@ import java.io.OutputStream;
 /* ============================== CLASS DEFINITION ============================== */
 public class ANSIColorPaneOutputStream extends OutputStream
  {
-  // The GUI Log window component
+  /* ============================ PRIVATE ATTRIBUTES ============================ */
+
+  // A reference to the GUI Log window
   private final ANSIColorPane logWindow;
+
 
   /* ============================= PUBLIC METHODS ============================= */
 
@@ -53,7 +56,7 @@ public class ANSIColorPaneOutputStream extends OutputStream
 
 
   /**
-   * Write a character in the GUI log window
+   * Writes a character in the GUI log window
    * @param charRes the character representation as an integer
    */
   @Override

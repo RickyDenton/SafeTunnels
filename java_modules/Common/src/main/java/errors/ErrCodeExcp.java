@@ -27,6 +27,7 @@ public class ErrCodeExcp extends Exception
     this.addDscr = "";
    }
 
+
   /**
    * ErrCode + addDscr ErrCode Exception constructor
    * @param errCode The ErrCode that has occurred

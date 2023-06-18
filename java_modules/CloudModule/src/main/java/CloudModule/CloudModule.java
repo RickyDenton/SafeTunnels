@@ -22,13 +22,14 @@ import modules.SensorsMQTTHandler.SensorsMQTTHandler;
 /* ============================== CLASS DEFINITION ============================== */
 final class CloudModule
  {
-  /* ============================ PRIVATE ATTRIBUTES ============================ */
+  /* ============================ PACKAGE ATTRIBUTES ============================ */
 
   // The SafeTunnels MySQL database connector used by the Cloud Module
   final CloudMySQLConnector cloudMySQLConnector;
 
   // The Cloud Module's sensors MQTT Client Handler
   final SensorsMQTTHandler cloudMQTTHandler;
+
 
   /* ============================== PRIVATE METHODS ============================== */
 
@@ -67,6 +68,8 @@ final class CloudModule
     Log.info("Cloud Module successfully initialized");
    }
 
+
+  /* ============================= PUBLIC METHODS ============================= */
 
   /**
    * Cloud Module application entry point

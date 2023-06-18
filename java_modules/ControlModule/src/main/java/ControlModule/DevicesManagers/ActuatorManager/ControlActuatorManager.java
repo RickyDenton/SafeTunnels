@@ -1,105 +1,108 @@
+/* An actuator managed by the Control Module */
+
 package ControlModule.DevicesManagers.ActuatorManager;
 
+/* ================================== IMPORTS ================================== */
+
+/* --------------------- Java Standard Libraries Resources --------------------- */
+import javax.swing.*;
+import java.util.Timer;
+import java.util.TimerTask;
+
+/* --------------------- Californium CoAP Client Resources --------------------- */
+import org.eclipse.californium.core.CoapClient;
+
+/* --------------------------- SafeTunnels Resources --------------------------- */
+import logging.Log;
 import ControlModule.ControlModule;
+import devices.actuator.BaseActuator;
 import ControlModule.ControlMySQLConnector.ControlMySQLConnector;
 import ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.RequestsHandlers.fan.CoAPClientFanReqHandler;
 import ControlModule.DevicesManagers.ActuatorManager.CoAPClientsHandlers.RequestsHandlers.light.CoAPClientLightReqHandler;
 import ControlModule.DevicesManagers.ActuatorManager.GUIUpdateTasks.FanIconSpinTask;
 import ControlModule.DevicesManagers.ActuatorManager.GUIUpdateTasks.LightBlinkTask;
-import devices.actuator.BaseActuator;
-import logging.Log;
-import org.eclipse.californium.core.CoapClient;
-
-import javax.swing.*;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import static ControlModule.OpState.*;
 import static devices.actuator.BaseActuator.ActuatorQuantity.FANRELSPEED;
 import static devices.actuator.BaseActuator.ActuatorQuantity.LIGHTSTATE;
 import static devices.actuator.BaseActuator.LightState.LIGHT_STATE_INVALID;
 
 
-public class ControlActuatorManager extends BaseActuator
+/* ============================== CLASS DEFINITION ============================== */
+public final class ControlActuatorManager extends BaseActuator
  {
-  private final static int actuatorWatcherTimerInitDelay = 3 * 1000;  // milliseconds
+  /* =========================== ACTUATOR PARAMETERS =========================== */
 
-  // MUST BE > COAP CLIENT TIMEOUTS
-  private static final int actuatorWatcherTimerPeriod = 10 * 1000;    // milliseconds
-  private static final int fanIconSpinTimerBasePeriod = 130;          // milliseconds
-  private static final int autoAdjustOnConnTimerDelay = 200;          // milliseconds
+  // The initial delay in milliseconds before starting the actuator's watchdog timer
+  private final static int actuatorWatcherTimerInitDelay = 3 * 1000;
+
+  // The actuator watchdog timer period in milliseconds
+  private static final int actuatorWatcherTimerPeriod = 10 * 1000;
+
+  // The initial delay in milliseconds from when an actuator
+  // connects to when its quantities are automatically adjusted
+  // if the control module's automatic mode is enabled
+  private static final int autoAdjustOnConnTimerDelay = 200;
+
+  // The base fan icon spin timer period in milliseconds
+  private static final int fanIconSpinTimerBasePeriod = 130;
+
+
+  /* ============================ PRIVATE ATTRIBUTES ============================ */
 
   // Actuator quantities
   private short fanRelSpeed;
   private LightState lightState;
 
-  // Controller Module reference
+  // Control Module and MySQL Connector references
   private final ControlModule controlModule;
-
-  // Control Module MySQL Connector
   private final ControlMySQLConnector controlMySQLConnector;
 
-  // Actuator Resources CoAP Clients
-  final CoapClient coapClientFan;
-  final CoapClient coapClientLight;
-  final CoapClient coapClientErrors;
+  // Actuator Resources Californium CoAP clients
+  private final CoapClient coapClientFan;
+  private final CoapClient coapClientLight;
+  private final CoapClient coapClientErrors;
 
-  // GUI Update timers
-  Timer fanIconSpinTimer;
-  Timer lightBlinkTimer;
+
+  /* ---------------------- GUI Actuator Widget Management ---------------------- */
 
   // Whether the actuator is bound to an actuator widget in the GUI
   private boolean GUIBound;
 
+  // GUI quantities animation timers
+  private Timer fanIconSpinTimer;
+  private Timer lightBlinkTimer;
+
   // The GUI's JLabels associated with the actuator, if any
-  private JLabel connStateLEDIcon;
-  private JLabel fanRelSpeedLabel;
-  private JLabel lightStateLabel;
-  private JLabel fanIcon;
-  private JLabel lightIcon;
-  private JSlider fanRelSpeedSlider;
-  private JButton lightStateButtonOFF;
-  private JButton lightStateButtonWARNING;
-  private JButton lightStateButtonALERT;
-  private JButton lightStateButtonEMERGENCY;
+  private JLabel  connStateLEDIcon;          // Connection state LED
+  private JLabel  fanRelSpeedLabel;          // Fan relative speed value
+  private JLabel  lightStateLabel;           // Light state value
+  private JLabel  fanIcon;                   // Fan icon
+  private JLabel  lightIcon;                 // Light icon
+  private JSlider fanRelSpeedSlider;         // Fan relative speed slider
+  private JButton lightStateButtonOFF;       // Light "OFF" button
+  private JButton lightStateButtonWARNING;   // Light "ON"/"WARN" button
+  private JButton lightStateButtonALERT;     // Light "ALERT" button
+  private JButton lightStateButtonEMERGENCY; // Light "EMERGENCY" button
 
 
-  // Binds this actuator to an actuator widget in the GUI
-  public void bindToGUI(JLabel connStateLEDIcon, JLabel fanRelSpeedLabel, JLabel lightStateLabel,
-                        JLabel fanIcon, JLabel lightIcon, JSlider fanRelSpeedSlider,
-                        JButton lightStateButtonOFF, JButton lightStateButtonWARNING,
-                        JButton lightStateButtonALERT, JButton lightStateButtonEMERGENCY)
+  /* ============================= PUBLIC METHODS ============================= */
+
+  /**
+   * ControlActuatorManager constructor, initializing its associated attributes and
+   * Californium CoAP clients and scheduling at a fixed rate its Watchdog Timer
+   * @param MAC The sensor's (unique) MAC address
+   * @param ID  The sensor's unique ID in the SafeTunnels database
+   * @param controlModule A reference to the Control Module object
+   * @param controlMySQLConnector A reference to the Control MySQL Connector object
+   */
+  public ControlActuatorManager(String MAC,short ID,ControlModule controlModule,
+                                ControlMySQLConnector controlMySQLConnector)
    {
-    if(connStateLEDIcon == null || fanRelSpeedLabel == null || lightStateLabel == null || fanIcon == null ||
-       lightIcon == null || fanRelSpeedSlider == null || lightStateButtonOFF == null ||
-       lightStateButtonWARNING == null || lightStateButtonALERT == null || lightStateButtonEMERGENCY == null)
-     {
-      Log.err("Attempting to bind actuator" + ID + "to null elements in the GUI");
-      return;
-     }
-
-    // Assign the GUI's components associated with the actuator
-    this.connStateLEDIcon = connStateLEDIcon;
-    this.fanRelSpeedLabel = fanRelSpeedLabel;
-    this.lightStateLabel = lightStateLabel;
-    this.fanIcon = fanIcon;
-    this.lightIcon = lightIcon;
-    this.fanRelSpeedSlider = fanRelSpeedSlider;
-    this.lightStateButtonOFF = lightStateButtonOFF;
-    this.lightStateButtonWARNING = lightStateButtonWARNING;
-    this.lightStateButtonALERT = lightStateButtonALERT;
-    this.lightStateButtonEMERGENCY = lightStateButtonEMERGENCY;
-
-    // Set that the actuator is now bound to an actuator widget in the GUI
-    GUIBound = true;
-   }
-
-  public ControlActuatorManager(String MAC,short ID,ControlModule controlModule,ControlMySQLConnector controlMySQLConnector)
-   {
-    // Call the parent's constructor, initializing the sensor's connState to false
+    // Call the parent constructor, initializing
+    // the actuator's MAC, ID and connState to false
     super(MAC,ID);
 
-    // Initialize the other ControlActuatorManager's attributes
+    // Initialize the other ControlActuatorManager base attributes
     this.controlMySQLConnector = controlMySQLConnector;
     this.controlModule = controlModule;
     fanRelSpeed = -1;
@@ -139,7 +142,7 @@ public class ControlActuatorManager extends BaseActuator
     /*/ --- Actuator Global IPv6 Address and CoAP Endpoint Initialization --- /*/
 
     /*
-     * Initialize the actuator resources' CoAP Clients
+     * Initialize the actuator resources' Californium CoAP Clients
      *
      * NOTE: The CoAP clients use confirmable (CON) messages by default
      */
@@ -147,15 +150,75 @@ public class ControlActuatorManager extends BaseActuator
     coapClientLight = new CoapClient(actuatorCoAPEndpoint + actuatorLightStateResRelPath);
     coapClientErrors = new CoapClient(actuatorCoAPEndpoint + actuatorErrorsResRelPath);
 
-    // Initialize the Actuator Watchdog Timer
+    // Schedule at a fixed rate the actuator's Watchdog Timer
     Timer actuatorWatchdogTimer = new Timer();
-    actuatorWatchdogTimer.scheduleAtFixedRate(new ActuatorWatchdogTimerTask(this,coapClientFan,
-                                                                             coapClientLight,coapClientErrors),
-                                                                             actuatorWatcherTimerInitDelay,actuatorWatcherTimerPeriod);
-
+    actuatorWatchdogTimer.scheduleAtFixedRate(new ActuatorWatchdogTimerTask
+     (this,coapClientFan,coapClientLight,coapClientErrors),
+      actuatorWatcherTimerInitDelay,actuatorWatcherTimerPeriod);
    }
 
 
+  /**
+   * @return The actuator's fan relative speed value
+   */
+  public short getFanRelSpeed()
+   { return this.fanRelSpeed; }
+
+
+  /**
+   * Binds the actuator to an actuator widget in the Control Module's GUI
+   * @param connStateLEDIcon          The actuator widget's connection state LED
+   * @param fanRelSpeedLabel          The actuator widget's fan relative speed value
+   * @param lightStateLabel           The actuator widget's light state value
+   * @param fanIcon                   The actuator widget's fan icon
+   * @param lightIcon                 The actuator widget's light icon
+   * @param fanRelSpeedSlider         The actuator widget's fan relative speed slider
+   * @param lightStateButtonOFF       The actuator widget's light "OFF" button
+   * @param lightStateButtonWARNING   The actuator widget's light "ON"/"WARN" button
+   * @param lightStateButtonALERT     The actuator widget's light "ALERT" button
+   * @param lightStateButtonEMERGENCY The actuator widget's light "EMERGENCY" button
+   */
+  public void bindToGUI(JLabel connStateLEDIcon, JLabel fanRelSpeedLabel, JLabel lightStateLabel,
+                        JLabel fanIcon, JLabel lightIcon, JSlider fanRelSpeedSlider,
+                        JButton lightStateButtonOFF, JButton lightStateButtonWARNING,
+                        JButton lightStateButtonALERT, JButton lightStateButtonEMERGENCY)
+   {
+    // Ensure all the passed actuator widget GUI components to
+    // be non-null, logging an error and returning otherwise
+    if(connStateLEDIcon == null || fanRelSpeedLabel == null || lightStateLabel == null || fanIcon == null ||
+       lightIcon == null || fanRelSpeedSlider == null || lightStateButtonOFF == null ||
+       lightStateButtonWARNING == null || lightStateButtonALERT == null || lightStateButtonEMERGENCY == null)
+     {
+      Log.err("Attempting to bind actuator" + ID + "to null elements in the GUI");
+      return;
+     }
+
+    // Initialize the actuator widget's
+    // components to the provided values
+    this.connStateLEDIcon = connStateLEDIcon;
+    this.fanRelSpeedLabel = fanRelSpeedLabel;
+    this.lightStateLabel = lightStateLabel;
+    this.fanIcon = fanIcon;
+    this.lightIcon = lightIcon;
+    this.fanRelSpeedSlider = fanRelSpeedSlider;
+    this.lightStateButtonOFF = lightStateButtonOFF;
+    this.lightStateButtonWARNING = lightStateButtonWARNING;
+    this.lightStateButtonALERT = lightStateButtonALERT;
+    this.lightStateButtonEMERGENCY = lightStateButtonEMERGENCY;
+
+    // Set that the actuator is now bound to a GUI actuator widget
+    GUIBound = true;
+   }
+
+
+  /* ----------------------------- Setters Methods ----------------------------- */
+
+  /**
+   * Actuator offline connection status handler, which:
+   *   1) Marks the sensor as offline
+   *   2) Pushes such connState into the database
+   *   3) Disables the actuator's associated GUI widget, if any
+   */
   public void setConnStateOffline()
    {
     // Set the actuator as offline
@@ -167,20 +230,20 @@ public class ControlActuatorManager extends BaseActuator
     // Log that the actuator appears to be offline
     Log.warn("actuator" + ID + " appears to be offline");
 
-    // If bound to a GUI sensor widget
+    // If the actuator is bound to a GUI actuator widget
     if(GUIBound)
      {
       // Update the connection state LED icon
       connStateLEDIcon.setIcon(ControlModule.connStateLEDOFFImg);
 
-      // Stop the fan spinning and the LED blinking, if any
+      // Stop the fan spinning ant the
+      // LED blinking animations, if any
       if(fanIconSpinTimer != null)
        fanIconSpinTimer.cancel();
-
       if(lightBlinkTimer != null)
        lightBlinkTimer.cancel();
 
-      // Deactivate the other actuator widget's components
+      // Disable all the actuator widget's components
       fanRelSpeedLabel.setEnabled(false);
       lightStateLabel.setEnabled(false);
       fanIcon.setEnabled(false);
@@ -194,7 +257,15 @@ public class ControlActuatorManager extends BaseActuator
    }
 
 
-
+  /**
+   * Actuator online connection status handler, which:
+   *   1) Marks the sensor as online
+   *   2) Pushes such connState into the database
+   *   3) Enables the actuator's associated GUI widget, if any
+   *   4) Starts the autoAdjustOnConnTimer which, after a short
+   *      delay, automatically adjusts the actuator's quantities
+   *      if the Control Module automatic mode is enabled
+   */
   public void setConnStateOnline()
    {
     // Set the actuator as online
@@ -206,7 +277,7 @@ public class ControlActuatorManager extends BaseActuator
     // Log that the actuator is now online
     Log.info("actuator" + ID + " is now online");
 
-    // If bound to a GUI sensor widget
+    // If the actuator is bound to a GUI actuator widget
     if(GUIBound)
      {
       // Update the connection state LED icon
@@ -224,9 +295,11 @@ public class ControlActuatorManager extends BaseActuator
       lightStateButtonEMERGENCY.setEnabled(true);
      }
 
-    // Start a timer which, after a short delay, checks whether
-    // the automatic fan adjustment is enabled and, if it is,
-    // sends the commands to adjust the fan's quantities
+    /*
+     * Start the autoAdjustOnConnTimer which, after a short
+     * delay, automatically adjusts the actuator's quantities
+     * if the Control Module automatic mode is enabled
+     */
     Timer autoAdjustOnConnTimer = new Timer();
     autoAdjustOnConnTimer.schedule(new TimerTask()
      {
@@ -242,11 +315,25 @@ public class ControlActuatorManager extends BaseActuator
    }
 
 
+  /**
+   * Actuator new fan relative speed value handler, which, if the
+   * new fan relative speed value differs from its current one:
+   *   1) Updates the actuator's fan relative speed value
+   *   2) Pushes such new fan relative speed into the database
+   *   3) If the actuator is bound to a GUI actuator widget:
+   *      3.1) Updates the widget's fan relative speed value
+   *      3.2) Sets the widget's fan relative speed slider to match the value
+   *      3.3) Adjusts the fan icon spinning animation
+   *           depending on the new fan relative speed value
+   *   4) Notify the Control Module that the fan relative speed
+   *      has changed so as for it to compute the new system's
+   *      average fan speed and propagate it via MQTT to sensors
+   */
   @Override
   public void setFanRelSpeed(int newFanRelSpeed)
    {
-    // If this is not a periodic fan relative speed
-    // observing refresh, i.e. its value has changed
+    // If the new fan relative speed value differs from its current
+    // one (i.e. this is not a periodic "fan" observer refresh)
     if(newFanRelSpeed != this.fanRelSpeed)
      {
       // Update the actuator's fan relative speed value
@@ -259,56 +346,81 @@ public class ControlActuatorManager extends BaseActuator
       // Log the new actuator fan relative speed
       Log.dbg("New actuator" + ID + " fan relative speed: " + fanRelSpeed);
 
-      // If bound to a GUI widget, update its associated
-      // fan speed value and set the slider to match
+      // If the actuator is bound to an actuator widget in the GUI
       if(GUIBound)
        {
+        // Update its fan relative speed value, also setting
+        // its color as of its current "operating state"
         fanRelSpeedLabel.setText(newFanRelSpeed + " %");
         fanRelSpeedLabel.setForeground(fanRelSpeedToOpStateColor(newFanRelSpeed));
+
+        // Sets the fan relative speed slider to match the new value
         fanRelSpeedSlider.setValue(newFanRelSpeed);
 
-        // Stop the fanIconSpinTimer
+        // Stop the fanIconSpinTimer controlling the fan spinning animation
         if(fanIconSpinTimer != null)
          fanIconSpinTimer.cancel();
 
-        // If the fan has stopped, restore its fixed icon
+        // If the fan has stopped, restore its base, static icon
         if(newFanRelSpeed == 0)
          fanIcon.setIcon(ControlModule.actuatorFanIcons[0]);
 
-         // Otherwise initialize the fanIconSpinTimer with a fixed
-         // period inversely proportional to the fan relative speed
+        // Otherwise (re)-schedule the fanIconSpinTimer at a fixed
+        // rate directly proportional to the fan relative speed
         else
          {
           fanIconSpinTimer = new Timer();
-          fanIconSpinTimer.scheduleAtFixedRate(new FanIconSpinTask(fanIcon),0,fanIconSpinTimerBasePeriod-newFanRelSpeed);
+          fanIconSpinTimer.scheduleAtFixedRate(new FanIconSpinTask(fanIcon),
+                                          0,fanIconSpinTimerBasePeriod-newFanRelSpeed);
          }
        }
 
-      // Update the system's average fan relative speed
+      // Notify the Control Module that the fan relative speed
+      // has changed so as for it to compute the new system's
+      // average fan speed and propagate it via MQTT to sensors
       controlModule.updateAvgFanRelSpeed();
      }
    }
 
 
+  /**
+   * Actuator new fan relative speed value handler, which, if
+   * the new light state value differs from its current one:
+   *   1) Updates the actuator's light state value
+   *   2) Pushes such new light state value into the database
+   *   3) If the actuator is bound to a GUI actuator widget, updates
+   *      its light state value and animates the light icon accordingly
+   *   4) Notify the Control Module that the fan relative speed
+   *      has changed so as for it to compute the new system's
+   *      average fan speed and propagate it via MQTT to sensors
+   */
   @Override
   public void setLightState(LightState newLightState)
    {
-    // If this is not a periodic light state
-    // observing refresh, i.e. its value has changed
+    // If the new light state value differs from its current one
+    // (i.e. this is not a periodic "light" observer refresh)
     if(newLightState != this.lightState)
      {
       // Update the actuator's light state value
       this.lightState = newLightState;
 
-      // If bound to a GUI widget, update its
-      // associated label and light state icon
+      // Attempt to push the updated actuator light state into the database
+      controlMySQLConnector.pushActuatorQuantityValue(ID,LIGHTSTATE,lightState.ordinal());
+
+      // Log the new actuator light state
+      Log.dbg("New actuator" + ID + " light state: " + lightState);
+
+      // If the actuator is bound to an actuator widget in the GUI
       if(GUIBound)
        {
-        // Stop the LightBlinkTimer, if any
+        // Stop the LightBlinkTimer controlling
+        // the light blinking animation, if any
         if(lightBlinkTimer!= null)
          lightBlinkTimer.cancel();
 
-        // Depending on the new light state
+        // Update the GUI widget light state value, also setting its
+        // color to match its "operating state" and, if applicable,
+        // start the LightBlinkTimer light blinking timer
         switch(newLightState)
          {
           case LIGHT_OFF:
@@ -327,79 +439,100 @@ public class ControlActuatorManager extends BaseActuator
            lightStateLabel.setText("ALERT");
            lightStateLabel.setForeground(ALERT.getColor());
 
-           // Start the LED blinking timer
            lightBlinkTimer = new Timer();
-           lightBlinkTimer.scheduleAtFixedRate(new LightBlinkTask(lightIcon,ControlModule.actuatorLightALERTImg),0,1000);
+           lightBlinkTimer.scheduleAtFixedRate(new LightBlinkTask
+             (lightIcon,ControlModule.actuatorLightALERTImg),0,1000);
            break;
 
           case LIGHT_BLINK_EMERGENCY:
            lightStateLabel.setText("EMER.");
            lightStateLabel.setForeground(EMERGENCY.getColor());
 
-           // Start the LED blinking timer
            lightBlinkTimer = new Timer();
-           lightBlinkTimer.scheduleAtFixedRate(new LightBlinkTask(lightIcon,ControlModule.actuatorLightEMERGENCYImg),0,300);
+           lightBlinkTimer.scheduleAtFixedRate(new LightBlinkTask
+             (lightIcon,ControlModule.actuatorLightEMERGENCYImg),0,300);
            break;
          }
        }
-
-      // Attempt to push the updated actuator light state into the database
-      controlMySQLConnector.pushActuatorQuantityValue(ID,LIGHTSTATE,lightState.ordinal());
-
-      // Log the new actuator light state
-      Log.dbg("New actuator" + ID + " light state: " + lightState);
      }
    }
 
-  public short getFanRelSpeed()
-   { return this.fanRelSpeed; }
 
+  /* ----------------------- CoAP Client Requests Methods ----------------------- */
 
+  /**
+   * Sends in an asynchronous confirmable CoAP request
+   * a new fan relative speed value to the actuator
+   * @param sendFanRelSpeed The new fan relative speed value
+   *                        to be sent to the actuator
+   */
   public void sendFanRelSpeed(int sendFanRelSpeed)
    {
-    // Ensure the fan relative speed to be sent to the actuator to be valid
+    // Ascertain the fan relative speed value to be sent to the
+    // actuator to be valid, logging the error and returning otherwise
     if(sendFanRelSpeed < 0 || sendFanRelSpeed > 100)
      {
-      Log.err("Attempting to send to actuator" + ID + " an invalid fan relative speed (" + sendFanRelSpeed + ")");
+      Log.err("Attempting to send to actuator" + ID + " an invalid "
+               + "fan relative speed (" + sendFanRelSpeed + ")");
       return;
      }
 
-    // Ensure the actuator to be online
+    // Ascertain the actuator to be online,
+    // logging the error and returning otherwise
     if(!connState)
      {
-      Log.warn("Cannot send an updated fan relative speed (" + sendFanRelSpeed + ") to actuator" + ID + " because it is offline");
+      Log.warn("Cannot send an updated fan relative speed (" + sendFanRelSpeed
+                + ") to actuator" + ID + " because it is offline");
       return;
      }
 
-    // Ensure that the fan relative speed to be sent differs from its current one
+    // Ascertain the fan relative speed to be sent to differ from
+    // its current value, logging the error and returning otherwise
     if(sendFanRelSpeed == fanRelSpeed)
      {
-      Log.warn("Attempting to send to actuator" + ID + " the same fan relative speed (" + sendFanRelSpeed + ")");
+      Log.warn("Attempting to send to actuator" + ID + " the same "
+                + "fan relative speed (" + sendFanRelSpeed + ")");
       return;
      }
 
-    // Send the fan relative speed using an asynchronous, confirmable PUT request
-    coapClientFan.put(new CoAPClientFanReqHandler(this,sendFanRelSpeed), "fanRelSpeed=" + sendFanRelSpeed,0); // 0 = text/plain
+    // Send the fan relative speed to the actuator
+    // via an asynchronous, confirmable PUT request
+    coapClientFan.put(new CoAPClientFanReqHandler
+      (this,sendFanRelSpeed),
+      "fanRelSpeed=" + sendFanRelSpeed,0);   // 0 = text/plain
    }
 
+
+  /**
+   * Sends in an asynchronous confirmable CoAP
+   * request a new light state value to the actuator
+   * @param sendLightState The new light state value
+   *                       to be sent to the actuator
+   */
   public void sendLightState(LightState sendLightState)
    {
-    // Ensure the actuator to be online
+    // Ascertain the actuator to be online,
+    // logging the error and returning otherwise
     if(!connState)
      {
-      Log.warn("Cannot send an updated light state (" + sendLightState.toString() + ") to actuator" + ID + " because it is offline");
+      Log.warn("Cannot send an updated light state (" + sendLightState.toString()
+               + ") to actuator" + ID + " because it is offline");
       return;
      }
 
-    // Ensure that the light state to be sent differs from its current one
+    // Ascertain the light state to be sent to differ from its
+    // current value, logging the error and returning otherwise
     if(sendLightState == lightState)
      {
-      Log.warn("Attempting to send to actuator" + ID + " the same light state (" + sendLightState + ")");
+      Log.warn("Attempting to send to actuator" + ID + " the "
+                + "same light state (" + sendLightState + ")");
       return;
      }
 
-    // Send the light state using an asynchronous, confirmable PUT request
-    coapClientLight.put(new CoAPClientLightReqHandler(this,sendLightState), "lightState=" + sendLightState.toString(),0); // 0 = text/plain
+    // Send the light state to the actuator via
+    // an asynchronous, confirmable PUT request
+    coapClientLight.put(new CoAPClientLightReqHandler
+      (this,sendLightState),
+      "lightState=" + sendLightState.toString(),0);  // 0 = text/plain
    }
-
  }

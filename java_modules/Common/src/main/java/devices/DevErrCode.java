@@ -4,10 +4,11 @@ package devices;
 
 /* ================================== IMPORTS ================================== */
 
-/* --------------------------- SafeTunnels Packages --------------------------- */
+/* --------------------------- SafeTunnels Resources --------------------------- */
 import errors.ErrCodeInfo;
 import errors.ErrCode;
 import devices.BaseDevice.DevType;
+
 
 /* =========================== INTERFACE DEFINITION =========================== */
 public interface DevErrCode extends ErrCode

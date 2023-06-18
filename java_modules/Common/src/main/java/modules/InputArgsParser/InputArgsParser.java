@@ -79,27 +79,31 @@ public abstract class InputArgsParser
             if(args[i + 1].equalsIgnoreCase("info"))
              logLevelOverride = ErrCodeSeverity.INFO;
             else
-             if(args[i + 1].equalsIgnoreCase("err") ||
-               args[i + 1].equalsIgnoreCase("ERROR"))
-              logLevelOverride = ErrCodeSeverity.ERROR;
+             if(args[i + 1].equalsIgnoreCase("warn") ||
+               args[i + 1].equalsIgnoreCase("WARNING"))
+              logLevelOverride = ErrCodeSeverity.WARNING;
              else
-              if(args[i + 1].equalsIgnoreCase("fatal"))
-               logLevelOverride = ErrCodeSeverity.FATAL;
+              if(args[i + 1].equalsIgnoreCase("err") ||
+                args[i + 1].equalsIgnoreCase("ERROR"))
+               logLevelOverride = ErrCodeSeverity.ERROR;
+              else
+               if(args[i + 1].equalsIgnoreCase("fatal"))
+                logLevelOverride = ErrCodeSeverity.FATAL;
 
                // If the following input argument could not
                // be interpreted as a ErrCode Severity
-              else
-               {
-                // Log that the following input argument could
-                // not be interpreted as a ErrCode Severity
-                Log.err("\"" + args[i + 1] + "\" could not "
+               else
+                {
+                 // Log that the following input argument could
+                 // not be interpreted as a ErrCode Severity
+                 Log.err("\"" + args[i + 1] + "\" could not "
                           + "be interpreted as a valid log level");
 
-                // Set that the provided input arguments
-                // are not valid and break from the cycle
-                validArgs = false;
-                break;
-               }
+                 // Set that the provided input arguments
+                 // are not valid and break from the cycle
+                 validArgs = false;
+                 break;
+                }
 
            // Override the default with the provided valid log level
            Log.LOG_LEVEL = logLevelOverride;
@@ -143,8 +147,8 @@ public abstract class InputArgsParser
       // Display a helper message outlining the
       // program's allowed options and values
       System.out.println("Usage: java " + appName + " [-db \"targetDatabase\"] "
-                         + "[-log \"logLevelOverride\"]  "
-                         + "logLevelOverride: {DEBUG, INFO, ERROR, FATAL}");
+                         + "[-log \"logLevelOverride\"]  " +
+                         "logLevelOverride: {DEBUG, WARNING, INFO, ERROR, FATAL}");
 
       // Terminate the program
       System.exit(1);

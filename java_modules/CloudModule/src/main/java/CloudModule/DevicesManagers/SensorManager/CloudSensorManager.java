@@ -21,23 +21,6 @@ final public class CloudSensorManager extends BaseSensor
   private final CloudMySQLConnector cloudMySQLConnector;
 
 
-  /* ============================ PROTECTED METHODS ============================ */
-
-  /**
-   *  Sensor Connection Handler, invoked by the "setC02" and "setTemp" handlers
-   *  upon receiving an updated quantity value with the sensor is offline
-   */
-  @Override
-  public void setConnStateOnline()
-   {
-    // Set that the sensor is now online
-    connState = true;
-
-    // Attempt to push the 'ONLINE' sensor connState into the database
-    cloudMySQLConnector.pushSensorConnState(ID, true);
-   }
-
-
   /* ============================== PUBLIC METHODS ============================== */
 
   /**
@@ -68,6 +51,21 @@ final public class CloudSensorManager extends BaseSensor
 
     // Attempt to push the 'OFFLINE' sensor connState into the database
     cloudMySQLConnector.pushSensorConnState(ID, false);
+   }
+
+
+  /**
+   *  Sensor Connection Handler, invoked by the "setC02" and "setTemp" handlers
+   *  upon receiving an updated quantity value with the sensor is offline
+   */
+  @Override
+  public void setConnStateOnline()
+   {
+    // Set that the sensor is now online
+    connState = true;
+
+    // Attempt to push the 'ONLINE' sensor connState into the database
+    cloudMySQLConnector.pushSensorConnState(ID, true);
    }
 
 

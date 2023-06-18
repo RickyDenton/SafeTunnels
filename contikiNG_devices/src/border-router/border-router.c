@@ -10,13 +10,14 @@
 
 /* ============================= DEFINES AND MACROS ============================= */
 
+// Log level
+#define LOG_MODULE "RPL BR"
+#define LOG_LEVEL LOG_LEVEL_INFO
+
 // Whether the application is deployed on physical
 // sensors or on Cooja motes (comment in the latter case)
 #define DEPLOY_PHY
 
-// Log level
-#define LOG_MODULE "RPL BR"
-#define LOG_LEVEL LOG_LEVEL_INFO
 
 /*
  * Power LED
@@ -29,6 +30,7 @@
 #else
  #define POWER_LED LEDS_GREEN   // This is green in Cooja
 #endif
+
 
 /* ================ CONTIKI-NG PROCESS DEFINITION AND AUTOSTART ================ */
 PROCESS(contiki_ng_br, "Contiki-NG Border Router");

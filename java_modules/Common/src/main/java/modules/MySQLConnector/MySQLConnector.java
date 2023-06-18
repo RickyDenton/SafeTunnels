@@ -1,63 +1,84 @@
+/* SafeTunnels MySQL Connector Base Class */
+
 package modules.MySQLConnector;
 
-import devices.BaseDevice.DevType;
-import logging.Log;
+/* ================================== IMPORTS ================================== */
 
+/* --------------------- Java Standard Libraries Resources --------------------- */
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Properties;
 
+/* --------------------------- SafeTunnels Resources --------------------------- */
+import logging.Log;
+import devices.BaseDevice.DevType;
 import static devices.BaseDevice.DevType.sensor;
 import static modules.MySQLConnector.MySQLConnectorErrCode.*;
 
 
+/* ============================== CLASS DEFINITION ============================== */
 public abstract class MySQLConnector
  {
-  /* ======================= SAFETUNNELS MySQL DATABASE PARAMETERS ======================= */
+  /* ================== SAFETUNNELS MySQL DATABASE PARAMETERS ================== */
 
-  /* ------------------------------- Connection Parameters ------------------------------- */
+  /* -------------------------- Connection Parameters -------------------------- */
+
+  // SafeTunnels database host URI
   public final static String ST_DB_HOST = "jdbc:mysql://localhost:3306/";
 
+  // SafeTunnels database name
   public static String ST_DB_NAME = "SafeTunnelsPhyDB";
   // public static String ST_DB_NAME = = "SafeTunnelsCoojaDB";
 
+  // SafeTunnels database endpoint (URI + name)
   public static String ST_DB_ENDPOINT = ST_DB_HOST + ST_DB_NAME;
+
+  // SafeTunnels Database user and password
   protected final static String ST_DB_USER = "root";
   protected final static String ST_DB_PWD = "iot2023";
 
-  /* ------------------------- Database Tables And Columns Names ------------------------- */
+  /* ------------------------- Tables and Columns Names ------------------------- */
 
-  // --------------------------------------- Common ---------------------------------------
+  // ----------------------------------- Shared -----------------------------------
+
+  // Columns Names
   public final static String ST_DB_COMMON_COLUMN_MAC = "mac";
   public final static String ST_DB_COMMON_COLUMN_CONNSTATE = "connState";
 
-  // -------------------------------------- Sensors --------------------------------------
+  // ----------------------------------- Sensors -----------------------------------
+
+  // Tables Names
   public final static String ST_DB_SENSORS_TABLE = "sensors";
   public final static String ST_DB_SENSORS_TABLE_CONNSTATE = "sensorsConnStateSeries";
   public final static String ST_DB_SENSORS_TABLE_C02 = "sensorsC02Series";
   public final static String ST_DB_SENSORS_TABLE_TEMP = "sensorsTempSeries";
 
+  // Columns Names
   public final static String ST_DB_SENSORS_COLUMN_ID = "sensorID";
   public final static String ST_DB_SENSORS_COLUMN_C02 = "C02Density";
   public final static String ST_DB_SENSORS_COLUMN_TEMP = "temp";
 
-  // ------------------------------------- Actuators -------------------------------------
+  // ---------------------------------- Actuators ----------------------------------
+
+  // Tables Names
   protected final static String ST_DB_ACTUATORS_TABLE = "actuators";
   protected final static String ST_DB_ACTUATORS_TABLE_CONNSTATE = "actuatorsConnStateSeries";
   protected final static String ST_DB_ACTUATORS_TABLE_LIGHTSTATE = "actuatorsLightSeries";
   protected final static String ST_DB_ACTUATORS_TABLE_FANRELSPEED = "actuatorsFanSeries";
 
+  // Columns Names
   protected final static String ST_DB_ACTUATORS_COLUMN_ID = "actuatorID";
   protected final static String ST_DB_ACTUATORS_COLUMN_LIGHTSTATE = "lightState";
   protected final static String ST_DB_ACTUATORS_COLUMN_FANRELSPEED = "fanRelSpeed";
 
-  /* ==================================== ATTRIBUTES ==================================== */
 
-  // SafeTunnels Database connection
-  protected Connection STDBConn;
+  /* ================================ ATTRIBUTES ================================ */
 
-  // SafeTunnels Database connection properties
+  // A set of properties used for establishing the database connection
   Properties STDBConnProperties;
+
+  // The Database Connection object used to perform queries
+  protected Connection STDBConn;
 
 
   /* ================================== PRIVATE METHODS ================================== */
@@ -76,6 +97,7 @@ public abstract class MySQLConnector
      return ST_DB_ACTUATORS_TABLE;
    }
 
+
   /**
    * @param devType The device type to retrieve the database
    *                column ID name (sensor || actuator)
@@ -91,24 +113,36 @@ public abstract class MySQLConnector
    }
 
 
+  /**
+   * Attempts to establish a connection with the SafeTunnels Database
+   */
   private void connectToDB()
    {
+    // Attempt to establish a connection with the SafeTunnels database
     try
      { STDBConn = DriverManager.getConnection(ST_DB_ENDPOINT,STDBConnProperties);}
 
-    // Failing to connect with the database is a FATAL error
+    // Failing to establish a connection with the SafeTunnels database is a FATAL error
     catch(java.sql.SQLException sqlExcp)
      { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp.getMessage() + ")"); }
    }
 
+
+  /**
+   * Checks whether the database connection is still
+   * alive, attempting to re-establish it otherwise
+   */
   private void checkDBConn()
    {
     try
      {
-      // If the database connection has been closed, attempt to reopen it
+      // If the database connection has been
+      // closed, attempt to re-establish it
       if(STDBConn.isClosed())
        connectToDB();
      }
+
+    // Failing to establish a connection with the SafeTunnels database is a FATAL error
     catch(java.sql.SQLException sqlExcp)
      { Log.code(ERR_DB_CONN_FAILED,"(reason = " + sqlExcp.getMessage() + ")"); }
    }
@@ -116,48 +150,67 @@ public abstract class MySQLConnector
 
   /* ================================= PROTECTED METHODS ================================= */
 
-  protected void pushDevState(String seriesTable, String devIDColumn, String valueColumn, int devID, String value) throws java.sql.SQLException
+  /**
+   * Attempts to push an updated device's state into the database
+   * @param seriesTable The table name where to insert the new state into
+   * @param devIDColumn The ID column name
+   * @param valueColumn The value column name
+   * @param devID       The associated device ID
+   * @param value       The state value to be inserted into the database
+   * @throws java.sql.SQLException Failed to push the updated
+   *                               device's state into the database
+   */
+  protected void pushDevState(String seriesTable, String devIDColumn,
+                              String valueColumn, int devID, String value) throws java.sql.SQLException
    {
-    // Ensure the database connection to be active
+    // Ensure the database connection to be alive
     checkDBConn();
 
-    // Build the query to push the updated device state into the database
-    String pushDevConnStatusQuery = "INSERT INTO " + seriesTable + "( " + devIDColumn + "," + valueColumn + ") VALUES(" + devID + "," + value +")";
+    // Build the SQL query to push the updated device state into the database
+    String pushDevConnStatusQuery = "INSERT INTO " + seriesTable + "( " + devIDColumn + ","
+                                     + valueColumn + ") VALUES(" + devID + "," + value +")";
 
-    // Attempt to initialize the statement
+    // Attempt to initialize an SQL statement
     try(Statement mySQLStmt = STDBConn.createStatement())
      {
       // Attempt to push the updated device state into the database
       int numRowsChanged = mySQLStmt.executeUpdate(pushDevConnStatusQuery);
 
-      // Ensure that a row was affected by the update
-      if(numRowsChanged==0)
-       throw new java.sql.SQLException("Pushing an updated device state to the database affected no rows");
+      // Ensure that at least one row was affected by the update
+      if(numRowsChanged == 0)
+       throw new java.sql.SQLException("Pushing an updated device state to "
+                                        + "the database affected no rows");
      }
    }
 
 
   /* ================================== PUBLIC METHODS ================================== */
 
-  // Constructor
+  /**
+   * MySQLConnector constructor, initializing and
+   * establishing a connection with the SafeTunnels Database
+   */
   public MySQLConnector()
    {
-    // Initialize the database mutex
-
-    // Initialize the database connection properties
+    // Initialize the SafeTunnels database connection properties
     STDBConnProperties = new Properties();
     STDBConnProperties.put("user",ST_DB_USER);
     STDBConnProperties.put("password",ST_DB_PWD);
     STDBConnProperties.put("autoReconnect","true");
     STDBConnProperties.put("maxReconnects","4");
 
-    // Attempt to connect with the database
+    // Attempt to connect with the SafeTunnels database
     connectToDB();
    }
 
 
-  // Returns the DevMACIDPair (<MAC,sensorID> pairs) list of
-  // the devices of a given devType stored in the database
+  /**
+   * Returns the DevMACIDPair (<MAC,sensorID> pairs) list of
+   * the devices of a given devType stored in the database
+   * @param devType The type of devices to be retrieved from the database
+   * @return The DevMACIDPair (<MAC,sensorID> pairs) list
+   *         of devType devices stored in the database
+   */
   public ArrayList<DevMACIDPair> getDBDevicesList(DevType devType)
    {
     // DevMACIDPair list of devType devices
@@ -186,7 +239,7 @@ public abstract class MySQLConnector
         // For every device tuple returned, initialize and append
         // its associated DevMACIDPair element in the devicesList
         while(devSet.next())
-         devicesList.add(new DevMACIDPair(devSet.getString("mac"),devSet.getShort(devColumnIDName)));
+         devicesList.add(new DevMACIDPair(devSet.getString(ST_DB_COMMON_COLUMN_MAC),devSet.getShort(devColumnIDName)));
 
         // Retrieving no devices from the database is a FATAL error
         if(devicesList.isEmpty())

@@ -4,7 +4,7 @@ package devices.sensor;
 
 /* ================================== IMPORTS ================================== */
 
-/* --------------------------- SafeTunnels Packages --------------------------- */
+/* --------------------------- SafeTunnels Resources --------------------------- */
 import devices.BaseDevice;
 import static devices.BaseDevice.DevType.sensor;
 
@@ -12,17 +12,17 @@ import static devices.BaseDevice.DevType.sensor;
 /* ============================== CLASS DEFINITION ============================== */
 public abstract class BaseSensor extends BaseDevice
  {
-  /* --------------------------- Sensors MQTT Topics --------------------------- */
+  /* ============================ ENUMS DEFINITIONS ============================ */
 
-  // Quantities reporting topics
-  public final static String TOPIC_SENSORS_C02 = "SafeTunnels/C02";
-  public final static String TOPIC_SENSORS_TEMP = "SafeTunnels/temp";
+  /* --------------------------- Sensors Quantities --------------------------- */
+  public enum SensorQuantity
+   {
+    // C02 Density (ppm)
+    C02  { @Override public String toString() { return "C02 density"; } },
 
-  // Errors reporting topic
-  public final static String TOPIC_SENSORS_ERRORS = "SafeTunnels/sensorsErrors";
-
-  // Average Fan Relative Speed subscription topic
-  public final static String TOPIC_AVG_FAN_REL_SPEED = "SafeTunnels/avgFanRelSpeed";
+    // Temperature (°C)
+    TEMP { @Override public String toString() { return "temperature"; } },
+   }
 
   /* ----------------------- Sensors MQTT Client States ----------------------- */
   public enum SensorMQTTCliState
@@ -54,15 +54,21 @@ public abstract class BaseSensor extends BaseDevice
     MQTT_CLI_STATE_UNKNOWN
    }
 
-  /* --------------------------- Sensors Quantities --------------------------- */
-  public enum SensorQuantity
-   {
-    // C02 Density (ppm)
-    C02  { @Override public String toString() { return "C02 density"; } },
 
-    // Temperature (°C)
-    TEMP { @Override public String toString() { return "temperature"; } },
-   }
+  /* ================================ ATTRIBUTES ================================ */
+
+  /* --------------------------- Sensors MQTT Topics --------------------------- */
+
+  // Quantities reporting topics
+  public final static String TOPIC_SENSORS_C02 = "SafeTunnels/C02";
+  public final static String TOPIC_SENSORS_TEMP = "SafeTunnels/temp";
+
+  // Errors reporting topic
+  public final static String TOPIC_SENSORS_ERRORS = "SafeTunnels/sensorsErrors";
+
+  // Average Fan Relative Speed subscription topic
+  public final static String TOPIC_AVG_FAN_REL_SPEED = "SafeTunnels/avgFanRelSpeed";
+
 
   /* ============================= PUBLIC METHODS ============================= */
 
@@ -74,15 +80,25 @@ public abstract class BaseSensor extends BaseDevice
   public BaseSensor(String MAC, short ID)
    { super(MAC,ID); }
 
+
   /**
    * @return The sensor's device type
    */
   public DevType getDevType()
    { return sensor; }
 
-  // TODO: ALSO, if sensor was offline, update its state to online
+
+  /**
+   * Sets the sensor's C02 value
+   * and asserts it to be online
+   * @param newC02 The sensor's new C02 value
+   */
   public abstract void setC02(int newC02);
 
-  // TODO: ALSO, if sensor was offline, update its state to online
+  /**
+   * Sets the sensor's temperature value
+   * and asserts it to be online
+   * @param newTemp The sensor's new temperature value
+   */
   public abstract void setTemp(int newTemp);
  }
